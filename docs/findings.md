@@ -29,9 +29,16 @@ no finding is in them.
 | 0014 | strict: -Wunused-parameter | CtrlLib/StatusBar.cpp `InfoCtrl::GetTabOffset(int t)` | ignores `t` (a local `t` hides it) and returns the end of the last tab; now stops at tab `t` (no caller in U++) |
 | 0014 | strict: -Wunused-parameter | Core/Regex.h (new since 18619) | `Regex(dword options, const char *pattern, int len)` and the `WRegex` one call `Set(pattern, len)`: the options (e.g. `PCRE2_CASELESS`) are dropped |
 | 0015 | strict: the rest | 21 files | signed/unsigned compares (`findarg`/`decode` compare integers by value: no negative number equals an unsigned one), debug `CHECK` as one expression (it left an empty `else`), default member values for aggregates, `[[maybe_unused]]` SSH allocators, sized `operator delete`, enum/int in `?:`, `(const T)` casts, byte fields tested `>= 0`, two string-literal `?:` gcc -O3 + ASan misread |
+| 0016 | bootstrap | Draw/Draw.upp | the system packages are declared for DPKG only (freetype, fontconfig, X11, xcb, expat); the RPM names are added |
 
 UppBaseCheck checks the bugs of 0008 and 0014 and the `findarg` rule of 0015 directly:
 on the pristine tree it passes 13/21, on the patched tree 21/21.
+
+## Not in uppsrc, so not patched
+
+| Where | What |
+|---|---|
+| `mkumk_gcc.sh` (repo root) | since the switch to system libraries (2026-10-14) it no longer links: it lacks `-llz4 -lzstd -llzma -lpcre2-8 -lpcre2-32 -lxxhash`; `upp_basefix.sh` adds them when it builds umk |
 
 ## System libraries, not U++ (suppressed: supp/)
 

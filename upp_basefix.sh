@@ -2,6 +2,9 @@
 # upp_basefix.sh: one pinned U++ (build 18761, github.com/ultimatepp/ultimatepp commit
 # af8e133a7697) plus our patches, built and checked.
 #
+#   ./upp_basefix.sh bootstrap [--install]   all of it on a new machine: the system packages
+#                                             (listed; --install: sudo dnf/apt install), the
+#                                             pinned tree, umk, the patched tree
 #   ./upp_basefix.sh pristine [--from DIR]   clean pinned tree in $WORK/pristine: the commit's
 #                                             uppsrc from GitHub (downloaded once), or DIR's
 #                                             uppsrc (*.orig files put back); checked vs pin/
@@ -20,17 +23,19 @@
 #   ./upp_basefix.sh gui                      build the UppBaseFixBuild window (gcc release,
 #                                             patched tree) and start it
 #
-# WORK (default /home/jay/upp_basefix_work) holds the trees, its own umk + object cache
+# WORK (UPP_BASEFIX_WORK, default ~/upp_basefix_work) holds the download, the trees, its
+# own umk (built from the pinned commit; UPP_BASEFIX_UMK names another) + object cache
 # (umk/.cache/upp.out: never shared with other projects), out/ and logs/.
+# Compilers: the bm/ files' paths if they exist, else g++ / clang++ from PATH
+# (UPP_BASEFIX_GCC, UPP_BASEFIX_CLANG override).
 # Every step prints "step: ..." lines; build/test end with one "result:" line per run
 # and a "summary:" line. The exit code is 0 only when everything asked for passed.
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-WORK="${UPP_BASEFIX_WORK:-/home/jay/upp_basefix_work}"
+WORK="${UPP_BASEFIX_WORK:-$HOME/upp_basefix_work}"
 PIN=18761                                          # U++ build number: git commit count + 2270
 PIN_COMMIT=af8e133a7697615f18693b071dac39992f9f7ace  # ultimatepp/ultimatepp master, 2026-10-19
 PIN_URL="https://codeload.github.com/ultimatepp/ultimatepp/tar.gz/$PIN_COMMIT"
-UMK_SOURCE="${UPP_BASEFIX_UMK:-/home/jay/u++/umk}"
 step() { echo "step: $*"; }
 die() { echo "error: $*" >&2; exit 2; }
 
@@ -49,17 +54,23 @@ cmd_verify() {
   [ "$bad" = 0 ] && [ "$extra" = 0 ]
 }
 
+# download -> path of the pinned commit's archive (fetched once)
+download() {
+  local tgz="$WORK/download/ultimatepp-$PIN_COMMIT.tar.gz"
+  if [ ! -s "$tgz" ]; then
+    step "download U++ $PIN (commit ${PIN_COMMIT:0:12}) from GitHub" >&2
+    mkdir -p "$WORK/download"
+    curl -fsSL -o "$tgz.part" "$PIN_URL" && mv "$tgz.part" "$tgz" || die "download failed: $PIN_URL"
+  fi
+  echo "$tgz"
+}
+
 cmd_pristine() {
   local from=""
   [ "${1:-}" = --from ] && from="${2:?--from DIR}"
   mkdir -p "$WORK/pristine"
   if [ -z "$from" ]; then
-    local tgz="$WORK/download/ultimatepp-$PIN_COMMIT.tar.gz"
-    if [ ! -s "$tgz" ]; then
-      step "download U++ $PIN (commit ${PIN_COMMIT:0:12}) from GitHub"
-      mkdir -p "$WORK/download"
-      curl -fsSL -o "$tgz.part" "$PIN_URL" && mv "$tgz.part" "$tgz" || die "download failed: $PIN_URL"
-    fi
+    local tgz; tgz=$(download)
     step "unpack uppsrc -> $WORK/pristine/uppsrc"
     rm -rf "$WORK/pristine/uppsrc" "$WORK/pristine/ultimatepp-$PIN_COMMIT"
     tar -xzf "$tgz" -C "$WORK/pristine" "ultimatepp-$PIN_COMMIT/uppsrc" || die "unpack failed"
@@ -108,11 +119,40 @@ cmd_status() {
   [ "$have" = "$n" ]
 }
 
+# compiler C -> the compiler to run: UPP_BASEFIX_GCC / UPP_BASEFIX_CLANG, else the bm/ file's
+# path if it exists, else g++ / clang++ from PATH
+compiler() {
+  local env bm path fallback
+  case $1 in gcc) env=${UPP_BASEFIX_GCC:-}; bm="$HERE/bm/GCC15.bm"; fallback=g++ ;;
+             clang) env=${UPP_BASEFIX_CLANG:-}; bm="$HERE/bm/CLANG26.bm"; fallback=clang++ ;; esac
+  [ -n "$env" ] && { echo "$env"; return; }
+  path=$(sed -n 's/^COMPILER = "\(.*\)";/\1/p' "$bm")
+  [ -x "$path" ] && { echo "$path"; return; }
+  command -v "$fallback" || die "no $1 compiler (set UPP_BASEFIX_${1^^})"
+}
+
+# umk: UPP_BASEFIX_UMK if set, else built once from the pinned commit (its mkumk_gcc.sh,
+# which since U++'s switch to system libraries also needs lz4, zstd, lzma, pcre2, xxhash)
 setup_umk() {
-  [ -x "$WORK/umk/umk" ] && return 0
-  [ -x "$UMK_SOURCE" ] || die "no umk at $UMK_SOURCE (set UPP_BASEFIX_UMK)"
-  step "own umk + object cache in $WORK/umk"
-  mkdir -p "$WORK/umk/.config/u++/theide" && cp "$UMK_SOURCE" "$WORK/umk/umk"
+  local want="${UPP_BASEFIX_UMK:-pin $PIN_COMMIT}"
+  [ -x "$WORK/umk/umk" ] && [ "$(cat "$WORK/umk/umk.from" 2>/dev/null)" = "$want" ] && return 0
+  mkdir -p "$WORK/umk/.config/u++/theide"
+  if [ -n "${UPP_BASEFIX_UMK:-}" ]; then
+    [ -x "$UPP_BASEFIX_UMK" ] || die "no umk at $UPP_BASEFIX_UMK"
+    step "own umk + object cache in $WORK/umk (umk from $UPP_BASEFIX_UMK)"
+    cp "$UPP_BASEFIX_UMK" "$WORK/umk/umk"
+  else
+    tree_ok "$WORK/pristine" || die "no pristine tree: run ./upp_basefix.sh pristine"
+    local tgz b="$WORK/umk-build" cc; tgz=$(download); cc=$(compiler gcc)
+    step "build umk from U++ $PIN with $cc (about a minute)"
+    rm -rf "$b" && mkdir -p "$b"
+    tar -xzf "$tgz" -C "$b" --strip-components=1 "ultimatepp-$PIN_COMMIT/mkumk_gcc.sh" "ultimatepp-$PIN_COMMIT/mkumk_blitz.cpp" || die "unpack failed"
+    ln -s "$WORK/pristine/uppsrc" "$b/uppsrc"
+    ( cd "$b" && sed -e "s|^gcc |$cc -std=c++26 |" -e "s|-lbz2|-lbz2 -llz4 -lzstd -llzma -lpcre2-8 -lpcre2-32 -lxxhash|" mkumk_gcc.sh | bash ) > "$b/build.log" 2>&1
+    [ -x "$b/umk" ] || { grep -E 'error|undefined' "$b/build.log" | head -10; die "umk build failed: $b/build.log"; }
+    cp "$b/umk" "$WORK/umk/umk"
+  fi
+  echo "$want" > "$WORK/umk/umk.from"
 }
 
 # bm COMPILER STRICT [EXTRA_CPP] [EXTRA_LINK] -> path of a build method in $WORK/bm
@@ -130,7 +170,7 @@ make_bm() {
   # the compiler through a wrapper: each compile's messages also go to a file of its own
   # in $UPP_BASEFIX_DIAG, so warnings are counted whole (umk's log interleaves the
   # parallel compiles' lines)
-  local real; real=$(sed -n 's/^COMPILER = "\(.*\)";/\1/p' "$src")
+  local real; real=$(compiler "$c")
   mkdir -p "$WORK/bin"
   cat > "$WORK/bin/$c-cc" <<EOW
 #!/bin/bash
@@ -303,7 +343,68 @@ cmd_gui() {
   step "started $WORK/out/gui/UppBaseFixBuild"
 }
 
+# The U++ packages the check programs and the window build; their .upp files name the
+# system packages they need (external_dependency(RPM ...) / (DPKG ...)).
+UPP_PACKAGES="Core Core/SSH Draw Painter PdfDraw RichText Sql CtrlCore CtrlLib plugin/png plugin/sqlite3 plugin/bmp"
+
+# system_packages KIND (RPM|DPKG) TREE -> the -devel packages the U++ packages declare for a
+# GTK (not X11, not VIRTUALGUI) build, then the tools: compilers, sanitizer runtimes,
+# valgrind, and what umk's own build links (bz2, zstd, lzma)
+system_packages() {
+  local kind=$1 tree=$2 p
+  for p in $UPP_PACKAGES; do
+    sed -n "s/^external_dependency($kind\\(\\( !X11\\| !VIRTUALGUI\\)*\\)) *\\([^;]*\\);.*/\\3/p" \
+      "$tree/uppsrc/$p/$(basename "$p").upp"
+  done
+  local id; id=$(. /etc/os-release 2>/dev/null; echo "${ID:-} ${ID_LIKE:-}")
+  case $kind in
+    RPM)
+      case " $id " in
+        *" rhel "*|*" centos "*|*" rocky "*|*" almalinux "*)   # gcc 15 comes as a toolset
+          echo gcc-toolset-15-gcc-c++ gcc-toolset-15-libasan-devel gcc-toolset-15-libubsan-devel ;;
+        *) echo gcc-c++ libasan libubsan ;;
+      esac
+      echo clang compiler-rt valgrind pkgconf-pkg-config curl tar patch rsync bzip2-devel libzstd-devel xz-devel ;;
+    DPKG)
+      echo g++ clang libclang-rt-dev valgrind pkg-config curl tar patch rsync libbz2-dev libzstd-dev liblzma-dev ;;
+  esac
+}
+
+cmd_bootstrap() {
+  local install=0 kind have pm
+  [ "${1:-}" = --install ] && install=1
+  if command -v dnf > /dev/null; then kind=RPM; have="rpm -q"; pm=dnf
+  elif command -v apt-get > /dev/null; then kind=DPKG; have="dpkg -s"; pm=apt-get
+  else die "neither dnf nor apt-get: install the packages by hand (see the .upp files' external_dependency lines)"; fi
+  # the package list comes from the patched .upp files (0016 adds Draw's RPM names), so the
+  # pinned tree comes first: download + patch need only curl, tar, patch, rsync
+  step "pinned tree and patches"
+  tree_ok "$WORK/pristine" && cmd_verify "$WORK/pristine" > /dev/null || cmd_pristine || exit 1
+  cmd_patch > /dev/null || die "the patches do not apply: ./upp_basefix.sh patch"
+  step "system packages ($kind) the build and the checks need"
+  local missing=() p
+  for p in $(system_packages $kind "$WORK/patched" | tr ' ' '\n' | sort -u); do
+    $have "$p" > /dev/null 2>&1 || missing+=("$p")
+  done
+  if [ ${#missing[@]} -gt 0 ]; then
+    echo "missing: ${missing[*]}"
+    if [ "$install" = 1 ]; then
+      step "sudo $pm install ${missing[*]}"
+      sudo $pm install -y "${missing[@]}" || die "install failed (on RHEL, xxhash-devel is in EPEL; gcc-toolset-15 in AppStream)"
+    else
+      echo "install them: sudo $pm install ${missing[*]}"
+      echo "         (or: ./upp_basefix.sh bootstrap --install)"
+      exit 1
+    fi
+  else
+    echo "system packages: all there"
+  fi
+  setup_umk
+  echo "bootstrap: done. Next: ./upp_basefix.sh test   or   ./upp_basefix.sh gui"
+}
+
 case "${1:-}" in
+  bootstrap) shift; cmd_bootstrap "$@" ;;
   pristine) shift; cmd_pristine "$@" ;;
   verify)   shift; cmd_verify "$@" ;;
   patch)    shift; cmd_patch ;;
@@ -311,5 +412,5 @@ case "${1:-}" in
   build)    shift; cmd_build 0 "$@" ;;
   test)     shift; cmd_build 1 "$@" ;;
   gui)      shift; cmd_gui ;;
-  *) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+  *) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac

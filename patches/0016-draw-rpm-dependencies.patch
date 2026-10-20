@@ -1,0 +1,20 @@
+diff -ruN a/uppsrc/Draw/Draw.upp b/uppsrc/Draw/Draw.upp
+--- a/uppsrc/Draw/Draw.upp	2026-10-20 15:16:30.994335904 -0700
++++ b/uppsrc/Draw/Draw.upp	2026-10-20 15:16:30.995335905 -0700
+@@ -27,6 +27,16 @@
+ 
+ external_dependency(DPKG !VIRTUALGUI) libexpat1-dev;
+ 
++external_dependency(RPM) freetype-devel;
++
++external_dependency(RPM) fontconfig-devel;
++
++external_dependency(RPM !VIRTUALGUI) libX11-devel;
++
++external_dependency(RPM !VIRTUALGUI) libxcb-devel;
++
++external_dependency(RPM !VIRTUALGUI) expat-devel;
++
+ file
+ 	Draw.h options(BUILDER_OPTION) PCH,
+ 	FontInt.h,

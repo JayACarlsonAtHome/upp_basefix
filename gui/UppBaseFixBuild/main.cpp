@@ -13,7 +13,7 @@
 using namespace Upp;
 
 // upp_basefix.sh: $UPP_BASEFIX_HOME (set by "upp_basefix.sh gui"), else a folder above
-// this program, else the usual clone.
+// this program.
 static String ScriptPath()
 {
 	Vector<String> dirs;
@@ -21,7 +21,6 @@ static String ScriptPath()
 		dirs << h;
 	for(String d = GetExeFolder(); d.GetCount() > 1; d = GetFileFolder(d))
 		dirs << d;
-	dirs << "/run/media/jay/GFS/git/upp_basefix";
 	for(const String& d : dirs) {
 		String s = AppendFileName(d, "upp_basefix.sh");
 		if(FileExists(s))
