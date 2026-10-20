@@ -10,9 +10,12 @@
 #        --compiler gcc|clang|both   (default both)      --release   (default debug)
 #        --tree patched|pristine     (default patched)   --strict    (-Wall -Wextra)
 #        --clean                     rebuild every package (umk -a)
+#        --verbose                   show every file compiled (default: packages + warnings)
 #   ./upp_basefix.sh test [options]           build, then run the checks
 #        same options, plus one check:  --valgrind  --helgrind  --asan  --tsan
 #        (--asan/--tsan need clang or gcc runtimes; valgrind needs valgrind)
+#   ./upp_basefix.sh gui                      build the UppBaseFixBuild window (gcc release,
+#                                             patched tree) and start it
 #
 # WORK (default /home/jay/upp_basefix_work) holds the trees, its own umk + object cache
 # (umk/.cache/upp.out: never shared with other projects), out/ and logs/.
@@ -110,7 +113,7 @@ make_bm() {
   echo "$WORK/bm/$name.bm"
 }
 
-COMPILERS="gcc clang"; MODE=debug; TREE=patched; STRICT=0; CLEAN=0; CHECK=""
+COMPILERS="gcc clang"; MODE=debug; TREE=patched; STRICT=0; CLEAN=0; CHECK=""; VERBOSE=0
 parse_build_opts() {
   while [ $# -gt 0 ]; do
     case $1 in
@@ -120,6 +123,7 @@ parse_build_opts() {
       --tree) case ${2:-} in patched|pristine) TREE=$2 ;; *) die "--tree patched|pristine" ;; esac; shift 2 ;;
       --strict) STRICT=1; shift ;;
       --clean) CLEAN=1; shift ;;
+      --verbose) VERBOSE=1; shift ;;
       --valgrind|--helgrind|--asan|--tsan) CHECK=${1#--}; shift ;;
       *) die "unknown option $1" ;;
     esac
@@ -140,14 +144,15 @@ build_one() {
   local what="$MODE"; [ "$STRICT" = 1 ] && what="$what, strict"; [ -n "$CHECK" ] && what="$what, $CHECK"
   local tag="$TREE-$c-$MODE$([ "$STRICT" = 1 ] && echo -strict)${CHECK:+-$CHECK}"
   BUILT_DIR="$WORK/out/$tag"; mkdir -p "$BUILT_DIR" "$WORK/logs"
-  local p rc log ours upp t0 t1
+  local p rc log ours upp t0 t1 show='^-----|error:|warning:'
+  [ "$VERBOSE" = 1 ] && show='.'
   for p in UppBaseCheck UppBaseCheckGui; do
     log="$WORK/logs/build-$tag-$p.log"
     step "build $p with $c ($what) on the $TREE tree"
     t0=$(date +%s)
     # +USEMALLOC: sanitizers and valgrind need the system allocator, not U++'s heap
     local cfg=""; [ -n "$CHECK" ] && cfg="+USEMALLOC"
-    "$WORK/umk/umk" "$HERE/check,$WORK/$TREE/uppsrc" "$p" "$bm" $flags $cfg "$BUILT_DIR/$p" 2>&1 | tee "$log" | grep --line-buffered -E '^-----|error:|warning:' | sed -u 's/^/  /'
+    "$WORK/umk/umk" "$HERE/check,$WORK/$TREE/uppsrc" "$p" "$bm" $flags $cfg "$BUILT_DIR/$p" 2>&1 | tee "$log" | grep --line-buffered -E "$show" | sed -u 's/^/  /'
     rc=${PIPESTATUS[0]}; t1=$(date +%s)
     ours=$(grep -E "^$HERE/.*warning:" "$log" | sort -u | wc -l)
     upp=$(grep -E "^$WORK/$TREE/uppsrc/.*warning:" "$log" | sort -u | wc -l)
@@ -195,6 +200,20 @@ cmd_build() {
   [ "$FAILS" = 0 ]
 }
 
+cmd_gui() {
+  tree_ok "$WORK/patched" || die "no patched tree: run ./upp_basefix.sh pristine, then patch"
+  setup_umk
+  local bm log="$WORK/logs/build-gui.log"; bm=$(make_bm gcc 0)
+  mkdir -p "$WORK/out/gui" "$WORK/logs"
+  step "build UppBaseFixBuild with gcc (release) on the patched tree"
+  "$WORK/umk/umk" "$HERE/gui,$WORK/patched/uppsrc" UppBaseFixBuild "$bm" -brsH "$WORK/out/gui/UppBaseFixBuild" > "$log" 2>&1 \
+    || { grep -E 'error' "$log" | head -20; die "build failed: $log"; }
+  echo "result: build UppBaseFixBuild gcc release: ok  warnings: $(grep -c 'warning:' "$log")  log: $log"
+  [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] || die "no display to start it on"
+  UPP_BASEFIX_HOME="$HERE" setsid -f "$WORK/out/gui/UppBaseFixBuild" > /dev/null 2>&1 < /dev/null
+  step "started $WORK/out/gui/UppBaseFixBuild"
+}
+
 case "${1:-}" in
   pristine) shift; cmd_pristine "$@" ;;
   verify)   shift; cmd_verify "$@" ;;
@@ -202,5 +221,6 @@ case "${1:-}" in
   status)   shift; cmd_status "$@" ;;
   build)    shift; cmd_build 0 "$@" ;;
   test)     shift; cmd_build 1 "$@" ;;
-  *) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+  gui)      shift; cmd_gui ;;
+  *) sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac

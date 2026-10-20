@@ -1,0 +1,13 @@
+description "upp_basefix: build and check the pinned U++ tree (a window over upp_basefix.sh)\377";
+
+uses
+	CtrlLib;
+
+file
+	main.cpp;
+
+mainconfig
+	"" = "GUI WAYLAND";
+
+options
+	"-Wformat=2 -Werror=format";
