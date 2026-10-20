@@ -10,7 +10,8 @@
 #        --compiler gcc|clang|both   (default both)      --release   (default debug)
 #        --tree patched|pristine     (default patched)   --strict    (-Wall -Wextra)
 #        --clean                     rebuild every package (umk -a)
-#        --verbose                   show every file compiled (default: packages + warnings)
+#        --verbose                   the compiler's whole output while it builds (default: each
+#                                    file compiled; warnings and errors listed after the build)
 #   ./upp_basefix.sh test [options]           build, then run the checks
 #        same options, plus one check:  --valgrind  --helgrind  --asan  --tsan
 #        (--asan/--tsan need clang or gcc runtimes; valgrind needs valgrind)
@@ -102,7 +103,9 @@ setup_umk() {
 make_bm() {
   local c=$1 strict=$2 extra=${3:-} link=${4:-} src name
   case $c in gcc) src="$HERE/bm/GCC15.bm" ;; clang) src="$HERE/bm/CLANG26.bm" ;; *) die "compiler $c" ;; esac
-  name="$c$([ "$strict" = 1 ] && echo -strict)$([ -n "$extra" ] && echo "-$(echo "$extra" | md5sum | cut -c1-6)")"
+  # the tree in the name: umk keeps objects per build method, and the check programs'
+  # sources are the same files for both trees
+  name="$TREE-$c$([ "$strict" = 1 ] && echo -strict)$([ -n "$extra" ] && echo "-$(echo "$extra" | md5sum | cut -c1-6)")"
   mkdir -p "$WORK/bm"
   local add=""
   [ "$strict" = 1 ] && add=" -Wall -Wextra"
@@ -146,23 +149,24 @@ parse_build_opts() {
   done
 }
 
-# U++ house style, never counted as U++ warnings: these kinds anywhere (the U++ authors
-# write so on purpose, see docs/strict.md), and the sites in supp/strict-reviewed.txt
-# (each checked by hand). Any other U++ warning counts.
-STYLE_RE="\[-W(unused-parameter|deprecated-copy|deprecated-copy-with-user-provided-copy|logical-op-parentheses)\]|(‘|')&&(’|') within (‘|')\|\|(’|')"
+# warning_lines DIAG_DIR -> every unique warning and error of a build, one per message
+# (from the compiler's own message files: umk's log interleaves parallel compiles)
+warning_lines() { cat "$1"/* 2> /dev/null | grep -E ': (warning|error): ' | sort -u; }
 
-# count_warnings DIAG_DIR -> "ours upp style" (unique warnings)
+# count_warnings DIAG_DIR -> "ours upp": warnings in upp_basefix's code, and all others
 count_warnings() {
-  local all u style upp ours
-  all=$(cat "$1"/* 2> /dev/null | grep -E ': warning: ' | sort -u)
+  local all ours
+  all=$(warning_lines "$1" | grep -E ': warning: ')
   ours=$(grep -cE "^$HERE/" <<< "$all")
-  u=$(grep -E "^$WORK/$TREE/uppsrc/" <<< "$all")
-  style=$( { grep -E "$STYLE_RE" <<< "$u"
-             grep -vE "$STYLE_RE" <<< "$u" \
-               | sed -E "s|^$WORK/$TREE/uppsrc/([^:]+):([0-9]+):[0-9]+: warning: .*(\[-W[^]]+\])\$|\1:\2 \3|" \
-               | grep -xFf <(grep -vE '^(#|$)' "$HERE/supp/strict-reviewed.txt"); } | grep -c .)
-  upp=$(( $(grep -c . <<< "$u") - style ))
-  echo "$ours $upp $style"
+  echo "$ours $(( $(grep -c . <<< "$all") - ours ))"
+}
+
+# show_lines: what the terminal and the window see while umk builds: umk's own lines
+# (packages, each file compiled, linking); --verbose: everything, the compiler's messages
+# too. The messages come whole after each build (warning_lines).
+show_lines() {
+  if [ "$VERBOSE" = 1 ]; then cat; return; fi
+  grep --line-buffered -E '^(-----|BLITZ:|Linking|OK\. |There were errors|[^ /:]+\.(c|cc|cpp|cxx|icpp|m|mm)$)'
 }
 
 # build_one COMPILER -> builds both check programs; sets BUILT_DIR, prints result lines
@@ -179,8 +183,7 @@ build_one() {
   local what="$MODE"; [ "$STRICT" = 1 ] && what="$what, strict"; [ -n "$CHECK" ] && what="$what, $CHECK"
   local tag="$TREE-$c-$MODE$([ "$STRICT" = 1 ] && echo -strict)${CHECK:+-$CHECK}"
   BUILT_DIR="$WORK/out/$tag"; mkdir -p "$BUILT_DIR" "$WORK/logs"
-  local p rc log ours upp t0 t1 show='^-----|error:|warning:'
-  [ "$VERBOSE" = 1 ] && show='.'
+  local p rc log ours upp t0 t1
   for p in UppBaseCheck UppBaseCheckGui; do
     log="$WORK/logs/build-$tag-$p.log"
     step "build $p with $c ($what) on the $TREE tree"
@@ -188,10 +191,12 @@ build_one() {
     # +USEMALLOC: sanitizers and valgrind need the system allocator, not U++'s heap
     local cfg=""; [ -n "$CHECK" ] && cfg="+USEMALLOC"
     local diag="$WORK/diag/$tag-$p"; rm -rf "$diag"; mkdir -p "$diag"
-    UPP_BASEFIX_DIAG="$diag" "$WORK/umk/umk" "$HERE/check,$WORK/$TREE/uppsrc" "$p" "$bm" $flags $cfg "$BUILT_DIR/$p" 2>&1 | tee "$log" | grep --line-buffered -E "$show" | sed -u 's/^/  /'
+    rm -f "$BUILT_DIR/$p"   # a failed build must not leave the last one to be run
+    UPP_BASEFIX_DIAG="$diag" "$WORK/umk/umk" "$HERE/check,$WORK/$TREE/uppsrc" "$p" "$bm" $flags $cfg "$BUILT_DIR/$p" 2>&1 | tee "$log" | show_lines | sed -u 's/^/  /'
     rc=${PIPESTATUS[0]}; t1=$(date +%s)
-    local counts style; counts=$(count_warnings "$diag")
-    read -r ours upp style <<< "$counts"
+    local counts; counts=$(count_warnings "$diag")
+    read -r ours upp <<< "$counts"
+    [ "$VERBOSE" = 1 ] || warning_lines "$diag" | sed 's/^/  /'
     # Only files compiled in this run print warnings: a clean build counts the whole tree,
     # so its count is kept and shown next to an incremental build's.
     local wfile="$BUILT_DIR/$p.warnings" scope
@@ -203,7 +208,7 @@ build_one() {
     else
       scope="files compiled now; tick Clean for the whole tree"
     fi
-    echo "result: build $p $c $MODE: $([ "$rc" = 0 ] && echo ok || echo FAILED) $((t1 - t0)) s  warnings: ours $ours, U++ $upp$([ "${style:-0}" -gt 0 ] && echo ", U++ house style $style") ($scope)  log: $log"
+    echo "result: build $p $c $MODE: $([ "$rc" = 0 ] && echo ok || echo FAILED) $((t1 - t0)) s  warnings: ours $ours, U++ $upp ($scope)  log: $log"
     [ "$rc" = 0 ] || FAILS=$((FAILS + 1))
   done
 }
@@ -218,20 +223,26 @@ run_checks() {
   local c=$1 out rc
   local run=()
   case $CHECK in
-    valgrind) run=(valgrind --error-exitcode=99 --leak-check=full --errors-for-leak-kinds=definite -q
+    valgrind) run=(valgrind --error-exitcode=99 --leak-check=full --errors-for-leak-kinds=definite --show-leak-kinds=definite -q
                             --suppressions="$HERE/supp/valgrind.supp") ;;
     helgrind) run=(valgrind --tool=helgrind --error-exitcode=99 -q --suppressions="$HERE/supp/valgrind.supp") ;;
   esac
   # system-library noise is suppressed (supp/); UBSan prints a stack for each report
-  export TSAN_OPTIONS="suppressions=$HERE/supp/tsan.supp second_deadlock_stack=1" LSAN_OPTIONS="suppressions=$HERE/supp/lsan.supp"
+  export TSAN_OPTIONS="suppressions=$HERE/supp/tsan.supp second_deadlock_stack=1" LSAN_OPTIONS="suppressions=$HERE/supp/lsan.supp print_suppressions=0"
   export UBSAN_OPTIONS="print_stacktrace=1"
-  step "run UppBaseCheck ($c${CHECK:+, $CHECK})"
-  out=$("${run[@]}" "$BUILT_DIR/UppBaseCheck" 2>&1); rc=$?
-  echo "$out" | sed 's/^/  /'
-  ub_fail
-  echo "result: test UppBaseCheck $c $MODE${CHECK:+ $CHECK}: $([ "$rc" = 0 ] && echo ok || echo "FAILED (exit $rc)")  $(echo "$out" | grep -E '^(passed|FAILED):' | tail -1)"
-  [ "$rc" = 0 ] || FAILS=$((FAILS + 1))
-  if [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && [ "$CHECK" != helgrind ]; then
+  if [ ! -x "$BUILT_DIR/UppBaseCheck" ]; then
+    echo "result: test UppBaseCheck $c $MODE${CHECK:+ $CHECK}: skipped (build failed)"
+  else
+    step "run UppBaseCheck ($c${CHECK:+, $CHECK})"
+    out=$("${run[@]}" "$BUILT_DIR/UppBaseCheck" 2>&1); rc=$?
+    echo "$out" | sed 's/^/  /'
+    ub_fail
+    echo "result: test UppBaseCheck $c $MODE${CHECK:+ $CHECK}: $([ "$rc" = 0 ] && echo ok || echo "FAILED (exit $rc)")  $(echo "$out" | grep -E '^(passed|FAILED):' | tail -1)"
+    [ "$rc" = 0 ] || FAILS=$((FAILS + 1))
+  fi
+  if [ ! -x "$BUILT_DIR/UppBaseCheckGui" ]; then
+    echo "result: test UppBaseCheckGui $c $MODE${CHECK:+ $CHECK}: skipped (build failed)"
+  elif [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && [ "$CHECK" != helgrind ]; then
     step "run UppBaseCheckGui --smoke ($c${CHECK:+, $CHECK})"
     # checked runs: no accessibility bridge (dbus) or GVFS: system threads, not U++
     local quiet=(); [ -n "$CHECK" ] && quiet=(env NO_AT_BRIDGE=1 GTK_A11Y=none GIO_USE_VFS=local)
@@ -283,5 +294,5 @@ case "${1:-}" in
   build)    shift; cmd_build 0 "$@" ;;
   test)     shift; cmd_build 1 "$@" ;;
   gui)      shift; cmd_gui ;;
-  *) sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+  *) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac

@@ -1,23 +1,20 @@
 # Strict builds (-Wall -Wextra)
 
-U++'s own build methods use neither `-Wall` nor `-Wextra`, and its clang methods turn
-`-Wlogical-op-parentheses` off (uppsrc/ide/Builders/Install.cpp): the U++ authors write
-some things on purpose that strict warnings flag. A strict build of the check programs
-gives about 1,500 unique U++ warnings with gcc and 950 with clang. upp_basefix.sh splits
-them:
+U++'s own build methods use neither `-Wall` nor `-Wextra` (and its clang methods turn
+`-Wlogical-op-parentheses` off, uppsrc/ide/Builders/Install.cpp). A strict build of the
+check programs on 18619 + patches 0001-0010 gave 1,367 warning sites in 228 U++ files.
+Patches 0011-0016 fix them in the code, using C++23/26 where it helps:
 
-- **ours**: warnings in upp_basefix's own code. Must be 0.
-- **U++**: any U++ warning not listed below. Must be 0: a new one turns the GUI row
-  yellow and is either a bug to patch (as 0009 and 0010 were) or a site to review.
-- **U++ house style**: counted apart, not a failure:
-  - these kinds anywhere: `-Wunused-parameter` (virtuals and callbacks that ignore an
-    argument), `-Wdeprecated-copy` (classes with a user copy constructor and an implicit
-    assignment), `&&` within `||` without parentheses (U++ precedence style);
-  - the sites in `supp/strict-reviewed.txt`, each read by hand, grouped by kind with the
-    reason it is not a bug (fall-throughs, signed/unsigned compares of character codes,
-    aggregate tables, CHECK in release builds, ...).
+| Kind | Sites | Fix |
+|---|---|---|
+| -Wdeprecated-copy | 538 | 0011: `Size_`, `Point_`, `Rect_` get `operator=(const T&) = default` |
+| -Wunused-parameter | 522 | 0013: name commented out; `[[maybe_unused]]` where ASSERT, LLOG or another platform uses it |
+| `&&` within `\|\|` | 238 | 0012: parentheses (clang's own fix-its, same meaning) |
+| -Wimplicit-fallthrough | 20 | 0014: `[[fallthrough]];`; ParseQtf's one was a bug (0015) |
+| the rest | 40 | 0015, 0016: see findings.md |
 
-The list is for the pinned tree (18619 + patches 0001-0010); a new pin needs a new review.
+Two of them were bugs (0015). Strict builds now give 0 warnings with gcc 15 and clang, debug
+and release, plain and with each check; upp_basefix.sh counts every warning: ours, U++.
 
 Warnings are counted from one file per compile (the build method runs the compiler
 through `$WORK/bin/<compiler>-cc`, which keeps its messages in `$WORK/diag/`): umk's log

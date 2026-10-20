@@ -7,6 +7,7 @@
 #include <Draw/Draw.h>
 #include <plugin/png/png.h>
 #include <plugin/sqlite3/Sqlite3.h>
+#include <RichText/RichText.h>
 
 using namespace Upp;
 
@@ -129,6 +130,15 @@ static void CheckPatchedBugs()
 	uint64 total = 0, avail = 0;
 	GetSystemMemoryStatus(total, avail);
 	Expect(total > 0 && avail <= total && total < ((uint64)1 << 50), "GetSystemMemoryStatus");
+	// 0015: QTF that ends too soon: the parser stops at the NUL (it read on past it; the
+	// bytes after the NUL here are ours, so the old reads are visible, not undefined)
+	static const char cut_p[] = "[p\0XYZ";
+	String e = ParseQTF(cut_p).GetPlainText().ToString();
+	Expect(e.Find("Unexpected end of text") >= 0 && e.Find("XYZ") < 0, "QTF: end of text in a paragraph format");
+	static const char cut_color[] = "[@\0 abc";
+	Expect(ParseQTF(cut_color).GetPlainText().ToString().Find("abc") < 0, "QTF: end of text in a color");
+	// 0016: findarg compares integers by value: -1 is not 0xFFFFFFFF
+	Expect(findarg(0xFFFFFFFFu, -1) < 0 && findarg(3u, 1, 2, 3) == 2 && findarg('b', 'a', 'b') == 1, "findarg: signed and unsigned");
 }
 
 static void CheckSsh()

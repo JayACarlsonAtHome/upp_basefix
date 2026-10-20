@@ -1,0 +1,1159 @@
+diff -ru a/uppsrc/Core/BlockStream.cpp b/uppsrc/Core/BlockStream.cpp
+--- a/uppsrc/Core/BlockStream.cpp	2026-10-20 13:03:35.567463611 -0700
++++ b/uppsrc/Core/BlockStream.cpp	2026-10-20 13:03:35.568463612 -0700
+@@ -488,7 +488,7 @@
+ 		fsz = st->st_size;
+ 		if(!(st->st_mode & S_IFREG) ||  // not a regular file, e.g. folder - bad things would happen
+ 		   fsz < 0 ||
+-		   (mode & NOWRITESHARE) && flock(handle, LOCK_EX|LOCK_NB) < 0) // lock if not sharing
++		   ((mode & NOWRITESHARE) && flock(handle, LOCK_EX|LOCK_NB) < 0)) // lock if not sharing
+ 		{
+ 			close(handle);
+ 			handle = -1;
+diff -ru a/uppsrc/Core/CharSet.h b/uppsrc/Core/CharSet.h
+--- a/uppsrc/Core/CharSet.h	2026-10-20 13:03:35.571463614 -0700
++++ b/uppsrc/Core/CharSet.h	2026-10-20 13:03:35.571463614 -0700
+@@ -183,12 +183,12 @@
+ inline char  ToLowerAscii(char16 c)  { return ToLowerAscii((wchar) c); }
+ 
+ inline bool IsDigit(int c)         { return c >= '0' && c <= '9'; }
+-inline bool IsAlpha(int c)         { return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z'; }
++inline bool IsAlpha(int c)         { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); }
+ inline bool IsAlNum(int c)         { return IsDigit(c) || IsAlpha(c); }
+ inline bool IsLeNum(int c)         { return IsDigit(c) || IsLetter(c); }
+ inline bool IsPunct(int c)         { return c != ' ' && !IsAlNum(c); }
+ inline bool IsSpace(int c)         { return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\v' || c == '\t'; }
+-inline bool IsXDigit(int c)        { return IsDigit(c) || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f'; }
++inline bool IsXDigit(int c)        { return IsDigit(c) || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'); }
+ 
+ bool IsDoubleWidth(int c);
+ 
+diff -ru a/uppsrc/Core/CoAlgo.h b/uppsrc/Core/CoAlgo.h
+--- a/uppsrc/Core/CoAlgo.h	2026-10-20 13:03:35.574463616 -0700
++++ b/uppsrc/Core/CoAlgo.h	2026-10-20 13:03:35.574463616 -0700
+@@ -128,7 +128,7 @@
+ 				i++;
+ 			}
+ 			CoWork::FinLock();
+-			if(better(*b, *best) || !better(*best, *b) && b < best)
++			if(better(*b, *best) || (!better(*best, *b) && b < best))
+ 				best = b;
+ 		}
+ 	);
+diff -ru a/uppsrc/Core/Color.cpp b/uppsrc/Core/Color.cpp
+--- a/uppsrc/Core/Color.cpp	2026-10-20 13:03:35.577463618 -0700
++++ b/uppsrc/Core/Color.cpp	2026-10-20 13:03:35.577463618 -0700
+@@ -271,7 +271,7 @@
+ 
+ static int sCharFilterHex(int c)
+ {
+-	return c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F' || IsDigit(c) ? c : 0;
++	return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || IsDigit(c) ? c : 0;
+ }
+ 
+ Color ColorFromText(const char *s)
+diff -ru a/uppsrc/Core/CvFlt.cpp b/uppsrc/Core/CvFlt.cpp
+--- a/uppsrc/Core/CvFlt.cpp	2026-10-20 13:03:35.581463620 -0700
++++ b/uppsrc/Core/CvFlt.cpp	2026-10-20 13:03:35.582463621 -0700
+@@ -126,7 +126,7 @@
+ 	uint64 rounding_range = ((uint64)1 << shift);
+ 	uint64 rounding_mid = rounding_range >> 1;
+ 	uint64 rounding = h & (rounding_range - 1);
+-	if(rounding > rounding_mid || rounding == rounding_mid && (l || (v & 1)))
++	if(rounding > rounding_mid || (rounding == rounding_mid && (l || (v & 1))))
+ 		return v + 1;
+ 	return v;
+ }
+diff -ru a/uppsrc/Core/Format.cpp b/uppsrc/Core/Format.cpp
+--- a/uppsrc/Core/Format.cpp	2026-10-20 13:03:35.586463624 -0700
++++ b/uppsrc/Core/Format.cpp	2026-10-20 13:03:35.587463625 -0700
+@@ -167,7 +167,7 @@
+ 		while(x /= base);
+ 	}
+ 	bool minus = (sign >= 0 && i < 0 && !IsNull(i));
+-	bool do_sign = (sign > 0 || sign >= 0 && minus);
++	bool do_sign = (sign > 0 || (sign >= 0 && minus));
+ 	if(do_sign && lpad != '0')
+ 		*--p = (minus ? '-' : '+');
+ 	if(width > e - p) {
+@@ -584,7 +584,7 @@
+ 		flags |= FD_SIGN;
+ 		s++;
+ 	}
+-	if(IsDigit(*s) || *s == '-' && IsDigit(s[1])) {
++	if(IsDigit(*s) || (*s == '-' && IsDigit(s[1]))) {
+ 		digits = (int)strtol(s, NULL, 10);
+ 		while(IsDigit(*++s))
+ 			;
+diff -ru a/uppsrc/Core/heapdbg.cpp b/uppsrc/Core/heapdbg.cpp
+--- a/uppsrc/Core/heapdbg.cpp	2026-10-20 13:03:35.590463627 -0700
++++ b/uppsrc/Core/heapdbg.cpp	2026-10-20 13:03:35.590463627 -0700
+@@ -121,7 +121,7 @@
+ void  DbgSet(DbgBlkHeader *p, size_t size)
+ {
+ 	bool allow_leak = s_ignoreleaks ||
+-	                  sIgnoreNonUppThreadsLeaks && !Thread::IsUpp() && !Thread::IsMain()
++	                  (sIgnoreNonUppThreadsLeaks && !Thread::IsUpp() && !Thread::IsMain())
+ #if (defined(TESTLEAKS) || defined(HEAPDBG)) && defined(COMPILER_GCC) && defined(UPP_HEAP)
+ 	                  || sMemDiagInitCount == 0
+ #endif
+@@ -247,7 +247,7 @@
+ 	int n = 0;
+ 	while(p != &dbg_live) {
+ 		dword serial = (unsigned int)~(p->serial ^ (uintptr_t)p);
+-		if(p->serial && (!sIgnoreNonMainLeaks || serial >= serial_main_begin && serial < serial_main_end)) {
++		if(p->serial && (!sIgnoreNonMainLeaks || (serial >= serial_main_begin && serial < serial_main_end))) {
+ 			if(!leaks)
+ 				VppLog() << "\n\nHeap leaks detected:\n";
+ 			leaks = true;
+diff -ru a/uppsrc/Core/Http.cpp b/uppsrc/Core/Http.cpp
+--- a/uppsrc/Core/Http.cpp	2026-10-20 13:03:35.593463629 -0700
++++ b/uppsrc/Core/Http.cpp	2026-10-20 13:03:35.594463629 -0700
+@@ -783,7 +783,7 @@
+ 		HttpError("content length exceeded " + AsString(max_content_size));
+ 		return;
+ 	}
+-	if(WhenContent && (status_code >= 200 && status_code < 300 || all_content))
++	if(WhenContent && ((status_code >= 200 && status_code < 300) || all_content))
+ 		WhenContent(ptr, size);
+ 	else
+ 		body.Cat((const char *)ptr, size);
+@@ -797,7 +797,7 @@
+ 	if(has_content_length && content_length == 0)
+ 		return false;
+ 
+-	String s = TcpSocket::Get(has_content_length && content_length > 0 || chunked_encoding ?
++	String s = TcpSocket::Get((has_content_length && content_length > 0) || chunked_encoding ?
+ 	                          (int)min((int64)chunk, count) : chunk);
+ 	if(s.GetCount()) {
+ 	#ifndef ENDZIP
+diff -ru a/uppsrc/Core/InetUtil.cpp b/uppsrc/Core/InetUtil.cpp
+--- a/uppsrc/Core/InetUtil.cpp	2026-10-20 13:03:35.597463631 -0700
++++ b/uppsrc/Core/InetUtil.cpp	2026-10-20 13:03:35.598463632 -0700
+@@ -114,7 +114,7 @@
+ 	{
+ 		const char *b = p;
+ 		while(p < e && (byte)*p > ' ' && (byte)*p < 127
+-		      && (IsAlNum(*p) || *p == '.' || *p == '-' || *p == '_' || path && *p == '/'))
++		      && (IsAlNum(*p) || *p == '.' || *p == '-' || *p == '_' || (path && *p == '/')))
+ 			p++;
+ 		if(*p == '?' && path) {
+ 			p++;
+diff -ru a/uppsrc/Core/parser.cpp b/uppsrc/Core/parser.cpp
+--- a/uppsrc/Core/parser.cpp	2026-10-20 13:03:35.601463634 -0700
++++ b/uppsrc/Core/parser.cpp	2026-10-20 13:03:35.602463635 -0700
+@@ -203,7 +203,7 @@
+ 	StringBuffer result;
+ 	int lvl = 0;
+ 	while(IsAlNum(*term) || *term == '_' || *term == '<' || *term == '>' ||
+-	      *term == ':' || (*term == ',' || *term == ' ' ) && lvl > 0 ) {
++	      *term == ':' || ((*term == ',' || *term == ' ' ) && lvl > 0) ) {
+ 		if(*term == '<') lvl++;
+ 		if(*term == '>') lvl--;
+ 		result.Cat(*term++);
+@@ -740,7 +740,7 @@
+ 				continue; // skip s++
+ 			}
+ 			else {
+-				if(byte(*s) < 32 || (byte)*s >= 0x7f && (flags & ASCSTRING_OCTALHI) || (byte)*s == 0xff || (byte)*s == 0x7f) {
++				if(byte(*s) < 32 || ((byte)*s >= 0x7f && (flags & ASCSTRING_OCTALHI)) || (byte)*s == 0xff || (byte)*s == 0x7f) {
+ 					char h[4];
+ 					int q = (byte)*s;
+ 					h[0] = '\\';
+diff -ru a/uppsrc/Core/Parser.h b/uppsrc/Core/Parser.h
+--- a/uppsrc/Core/Parser.h	2026-10-20 13:03:35.604463636 -0700
++++ b/uppsrc/Core/Parser.h	2026-10-20 13:03:35.605463637 -0700
+@@ -1,9 +1,9 @@
+ inline bool iscib(int c) {
+-	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_' || c == '$';
++	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '$';
+ }
+ 
+ inline bool iscid(int c) {
+-	return iscib(c) || c >= '0' && c <= '9';
++	return iscib(c) || (c >= '0' && c <= '9');
+ }
+ 
+ class CParser {
+diff -ru a/uppsrc/Core/Path.cpp b/uppsrc/Core/Path.cpp
+--- a/uppsrc/Core/Path.cpp	2026-10-20 13:03:35.607463638 -0700
++++ b/uppsrc/Core/Path.cpp	2026-10-20 13:03:35.608463639 -0700
+@@ -536,8 +536,8 @@
+ 	static uid_t uid = getuid();
+ 	static gid_t gid = getgid();
+ 	return (mode & oth) ||
+-	       (mode & grp) && gid == s.st_gid ||
+-	       (mode & usr) && uid == s.st_uid;
++	       ((mode & grp) && gid == s.st_gid) ||
++	       ((mode & usr) && uid == s.st_uid);
+ }
+ 
+ bool FindFile::IsSymLink() const
+@@ -1089,7 +1089,7 @@
+ 	for(FindFile ff(dir + "/*.*"); ff; ff++) {
+ 		String p = ff.GetPath();
+ 		if(PatternMatchMulti(patterns, ff.GetName()) &&
+-		   ((opt & FINDALLFILES) && ff.IsFile() || (opt & FINDALLFOLDERS) && ff.IsFolder()))
++		   (((opt & FINDALLFILES) && ff.IsFile()) || ((opt & FINDALLFOLDERS) && ff.IsFolder())))
+ 			r.Add(ff.GetPath());
+ 		if(ff.IsFolder())
+ 			FindAllPaths_(r, ff.GetPath(), patterns, opt);
+diff -ru a/uppsrc/Core/Random.cpp b/uppsrc/Core/Random.cpp
+--- a/uppsrc/Core/Random.cpp	2026-10-20 13:03:35.610463640 -0700
++++ b/uppsrc/Core/Random.cpp	2026-10-20 13:03:35.611463641 -0700
+@@ -76,7 +76,7 @@
+ {
+ 	static bool forked;
+ 	thread_local uint64 *s;
+-	if(!s || forked && Thread::IsMain()) {
++	if(!s || (forked && Thread::IsMain())) {
+ 		thread_local uint64 state[4];
+ 		s = state;
+ 		sSeed(s);
+diff -ru a/uppsrc/Core/Socket.cpp b/uppsrc/Core/Socket.cpp
+--- a/uppsrc/Core/Socket.cpp	2026-10-20 13:03:35.614463643 -0700
++++ b/uppsrc/Core/Socket.cpp	2026-10-20 13:03:35.614463643 -0700
+@@ -456,7 +456,7 @@
+ 	for(int pass = 0; pass < 2; pass++) {
+ 		addrinfo *rp = arp;
+ 		while(rp) {
+-			if(rp->ai_family == AF_INET == !pass && // Try to connect IPv4 in the first pass
++			if((rp->ai_family == AF_INET) == !pass && // Try to connect IPv4 in the first pass
+ 			   Open(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) {
+ 				if(connect(socket, rp->ai_addr, (int)rp->ai_addrlen) == 0 ||
+ 				   GetErrorCode() == SOCKERR(EINPROGRESS) || GetErrorCode() == SOCKERR(EWOULDBLOCK)
+@@ -653,7 +653,7 @@
+ 		#endif
+ 			return true;
+ 		}
+-		if(IsGlobalTimeout() || to <= 0 && timeout) {
++		if(IsGlobalTimeout() || (to <= 0 && timeout)) {
+ 			is_timeout = true;
+ 			return false;
+ 		}
+@@ -711,7 +711,7 @@
+ 			return done;
+ 		peek = false;
+ 		int count = Send(s + done, length - done);
+-		if(IsError() || timeout == 0 && count == 0 && peek)
++		if(IsError() || (timeout == 0 && count == 0 && peek))
+ 			return done;
+ 		if(count > 0)
+ 			done += count;
+@@ -775,7 +775,7 @@
+ 
+ bool Socket::IsEof() const
+ {
+-	return is_eof && ptr == end || IsAbort() || !IsOpen() || IsError();
++	return (is_eof && ptr == end) || IsAbort() || !IsOpen() || IsError();
+ }
+ 
+ int Socket::Get_()
+diff -ru a/uppsrc/Core/Stream.cpp b/uppsrc/Core/Stream.cpp
+--- a/uppsrc/Core/Stream.cpp	2026-10-20 13:03:35.617463645 -0700
++++ b/uppsrc/Core/Stream.cpp	2026-10-20 13:03:35.618463646 -0700
+@@ -1400,7 +1400,7 @@
+ 
+ int StreamHeading(Stream& stream, int ver, int minver, int maxver, const char* tag)
+ {
+-	if(stream.IsLoading() && stream.IsEof() || stream.IsError())
++	if((stream.IsLoading() && stream.IsEof()) || stream.IsError())
+ 		return Null;
+ 	String text = tag;
+ 	dword len = text.GetLength();
+diff -ru a/uppsrc/Core/String.h b/uppsrc/Core/String.h
+--- a/uppsrc/Core/String.h	2026-10-20 13:03:35.620463647 -0700
++++ b/uppsrc/Core/String.h	2026-10-20 13:03:35.620463647 -0700
+@@ -293,7 +293,7 @@
+ 	bool IsEqual(const String0& s) const {
+ 		uint64 q1 = q[1];
+ 		uint64 sq1 = s.q[1];
+-		return q1 == sq1 && q[0] == s.q[0] || ((q1 | sq1) & MAKE8B(0,0,0,0,0,0,255,0)) && LEq(s);
++		return (q1 == sq1 && q[0] == s.q[0]) || (((q1 | sq1) & MAKE8B(0,0,0,0,0,0,255,0)) && LEq(s));
+ 	}
+ 	bool IsEqual(const char *s) const;
+ 
+diff -ru a/uppsrc/Core/t.cpp b/uppsrc/Core/t.cpp
+--- a/uppsrc/Core/t.cpp	2026-10-20 13:03:35.622463648 -0700
++++ b/uppsrc/Core/t.cpp	2026-10-20 13:03:35.623463649 -0700
+@@ -19,8 +19,8 @@
+ static bool sIdEq(const char *a, const char *b)
+ {
+ 	for(;;) {
+-		if((*a == '\0' || *a == '\a' && a[1] != '\a') &&
+-		   (*b == '\0' || *b == '\a' && b[1] != '\a'))
++		if((*a == '\0' || (*a == '\a' && a[1] != '\a')) &&
++		   (*b == '\0' || (*b == '\a' && b[1] != '\a')))
+ 			return true;
+ 		if(*a != *b)
+ 			return false;
+diff -ru a/uppsrc/Core/TimeDate.cpp b/uppsrc/Core/TimeDate.cpp
+--- a/uppsrc/Core/TimeDate.cpp	2026-10-20 13:03:35.625463650 -0700
++++ b/uppsrc/Core/TimeDate.cpp	2026-10-20 13:03:35.626463651 -0700
+@@ -27,7 +27,7 @@
+ }
+ 
+ bool Date::IsValid() const {
+-	return year == -32768 || month >= 1 && month <= 12 && day >= 1 && day <= GetDaysOfMonth(month, year);
++	return year == -32768 || (month >= 1 && month <= 12 && day >= 1 && day <= GetDaysOfMonth(month, year));
+ }
+ 
+ String DayName(int i, int lang)
+diff -ru a/uppsrc/Core/Value.hpp b/uppsrc/Core/Value.hpp
+--- a/uppsrc/Core/Value.hpp	2026-10-20 13:03:35.631463654 -0700
++++ b/uppsrc/Core/Value.hpp	2026-10-20 13:03:35.631463654 -0700
+@@ -11,17 +11,17 @@
+ 
+ template<>
+ inline bool IsPolyEqual(const bool& x, const Value& v) {
+-	return v.Is<double>() && int(x) == double(v)
+-	    || v.Is<float>() && int(x) == float(v)
+-	    || v.Is<int64>() && int(x) == int64(v)
+-	    || v.Is<int>() && int(x) == int(v);
++	return (v.Is<double>() && int(x) == double(v))
++	    || (v.Is<float>() && int(x) == float(v))
++	    || (v.Is<int64>() && int(x) == int64(v))
++	    || (v.Is<int>() && int(x) == int(v));
+ }
+ 
+ template<>
+ inline bool IsPolyEqual(const int& x, const Value& v) {
+-	return v.Is<double>() && x == double(v)
+-	    || v.Is<float>() && x == float(v)
+-	    || v.Is<int64>() && x == int64(v);
++	return (v.Is<double>() && x == double(v))
++	    || (v.Is<float>() && x == float(v))
++	    || (v.Is<int64>() && x == int64(v));
+ }
+ 
+ template<>
+diff -ru a/uppsrc/Core/XML.cpp b/uppsrc/Core/XML.cpp
+--- a/uppsrc/Core/XML.cpp	2026-10-20 13:03:35.634463656 -0700
++++ b/uppsrc/Core/XML.cpp	2026-10-20 13:03:35.635463657 -0700
+@@ -11,7 +11,7 @@
+ 	else if(chr == '&')  result.Cat("&amp;");
+ 	else if(chr == '\'') result.Cat("&apos;");
+ 	else if(chr == '\"') result.Cat("&quot;");
+-	else if((byte)chr < ' ' && (escapelf || chr != '\n' && chr != '\t' && chr != '\r'))
++	else if((byte)chr < ' ' && (escapelf || (chr != '\n' && chr != '\t' && chr != '\r')))
+ 		result.Cat(Format("&#x%02x;", (byte)chr));
+ 	else if(!(chr & 0x80) || charset == CHARSET_UTF8) result.Cat(chr);
+ 	else result.Cat(ToUtf8(ToUnicode(chr, charset)));
+@@ -977,9 +977,9 @@
+ 
+ bool Ignore(XmlParser& p, dword style)
+ {
+-	if((XML_IGNORE_DECLS & style) && p.IsDecl() ||
+-	   (XML_IGNORE_PIS & style) && p.IsPI() ||
+-	   (XML_IGNORE_COMMENTS & style) && p.IsComment()) {
++	if(((XML_IGNORE_DECLS & style) && p.IsDecl()) ||
++	   ((XML_IGNORE_PIS & style) && p.IsPI()) ||
++	   ((XML_IGNORE_COMMENTS & style) && p.IsComment())) {
+ 		p.Skip();
+ 		return true;
+ 	}
+@@ -1107,7 +1107,7 @@
+ 		return true;
+ 	l = s.End();
+ 	for(const char *x = s; x < l; x++)
+-		if(*x == '\t' || *x == '\n' || *x == ' ' && x[1] == ' ')
++		if(*x == '\t' || *x == '\n' || (*x == ' ' && x[1] == ' '))
+ 			return true;
+ 	return false;
+ }
+diff -ru a/uppsrc/CtrlCore/GtkTop.cpp b/uppsrc/CtrlCore/GtkTop.cpp
+--- a/uppsrc/CtrlCore/GtkTop.cpp	2026-10-20 13:03:35.643463662 -0700
++++ b/uppsrc/CtrlCore/GtkTop.cpp	2026-10-20 13:03:35.644463663 -0700
+@@ -79,7 +79,7 @@
+ {
+ 	GuiLock __;
+ 	SetupRect(owner);
+-	if(owner && center == 1 || center == 2) {
++	if((owner && center == 1) || center == 2) {
+ 		Size sz = GetRect().Size();
+ 		Rect wr = owner ? owner->GetWorkArea() : Ctrl::GetPrimaryWorkArea();
+ 		Rect fm = frameMargins;
+diff -ru a/uppsrc/CtrlCore/GtkUtil.cpp b/uppsrc/CtrlCore/GtkUtil.cpp
+--- a/uppsrc/CtrlCore/GtkUtil.cpp	2026-10-20 13:03:35.646463664 -0700
++++ b/uppsrc/CtrlCore/GtkUtil.cpp	2026-10-20 13:03:35.646463664 -0700
+@@ -17,8 +17,8 @@
+ 	Image img;
+ 	if(pixbuf) {
+ 		int chn = gdk_pixbuf_get_n_channels(pixbuf);
+-		if((chn == 3 && !gdk_pixbuf_get_has_alpha(pixbuf) ||
+-		    chn == 4 && gdk_pixbuf_get_has_alpha(pixbuf)) &&
++		if(((chn == 3 && !gdk_pixbuf_get_has_alpha(pixbuf)) ||
++		    (chn == 4 && gdk_pixbuf_get_has_alpha(pixbuf))) &&
+ 		   gdk_pixbuf_get_colorspace(pixbuf) == GDK_COLORSPACE_RGB &&
+ 		   gdk_pixbuf_get_bits_per_sample(pixbuf) == 8) {
+ 			Size sz(gdk_pixbuf_get_width (pixbuf), gdk_pixbuf_get_height(pixbuf));
+diff -ru a/uppsrc/CtrlCore/ParseRTF.cpp b/uppsrc/CtrlCore/ParseRTF.cpp
+--- a/uppsrc/CtrlCore/ParseRTF.cpp	2026-10-20 13:03:35.650463667 -0700
++++ b/uppsrc/CtrlCore/ParseRTF.cpp	2026-10-20 13:03:35.650463667 -0700
+@@ -224,7 +224,7 @@
+ 
+ RichText RTFParser::Run()
+ {
+-	if(!PassGroup() || !PassCmd("rtf") || command_arg != 1 && !IsNull(command_arg))
++	if(!PassGroup() || !PassCmd("rtf") || (command_arg != 1 && !IsNull(command_arg)))
+ 		return pick(output);
+ 	while(Token() != T_EOF)
+ 		ReadItem();
+@@ -308,7 +308,7 @@
+ 					int& out_wd = (outer_border[b] ? tbl_border : tbl_grid);
+ 					Color& out_co = (outer_border[b] ? clr_border : clr_grid);
+ 					if(IsNull(cell.info.format.bordercolor) || border_width[b] <= 0
+-					|| !IsNull(out_co) && out_co != cell.info.format.bordercolor)
++					|| (!IsNull(out_co) && out_co != cell.info.format.bordercolor))
+ 						out_wd = 0;
+ 					else if(IsNull(out_wd) || border_width[b] < out_wd) {
+ 						out_wd = border_width[b];
+@@ -470,7 +470,7 @@
+ 				}
+ 
+ 				default: {
+-					if(IsAlpha(*--rtf) || *rtf == '*' && rtf[1] == '\\' && IsAlpha(rtf[2])) {
++					if(IsAlpha(*--rtf) || (*rtf == '*' && rtf[1] == '\\' && IsAlpha(rtf[2]))) {
+ 						if(*rtf == '*') {
+ 							rtf += 2;
+ 							state.new_dest = true;
+@@ -560,7 +560,7 @@
+ void RTFParser::Skip()
+ {
+ 	LLOG("Skip");
+-	bool is_group = (token == T_GROUP || token == T_COMMAND && state.new_dest);
++	bool is_group = (token == T_GROUP || (token == T_COMMAND && state.new_dest));
+ 	is_full = false;
+ 	if(is_group)
+ 		SkipGroup();
+diff -ru a/uppsrc/CtrlLib/ArrayCtrl.cpp b/uppsrc/CtrlLib/ArrayCtrl.cpp
+--- a/uppsrc/CtrlLib/ArrayCtrl.cpp	2026-10-20 13:03:35.653463669 -0700
++++ b/uppsrc/CtrlLib/ArrayCtrl.cpp	2026-10-20 13:03:35.654463670 -0700
+@@ -913,7 +913,7 @@
+ 		bg = array[i].paper;
+ 	fg = i & 1 ? evenink : oddink;
+ 	if((st & Display::SELECT) ||
+-	    !multiselect && (st & Display::CURSOR) && !nocursor ||
++	    (!multiselect && (st & Display::CURSOR) && !nocursor) ||
+ 	    drop) {
+ 		fg = hasfocus ? SColorHighlightText : SColorText;
+ 		bg = hasfocus ? SColorHighlight : Blend(SColorDisabled, SColorPaper);
+@@ -954,7 +954,7 @@
+ 	int sy = 0;
+ 	if(!IsNull(i))
+ 		while(i < GetCount()) {
+-			if((!sample || i == cursor || i < array.GetCount() && array[i].select) && IsLineVisible(i)) {
++			if((!sample || i == cursor || (i < array.GetCount() && array[i].select)) && IsLineVisible(i)) {
+ 				r.top = sample ? sy : GetLineY(i) - sb;
+ 				if(r.top > size.cy)
+ 					break;
+@@ -983,7 +983,7 @@
+ 							if(spanwidecells)
+ 								SpanWideCell(d, q, cm, cw, r, i, j);
+ 							
+-							if(cw < 2 * cm || editmode && i == cursor && column[jj].edit)
++							if(cw < 2 * cm || (editmode && i == cursor && column[jj].edit))
+ 								d.PaintBackground(w, r, q, fg, bg, st);
+ 							else {
+ 								d.PaintBackground(w, RectC(r.left, r.top, cm, r.Height()), q, fg, bg, st);
+@@ -2389,7 +2389,7 @@
+ bool ArrayCtrl::DoRemove()
+ {
+ 	if(IsReadOnly()) return false;
+-	if(!IsCursor() || askremove && !PromptOKCancel(RowFormat(t_("Do you really want to delete the selected %s ?"))))
++	if(!IsCursor() || (askremove && !PromptOKCancel(RowFormat(t_("Do you really want to delete the selected %s ?")))))
+ 		return false;
+ 	if(multiselect) {
+ 		Bits sel;
+diff -ru a/uppsrc/CtrlLib/Bar.cpp b/uppsrc/CtrlLib/Bar.cpp
+--- a/uppsrc/CtrlLib/Bar.cpp	2026-10-20 13:03:35.656463671 -0700
++++ b/uppsrc/CtrlLib/Bar.cpp	2026-10-20 13:03:35.656463671 -0700
+@@ -683,7 +683,7 @@
+ {
+ 	LLOG("BarCtrl::Layout");
+ 	if(IsChild()) {
+-		bool dowrap = InFrame() && wrap >= 0 || wrap > 0;
++		bool dowrap = (InFrame() && wrap >= 0) || wrap > 0;
+ 		if(GetAlign() == BAR_LEFT || GetAlign() == BAR_RIGHT)
+ 			pane.Repos(false, dowrap ? GetSize().cy : INT_MAX);
+ 		else
+diff -ru a/uppsrc/CtrlLib/Button.cpp b/uppsrc/CtrlLib/Button.cpp
+--- a/uppsrc/CtrlLib/Button.cpp	2026-10-20 13:03:35.659463673 -0700
++++ b/uppsrc/CtrlLib/Button.cpp	2026-10-20 13:03:35.659463673 -0700
+@@ -403,8 +403,8 @@
+ 	}
+ 	bool up = key & K_KEYUP;
+ 	key = key & ~K_KEYUP;
+-	if(key == K_ENTER && (type == OK || type == EXIT) ||
+-	   key == K_ESCAPE && (type == CANCEL || type == EXIT)) {
++	if((key == K_ENTER && (type == OK || type == EXIT)) ||
++	   (key == K_ESCAPE && (type == CANCEL || type == EXIT))) {
+ 		if(up) {
+ 			if(IsKeyPush())
+ 				return FinishPush();
+diff -ru a/uppsrc/CtrlLib/ColumnList.cpp b/uppsrc/CtrlLib/ColumnList.cpp
+--- a/uppsrc/CtrlLib/ColumnList.cpp	2026-10-20 13:03:35.662463675 -0700
++++ b/uppsrc/CtrlLib/ColumnList.cpp	2026-10-20 13:03:35.663463676 -0700
+@@ -370,7 +370,7 @@
+ 	if(nobg)
+ 		bg = Null;
+ 	if((st & Display::SELECT) ||
+-	   (!multi || !item[i].canselect && selcount == 0) && (st & Display::CURSOR) ||
++	   ((!multi || (!item[i].canselect && selcount == 0)) && (st & Display::CURSOR)) ||
+ 	   drop) {
+ 		fg = hasfocus ? SColorHighlightText : SColorText;
+ 		bg = hasfocus ? SColorHighlight : Blend(SColorDisabled, SColorPaper);
+@@ -908,7 +908,7 @@
+ 		if(DnDInsert(i, p.y, d, 2))
+ 			return;
+ 	}
+-	if(GetCount() == 0 && p.y < 4 || !WhenDrop) {
++	if((GetCount() == 0 && p.y < 4) || !WhenDrop) {
+ 		WhenDropInsert(GetCount(), d);
+ 		if(d.IsAccepted()) {
+ 			DnD(GetCount(), true);
+diff -ru a/uppsrc/CtrlLib/DateTimeCtrl.cpp b/uppsrc/CtrlLib/DateTimeCtrl.cpp
+--- a/uppsrc/CtrlLib/DateTimeCtrl.cpp	2026-10-20 13:03:35.665463677 -0700
++++ b/uppsrc/CtrlLib/DateTimeCtrl.cpp	2026-10-20 13:03:35.665463677 -0700
+@@ -901,8 +901,8 @@
+ int Clock::GetDir(int pp, int cp)
+ {
+ 	dir = 0;
+-	if(cp >= 1 && cp <= 30 && pp >= 1 && pp <= 30 ||
+-	   cp > 30 && cp <= 60 && pp > 30 && pp <= 60)
++	if((cp >= 1 && cp <= 30 && pp >= 1 && pp <= 30) ||
++	   (cp > 30 && cp <= 60 && pp > 30 && pp <= 60))
+ 	{
+ 		dir = pp < cp ? 1 : -1;
+ 	}
+diff -ru a/uppsrc/CtrlLib/DlgColor.h b/uppsrc/CtrlLib/DlgColor.h
+--- a/uppsrc/CtrlLib/DlgColor.h	2026-10-20 13:03:35.668463679 -0700
++++ b/uppsrc/CtrlLib/DlgColor.h	2026-10-20 13:03:35.669463680 -0700
+@@ -21,7 +21,7 @@
+ 	
+ 	WheelRampCtrl& DarkContent(bool b = true)       { dark_content = b; return *this; }
+ 	WheelRampCtrl& AllowDarkContent(bool b = true)  { allow_dark_content = b; return *this; }
+-	bool           IsDarkContent() const            { return dark_content || allow_dark_content && IsDarkTheme(); }
++	bool           IsDarkContent() const            { return dark_content || (allow_dark_content && IsDarkTheme()); }
+ 
+ private:
+ 	void          SetColor(Color color, bool set_norm, bool set_hsv);
+diff -ru a/uppsrc/CtrlLib/DocEdit.cpp b/uppsrc/CtrlLib/DocEdit.cpp
+--- a/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 13:03:35.671463681 -0700
++++ b/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 13:03:35.671463681 -0700
+@@ -445,7 +445,7 @@
+ 		default:
+ 			if(filter && key >= 32 && key < 65535)
+ 				key = (*filter)(key);
+-			if(key >= ' ' && key < K_CHAR_LIM || key == '\n' || key == '\t' || key == K_SHIFT_SPACE) {
++			if((key >= ' ' && key < K_CHAR_LIM) || key == '\n' || key == '\t' || key == K_SHIFT_SPACE) {
+ 				if(key == K_TAB && !processtab)
+ 					return false;
+ 				if(key >= 128 && key < K_CHAR_LIM && (charset != CHARSET_UTF8 && charset != CHARSET_UTF8_BOM)
+diff -ru a/uppsrc/CtrlLib/DropChoice.cpp b/uppsrc/CtrlLib/DropChoice.cpp
+--- a/uppsrc/CtrlLib/DropChoice.cpp	2026-10-20 13:03:35.673463683 -0700
++++ b/uppsrc/CtrlLib/DropChoice.cpp	2026-10-20 13:03:35.674463683 -0700
+@@ -37,7 +37,7 @@
+ }
+ 
+ void DropChoice::Drop() {
+-	if(!owner || owner->IsReadOnly() && !rodrop || list.GetCount() == 0 && !WhenDrop) return;
++	if(!owner || (owner->IsReadOnly() && !rodrop) || (list.GetCount() == 0 && !WhenDrop)) return;
+ 	WhenDrop();
+ 	if(dropfocus)
+ 		owner->SetWantFocus();
+@@ -51,12 +51,12 @@
+ }
+ 
+ void DropChoice::Select() {
+-	if(!owner || owner->IsReadOnly() && !rodrop) return;
++	if(!owner || (owner->IsReadOnly() && !rodrop)) return;
+ 	WhenSelect();
+ }
+ 
+ Value DropChoice::Get() const {
+-	if(!owner || owner->IsReadOnly() && !rodrop) return Value();
++	if(!owner || (owner->IsReadOnly() && !rodrop)) return Value();
+ 	int c = list.GetCursor();
+ 	if(c < 0) return Value();
+ 	return list.Get(c);
+@@ -64,7 +64,7 @@
+ 
+ int DropChoice::GetIndex() const
+ {
+-	if(!owner || owner->IsReadOnly() && !rodrop) return -1;
++	if(!owner || (owner->IsReadOnly() && !rodrop)) return -1;
+ 	return list.GetCursor();
+ }
+ 
+diff -ru a/uppsrc/CtrlLib/EditField.cpp b/uppsrc/CtrlLib/EditField.cpp
+--- a/uppsrc/CtrlLib/EditField.cpp	2026-10-20 13:03:35.676463685 -0700
++++ b/uppsrc/CtrlLib/EditField.cpp	2026-10-20 13:03:35.677463685 -0700
+@@ -302,7 +302,7 @@
+ 	                                     : style->disabled;
+ 	if(nobg)
+ 		paper = Null;
+-	if(enabled && (convert && convert->Scan(text).IsError() || errorbg))
++	if(enabled && ((convert && convert->Scan(text).IsError()) || errorbg))
+ 		paper = style->invalid;
+ 	return paper;
+ }
+@@ -981,7 +981,7 @@
+ 		}
+ 		return false;
+ 	default:
+-		if(key >= ' ' && key < K_CHAR_LIM || key == K_SHIFT_SPACE) {
++		if((key >= ' ' && key < K_CHAR_LIM) || key == K_SHIFT_SPACE) {
+ 			if(!RemoveSelection()) SaveUndo();
+ 			while(rep--)
+ 				Insert(key == K_SHIFT_SPACE ? ' ' : key);
+diff -ru a/uppsrc/CtrlLib/FileSel.cpp b/uppsrc/CtrlLib/FileSel.cpp
+--- a/uppsrc/CtrlLib/FileSel.cpp	2026-10-20 13:03:35.679463687 -0700
++++ b/uppsrc/CtrlLib/FileSel.cpp	2026-10-20 13:03:35.680463687 -0700
+@@ -906,7 +906,7 @@
+ 		list.Renaming(true);
+ 	}
+ 	if(filesystem->IsPosix())
+-		if(d == "/" || !IsEmpty(basedir) && String(~dir).IsEmpty())
++		if(d == "/" || (!IsEmpty(basedir) && String(~dir).IsEmpty()))
+ 			dirup.Disable();
+ 	if(filesystem->IsWin32())
+ 		if(!IsEmpty(basedir) && String(~dir).IsEmpty())
+@@ -1035,7 +1035,7 @@
+ 		if(q >= 0)
+ 			typed_ext = f.Mid(q + 1);
+ 		if(q < 0 || // no extension
+-		   force_ext && allowed_ext.Find(typed_ext) < 0 ||
++		   (force_ext && allowed_ext.Find(typed_ext) < 0) ||
+ 		   Filter(f.Mid(q + 1), // "(file.xxx)" should add extension too, allow just some
+ 		                   [](int c) { return IsAlNum(c) || findarg(c, '_', '-') >= 0 ? 0 : c; }
+ 		   ).GetCount()) {
+@@ -1288,8 +1288,8 @@
+ 			}
+ 			if(!IsFullPath(fn))
+ 				fn = AppendFileName(~dir, fn);
+-			if(filesystem->IsWin32() && (!fn.IsEmpty() && (*fn.Last() == '\\' || *fn.Last() == '/'))
+-			|| filesystem->IsPosix() && (fn != "/" && (*fn.Last() == '\\' || *fn.Last() == '/')))
++			if((filesystem->IsWin32() && (!fn.IsEmpty() && (*fn.Last() == '\\' || *fn.Last() == '/')))
++			|| (filesystem->IsPosix() && (fn != "/" && (*fn.Last() == '\\' || *fn.Last() == '/'))))
+ 			{
+ 				fn.Trim(fn.GetLength() - 1);
+ 				SetDir(TrimDot(fn));
+@@ -1609,7 +1609,7 @@
+ 	}
+ 	bool b = list.IsCursor() || !String(~file).IsEmpty();
+ 	ok.Enable(b);
+-	if(mode != SAVEAS || list.IsCursor() && list[list.GetCursor()].isdir)
++	if(mode != SAVEAS || (list.IsCursor() && list[list.GetCursor()].isdir))
+ 		ok.SetLabel(t_("Open"));
+ 	else
+ 		ok.SetLabel(t_("Save"));
+@@ -1990,8 +1990,8 @@
+ 		type.Trim(dlc);
+ 
+ 	String d = ~dir;
+-	if(filesystem->IsWin32() && d.GetLength() == 3 && d[1] == ':' ||
+-	   filesystem->IsPosix() && d == "/" ||
++	if((filesystem->IsWin32() && d.GetLength() == 3 && d[1] == ':') ||
++	   (filesystem->IsPosix() && d == "/") ||
+ 	   !IsFullPath(d))
+ 		d.Clear();
+ 
+diff -ru a/uppsrc/CtrlLib/LineEdit.cpp b/uppsrc/CtrlLib/LineEdit.cpp
+--- a/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 13:03:35.683463689 -0700
++++ b/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 13:03:35.684463690 -0700
+@@ -461,7 +461,7 @@
+ 		LTIMING("Map");
+ 		c = &cache.GetAdd(MakeTuple(font, color));
+ 	}
+-	if(c->x.GetCount() && c->x.Top() > x || font.IsUnderline() && cache.GetCount() > 1) {
++	if((c->x.GetCount() && c->x.Top() > x) || (font.IsUnderline() && cache.GetCount() > 1)) {
+ 		Flush();
+ 		c = &cache.GetAdd(MakeTuple(font, color));
+ 	}
+@@ -543,7 +543,7 @@
+ 	int cursorline = GetLine(cursor);
+ 	Highlight ih;
+ 	ih.ink = color[IsShowEnabled() ? INK_NORMAL : INK_DISABLED];
+-	ih.paper = color[IsReadOnly() && showreadonly || !IsShowEnabled() ? PAPER_READONLY : PAPER_NORMAL];
++	ih.paper = color[(IsReadOnly() && showreadonly) || !IsShowEnabled() ? PAPER_READONLY : PAPER_NORMAL];
+ 	if(nobg)
+ 		ih.paper = Null;
+ 	ih.font = font;
+@@ -747,7 +747,7 @@
+ 		selh -= len + 1;
+ 		pos += len + 1;
+ 	}
+-	w.DrawRect(0, y, sz.cx, sz.cy - y, color[IsReadOnly() && showreadonly || !IsShowEnabled() ? PAPER_READONLY : PAPER_NORMAL]);
++	w.DrawRect(0, y, sz.cx, sz.cy - y, color[(IsReadOnly() && showreadonly) || !IsShowEnabled() ? PAPER_READONLY : PAPER_NORMAL]);
+ 	DrawTiles(w, DropCaret(), CtrlImg::checkers());
+ 	vlinex = caretpos.x;
+ }
+@@ -1165,8 +1165,8 @@
+ 		return true;
+ 	if(filter && key >= 32 && key < K_CHAR_LIM)
+ 		key = (*filter)(key);
+-	if(!IsReadOnly() && (key >= 32 && key < K_CHAR_LIM || key == '\t' || key == '\n' ||
+-	   key == K_ENTER && processenter || key == K_SHIFT_SPACE)) {
++	if(!IsReadOnly() && ((key >= 32 && key < K_CHAR_LIM) || key == '\t' || key == '\n' ||
++	   (key == K_ENTER && processenter) || key == K_SHIFT_SPACE)) {
+ 		if(key >= 128 && key < K_CHAR_LIM && (charset != CHARSET_UTF8 && charset != CHARSET_UTF8_BOM)
+ 		   && FromUnicode((wchar)key, charset) == DEFAULTCHAR)
+ 			return true;
+diff -ru a/uppsrc/CtrlLib/MenuBar.cpp b/uppsrc/CtrlLib/MenuBar.cpp
+--- a/uppsrc/CtrlLib/MenuBar.cpp	2026-10-20 13:03:35.686463691 -0700
++++ b/uppsrc/CtrlLib/MenuBar.cpp	2026-10-20 13:03:35.686463691 -0700
+@@ -368,7 +368,7 @@
+ 		if(IterateFocusBackward(pane.GetLastChild(), &pane, false, true)) return true;
+ 	}
+ 	else
+-	if(parentmenu && !parentmenu->IsChild() && key == K_LEFT || key == K_ESCAPE) {
++	if((parentmenu && !parentmenu->IsChild() && key == K_LEFT) || key == K_ESCAPE) {
+ 		if(HasMouseDeep())
+ 			GetMouseCtrl()->Refresh();
+ 		if(parentmenu && parentmenu->submenu)
+@@ -449,7 +449,7 @@
+ 			s_doaltkey = true;
+ 			return true;
+ 		}
+-		if((key == K_F10 || key == (K_ALT_KEY|K_KEYUP) && s_doaltkey)
++		if((key == K_F10 || (key == (K_ALT_KEY|K_KEYUP) && s_doaltkey))
+ 		   && !submenu && !HasFocusDeep() && GetTopWindow() && GetTopWindow()->IsForeground()) {
+ 			LLOG("Open menu by F10 or ALT-UP");
+ 			SetupRestoreFocus();
+diff -ru a/uppsrc/CtrlLib/MenuItem.cpp b/uppsrc/CtrlLib/MenuItem.cpp
+--- a/uppsrc/CtrlLib/MenuItem.cpp	2026-10-20 13:03:35.688463693 -0700
++++ b/uppsrc/CtrlLib/MenuItem.cpp	2026-10-20 13:03:35.689463694 -0700
+@@ -296,7 +296,7 @@
+ int MenuItem::GetVisualState()
+ {
+ 	return HasFocus() ?
+-	       (HasMouse() && GetMouseLeft() || GetMouseRight()) ? PUSH : HIGHLIGHT : NORMAL;
++	       ((HasMouse() && GetMouseLeft()) || GetMouseRight()) ? PUSH : HIGHLIGHT : NORMAL;
+ }
+ 
+ void MenuItem::SyncState()
+@@ -426,7 +426,7 @@
+ bool MenuItem::HotKey(dword key)
+ {
+ 	if(isenabled && (key == accel || CompareAccessKey(accesskey, key)
+-	|| key < 256 && IsAlNum((char)key) && CompareAccessKey(accesskey, ToUpper((char)key) + K_DELTA + K_ALT))) {
++	|| (key < 256 && IsAlNum((char)key) && CompareAccessKey(accesskey, ToUpper((char)key) + K_DELTA + K_ALT)))) {
+ 		LLOG("MenuItem::HotKey(" << key << ") -> SetFocus");
+ 		SetFocus();
+ 		Sync();
+@@ -548,8 +548,8 @@
+ int  TopSubMenuItem::GetState()
+ {
+ 	if(parentmenu && parentmenu->GetActiveSubmenu() == &menu) return PUSH;
+-	if(HasMouse() && GetParent() && !GetParent()->HasFocusDeep() &&
+-	                 (!parentmenu || !parentmenu->GetActiveSubmenu() || parentmenu->GetActiveSubmenu() == &menu)
++	if((HasMouse() && GetParent() && !GetParent()->HasFocusDeep() &&
++	                 (!parentmenu || !parentmenu->GetActiveSubmenu() || parentmenu->GetActiveSubmenu() == &menu))
+ 	   || HasFocus())
+ 		return HIGHLIGHT;
+ 	return NORMAL;
+@@ -640,7 +640,7 @@
+ int  TopMenuItem::GetState()
+ {
+ 	if(!IsEnabled()) return NORMAL;
+-	if(HasMouse() && GetMouseLeft() || GetMouseRight()) return PUSH;
++	if((HasMouse() && GetMouseLeft()) || GetMouseRight()) return PUSH;
+ 	if(HasFocus() || HasMouse()) return HIGHLIGHT;
+ 	return NORMAL;
+ }
+diff -ru a/uppsrc/CtrlLib/MultiButton.cpp b/uppsrc/CtrlLib/MultiButton.cpp
+--- a/uppsrc/CtrlLib/MultiButton.cpp	2026-10-20 13:03:35.691463695 -0700
++++ b/uppsrc/CtrlLib/MultiButton.cpp	2026-10-20 13:03:35.691463695 -0700
+@@ -353,7 +353,7 @@
+ 			    : CTRL_NORMAL;
+ 		return q;
+ 	}
+-	if(!IsShowEnabled() || IsReadOnly() || frm && p && p->IsReadOnly() || i >= 0 && !Button(i).enabled)
++	if(!IsShowEnabled() || IsReadOnly() || (frm && p && p->IsReadOnly()) || (i >= 0 && !Button(i).enabled))
+ 		return CTRL_DISABLED;
+ 	if(IsTrivial() && !frm)
+ 		i = 0;
+diff -ru a/uppsrc/CtrlLib/RichTextView.cpp b/uppsrc/CtrlLib/RichTextView.cpp
+--- a/uppsrc/CtrlLib/RichTextView.cpp	2026-10-20 13:03:35.693463696 -0700
++++ b/uppsrc/CtrlLib/RichTextView.cpp	2026-10-20 13:03:35.694463697 -0700
+@@ -190,7 +190,7 @@
+ {
+ 	int l = minmax(min(cursor, anchor), 0, text.GetLength());
+ 	int h = minmax(max(cursor, anchor), 0, text.GetLength());
+-	if(sell == l && selh == h || sell == selh && l == h)
++	if((sell == l && selh == h) || (sell == selh && l == h))
+ 		return;
+ 	RichPos pl = text.GetRichPos(l);
+ 	RichPos ph = text.GetRichPos(h);
+diff -ru a/uppsrc/CtrlLib/SmartText.cpp b/uppsrc/CtrlLib/SmartText.cpp
+--- a/uppsrc/CtrlLib/SmartText.cpp	2026-10-20 13:03:35.697463699 -0700
++++ b/uppsrc/CtrlLib/SmartText.cpp	2026-10-20 13:03:35.697463699 -0700
+@@ -188,7 +188,7 @@
+ 	String text;
+ 	bool qtf = *s == '\1';
+ 	while(*s)
+-		if((*s == '&' && !qtf || *s == '\b') && s[1] && s[1] != '&') {
++		if(((*s == '&' && !qtf) || *s == '\b') && s[1] && s[1] != '&') {
+ 			akey = ToAscii(ToUpper(s[1]));
+ 			pos = text.GetLength() + 1;
+ 			s++;
+diff -ru a/uppsrc/CtrlLib/SuggestCtrl.cpp b/uppsrc/CtrlLib/SuggestCtrl.cpp
+--- a/uppsrc/CtrlLib/SuggestCtrl.cpp	2026-10-20 13:03:35.700463701 -0700
++++ b/uppsrc/CtrlLib/SuggestCtrl.cpp	2026-10-20 13:03:35.701463701 -0700
+@@ -89,7 +89,7 @@
+ 	if(cc)
+ 		key = cc;
+ 	if(EditString::Key(key, count)) {
+-		if(key >= 32 && key < K_CHAR_LIM || key == K_BACKSPACE || key == K_CTRL_SPACE) {
++		if((key >= 32 && key < K_CHAR_LIM) || key == K_BACKSPACE || key == K_CTRL_SPACE) {
+ 			int h;
+ 			WString x = CF(ReadLast(h));
+ 			list.Clear();
+diff -ru a/uppsrc/CtrlLib/Switch.cpp b/uppsrc/CtrlLib/Switch.cpp
+--- a/uppsrc/CtrlLib/Switch.cpp	2026-10-20 13:03:35.702463702 -0700
++++ b/uppsrc/CtrlLib/Switch.cpp	2026-10-20 13:03:35.703463703 -0700
+@@ -199,7 +199,7 @@
+ 				DrawSmartText(w, x + isz.cx + DPI(4), y + ty, sz.cx, v.label, font,
+ 				              dv || IsReadOnly() ? SColorDisabled : GetLabelTextColor(this),
+ 				              VisibleAccessKeys() ? v.accesskey : 0);
+-				if(HasFocus() && (pushindex == i || v.value == value && pushindex < 0))
++				if(HasFocus() && (pushindex == i || (v.value == value && pushindex < 0)))
+ 					DrawFocus(w, RectC(x + isz.cx + DPI(2), y + ty - DPI(1), tsz.cx + DPI(3), tsz.cy + DPI(2)) & sz);
+ 			}
+ 			v.rect = hr;
+diff -ru a/uppsrc/CtrlLib/ToolTip.cpp b/uppsrc/CtrlLib/ToolTip.cpp
+--- a/uppsrc/CtrlLib/ToolTip.cpp	2026-10-20 13:03:35.706463705 -0700
++++ b/uppsrc/CtrlLib/ToolTip.cpp	2026-10-20 13:03:35.706463705 -0700
+@@ -93,7 +93,7 @@
+ {
+ 	if(!GUI_ToolTips())
+ 		return;
+-	if(ctrl != tipctrl || ctrl && ctrl->GetTip() != AppToolTip().Get()) {
++	if(ctrl != tipctrl || (ctrl && ctrl->GetTip() != AppToolTip().Get())) {
+ 		LLOG("ToolTipHook / ctrl change " << UPP::Name(ctrl) << " -> " << UPP::Name(ctrl));
+ 		tipctrl = ctrl;
+ 		KillTimeCallback((void *)SyncToolTip);
+diff -ru a/uppsrc/CtrlLib/TreeCtrl.cpp b/uppsrc/CtrlLib/TreeCtrl.cpp
+--- a/uppsrc/CtrlLib/TreeCtrl.cpp	2026-10-20 13:03:35.708463706 -0700
++++ b/uppsrc/CtrlLib/TreeCtrl.cpp	2026-10-20 13:03:35.709463707 -0700
+@@ -812,7 +812,7 @@
+ 
+ bool TreeCtrl::IsSelDeep(int id) const
+ {
+-	return IsSel(id) || id && IsSelDeep(GetParent(id));
++	return IsSel(id) || (id && IsSelDeep(GetParent(id)));
+ }
+ 
+ void TreeCtrl::SelectOne0(int id, bool sel, bool cb)
+@@ -1081,7 +1081,7 @@
+ 	if(hasfocus)
+ 		st |= Display::FOCUS;
+ 	if((st & Display::SELECT) ||
+-	    !multiselect && (st & Display::CURSOR) && !nocursor ||
++	    (!multiselect && (st & Display::CURSOR) && !nocursor) ||
+ 	    drop) {
+ 		fg = hasfocus ? SColorHighlightText : SColorText;
+ 		bg = hasfocus ? SColorHighlight : Blend(SColorDisabled, SColorPaper);
+@@ -1164,7 +1164,7 @@
+ 				const Display *d = GetStyle(i, fg, bg, st);
+ 				int ctx = highlight_ctrl * csz.cx;
+ 				Rect br = RectC(x, y, vsz.cx + 2 * m.margin + ctx, msz.cy);
+-				if(!IsNull(m.value) || m.ctrl && highlight_ctrl) {
++				if(!IsNull(m.value) || (m.ctrl && highlight_ctrl)) {
+ 					w.DrawRect(br, bg);
+ 					Rect r = RectC(x + ctx + m.margin, y + (msz.cy - vsz.cy) / 2, vsz.cx, vsz.cy);
+ 					w.Clip(r);
+@@ -1886,7 +1886,7 @@
+ 		}
+ 		opt = option[id];
+ 		if(opt) {
+-			if(t && f || n) {
++			if((t && f) || n) {
+ 				opt->Set(Null);
+ 			}
+ 			else
+diff -ru a/uppsrc/Draw/DDARasterizer.cpp b/uppsrc/Draw/DDARasterizer.cpp
+--- a/uppsrc/Draw/DDARasterizer.cpp	2026-10-20 13:03:35.711463708 -0700
++++ b/uppsrc/Draw/DDARasterizer.cpp	2026-10-20 13:03:35.712463709 -0700
+@@ -246,7 +246,7 @@
+ 		int n2 = n;
+ 		int x1 = x + r.left;
+ 		int x2 = r.right - x - n;
+-		if(width < 0 || y == 0 || width > 1 && y < width || width >= ry) {
++		if(width < 0 || y == 0 || (width > 1 && y < width) || width >= ry) {
+ 			n = x2 - x1 + n;
+ 			n2 = 0;
+ 		}
+diff -ru a/uppsrc/Draw/Draw.h b/uppsrc/Draw/Draw.h
+--- a/uppsrc/Draw/Draw.h	2026-10-20 13:03:35.715463711 -0700
++++ b/uppsrc/Draw/Draw.h	2026-10-20 13:03:35.715463711 -0700
+@@ -37,7 +37,7 @@
+ inline
+ bool PreferColorEmoji(int c)
+ { // for these codepoints we prefer replacement color emoji even if glyphs is in the font
+-	return c >= 0x2600 && c <= 0x27ef || c >= 0x1f004 && c <= 0x1f251 || c >= 0x1f300 && c <= 0x1faf6;
++	return (c >= 0x2600 && c <= 0x27ef) || (c >= 0x1f004 && c <= 0x1f251) || (c >= 0x1f300 && c <= 0x1faf6);
+ }
+ 
+ class Font : public ValueType<Font, FONT_V, Moveable<Font> >{
+diff -ru a/uppsrc/Draw/Font.cpp b/uppsrc/Draw/Font.cpp
+--- a/uppsrc/Draw/Font.cpp	2026-10-20 13:03:35.719463714 -0700
++++ b/uppsrc/Draw/Font.cpp	2026-10-20 13:03:35.719463714 -0700
+@@ -91,7 +91,7 @@
+ 
+ int FontFilter(int c)
+ {
+-	return c >= 'a' && c <= 'z' || c >= '0' && c <= '9' ? c : c >= 'A' && c <= 'Z' ? ToLower(c) : 0;
++	return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ? c : c >= 'A' && c <= 'Z' ? ToLower(c) : 0;
+ }
+ 
+ int  Font::FindFaceNameIndex(const String& name) {
+diff -ru a/uppsrc/Draw/FontCR.cpp b/uppsrc/Draw/FontCR.cpp
+--- a/uppsrc/Draw/FontCR.cpp	2026-10-20 13:03:35.721463715 -0700
++++ b/uppsrc/Draw/FontCR.cpp	2026-10-20 13:03:35.722463716 -0700
+@@ -252,7 +252,7 @@
+ 				return false;
+ 			int format = Get16(offset);
+ 			LLOG("cmap pid: " << pid << " psid: " << psid << " format: " << format);
+-			if((pid == 3 && psid == 10) || (pid == 0 && psid == 4) && format == 12 && pass == 0) {
++			if((pid == 3 && psid == 10) || ((pid == 0 && psid == 4) && format == 12 && pass == 0)) {
+ 				int p = offset;
+ 				int ngroups = Get32(p + 12);
+ 				p += 16; // pointer to groups table
+@@ -264,7 +264,7 @@
+ 				}
+ 				return true;
+ 			}
+-			if(((pid == 3 && psid == 1) || (pid == 0 && psid == 3) && format == 4) && pass == 1) {
++			if(((pid == 3 && psid == 1) || ((pid == 0 && psid == 3) && format == 4)) && pass == 1) {
+ 				int p = offset;
+ 				int n = Get16(p + 6) >> 1;
+ 				int seg_end = p + 14;
+diff -ru a/uppsrc/Draw/Image.cpp b/uppsrc/Draw/Image.cpp
+--- a/uppsrc/Draw/Image.cpp	2026-10-20 13:03:35.723463716 -0700
++++ b/uppsrc/Draw/Image.cpp	2026-10-20 13:03:35.724463717 -0700
+@@ -271,11 +271,11 @@
+ {
+ 	static_assert(sizeof(RGBA) == 4, "sizeof(RGBA)");
+ 	return IsSame(img) ||
+-	   GetSize() == img.GetSize() &&
++	   (GetSize() == img.GetSize() &&
+ 	   GetHotSpot() == img.GetHotSpot() &&
+ 	   Get2ndSpot() == img.Get2ndSpot() &&
+ 	   GetDots() == img.GetDots() &&
+-	   memeq_t(~*this, ~img, GetLength());
++	   memeq_t(~*this, ~img, GetLength()));
+ }
+ 
+ bool Image::operator!=(const Image& img) const
+diff -ru a/uppsrc/Painter/Image.cpp b/uppsrc/Painter/Image.cpp
+--- a/uppsrc/Painter/Image.cpp	2026-10-20 13:03:35.729463721 -0700
++++ b/uppsrc/Painter/Image.cpp	2026-10-20 13:03:35.729463721 -0700
+@@ -77,7 +77,7 @@
+ 				fast = false;
+ 			}
+ 		}
+-		if(nx == 1 && ny == 1 || dofilter)
++		if((nx == 1 && ny == 1) || dofilter)
+ 			xform = Inverse(m);
+ 		else {
+ 			if(!fast)
+diff -ru a/uppsrc/Painter/OnPath.cpp b/uppsrc/Painter/OnPath.cpp
+--- a/uppsrc/Painter/OnPath.cpp	2026-10-20 13:03:35.731463722 -0700
++++ b/uppsrc/Painter/OnPath.cpp	2026-10-20 13:03:35.731463722 -0700
+@@ -14,7 +14,7 @@
+ 		Pointf pos(0, 0);
+ 		for(int i = 0; i < onpath.GetCount(); i++) {
+ 			PathLine& l = onpath[i];
+-			if(l.len > 0 && (l.len > q || q >= 1.0 && i == onpath.GetCount() - 1)) {
++			if(l.len > 0 && (l.len > q || (q >= 1.0 && i == onpath.GetCount() - 1))) {
+ 				Pointf v = l.p - pos;
+ 				Translate(q / l.len * v + pos);
+ 				Rotate(Bearing(v));
+diff -ru a/uppsrc/Painter/RadialGradient.cpp b/uppsrc/Painter/RadialGradient.cpp
+--- a/uppsrc/Painter/RadialGradient.cpp	2026-10-20 13:03:35.734463724 -0700
++++ b/uppsrc/Painter/RadialGradient.cpp	2026-10-20 13:03:35.734463724 -0700
+@@ -47,7 +47,7 @@
+ 				h = h & 2047;
+ 			else
+ 			if(style == GRADIENT_REFLECT)
+-				h = (h & 2048) ? (2047 - h & 2047) : (h & 2047);
++				h = (h & 2048) ? ((2047 - h) & 2047) : (h & 2047);
+ 			else
+ 				h = minmax(h, 0, 2047);
+ 			*span++ = gradient[h];
+diff -ru a/uppsrc/Painter/Render.cpp b/uppsrc/Painter/Render.cpp
+--- a/uppsrc/Painter/Render.cpp	2026-10-20 13:03:35.736463725 -0700
++++ b/uppsrc/Painter/Render.cpp	2026-10-20 13:03:35.737463726 -0700
+@@ -149,7 +149,7 @@
+ 
+ 	current = Null;
+ 
+-	if(width == 0 || !ss && color.a == 0 && width >= FILL) {
++	if(width == 0 || (!ss && color.a == 0 && width >= FILL)) {
+ 		if(co && ++emptycount + jobcount >= BATCH_SIZE) { // not to exhaust 'paths'
+ 			FinishPathJob();
+ 			FinishFillJob();
+diff -ru a/uppsrc/Painter/Stroker.cpp b/uppsrc/Painter/Stroker.cpp
+--- a/uppsrc/Painter/Stroker.cpp	2026-10-20 13:03:35.739463727 -0700
++++ b/uppsrc/Painter/Stroker.cpp	2026-10-20 13:03:35.739463727 -0700
+@@ -43,10 +43,10 @@
+ 
+ inline bool Stroker::PreClipped(Pointf p2, Pointf p3)
+ {
+-	return p2.x + tw < preclip.left && p3.x + tw < preclip.left ||
+-	       p2.x - tw > preclip.right && p3.x - tw > preclip.right ||
+-           p2.y + tw < preclip.top && p3.y + tw < preclip.top ||
+-	       p2.y - tw > preclip.bottom && p3.y - tw > preclip.bottom;
++	return (p2.x + tw < preclip.left && p3.x + tw < preclip.left) ||
++	       (p2.x - tw > preclip.right && p3.x - tw > preclip.right) ||
++           (p2.y + tw < preclip.top && p3.y + tw < preclip.top) ||
++	       (p2.y - tw > preclip.bottom && p3.y - tw > preclip.bottom);
+ }
+ 
+ void Stroker::Line(const Pointf& p3)
+diff -ru a/uppsrc/Painter/SvgParser.cpp b/uppsrc/Painter/SvgParser.cpp
+--- a/uppsrc/Painter/SvgParser.cpp	2026-10-20 13:03:35.742463729 -0700
++++ b/uppsrc/Painter/SvgParser.cpp	2026-10-20 13:03:35.742463729 -0700
+@@ -483,7 +483,7 @@
+ 		FinishElement();
+ 	}
+ 	else
+-	if(n.IsTag("g") || n.IsTag("symbol") && dosymbols)
++	if(n.IsTag("g") || (n.IsTag("symbol") && dosymbols))
+ 		Items(n, depth);
+ 	else
+ 	if(n.IsTag("use")) {
+diff -ru a/uppsrc/plugin/sqlite3/Sqlite3upp.cpp b/uppsrc/plugin/sqlite3/Sqlite3upp.cpp
+--- a/uppsrc/plugin/sqlite3/Sqlite3upp.cpp	2026-10-20 13:03:35.762463743 -0700
++++ b/uppsrc/plugin/sqlite3/Sqlite3upp.cpp	2026-10-20 13:03:35.763463743 -0700
+@@ -129,7 +129,7 @@
+    const char* ptr = sqlcmd;
+    while (*ptr)
+       if(*ptr == '\'')
+-         while(*++ptr && (*ptr != '\'' || *++ptr && *ptr == '\''))
++         while(*++ptr && (*ptr != '\'' || (*++ptr && *ptr == '\'')))
+             ;
+       else if(*ptr == '-' && *(ptr+1) == '-')
+          while(*++ptr && *ptr != '\n' && *ptr != '\r')
+diff -ru a/uppsrc/RichText/EncodeQtf.cpp b/uppsrc/RichText/EncodeQtf.cpp
+--- a/uppsrc/RichText/EncodeQtf.cpp	2026-10-20 13:03:35.745463731 -0700
++++ b/uppsrc/RichText/EncodeQtf.cpp	2026-10-20 13:03:35.746463732 -0700
+@@ -525,7 +525,7 @@
+ 				lngc.GetAdd(p.format.language, 0)++;
+ 			}
+ 		dword lang = lngc.GetCount() ? lngc.GetKey(FindMax(lngc.GetValues())) : 0;
+-		bool bracket = !(options & QTF_NOCHARSET) || lang && !(options & QTF_NOLANG);
++		bool bracket = !(options & QTF_NOCHARSET) || (lang && !(options & QTF_NOLANG));
+ 		if(bracket)
+ 			qtf << "[";
+ 		if(!(options & QTF_NOCHARSET)) {
+diff -ru a/uppsrc/RichText/ParaPaint.cpp b/uppsrc/RichText/ParaPaint.cpp
+--- a/uppsrc/RichText/ParaPaint.cpp	2026-10-20 13:03:35.748463733 -0700
++++ b/uppsrc/RichText/ParaPaint.cpp	2026-10-20 13:03:35.749463734 -0700
+@@ -215,7 +215,7 @@
+ 		pw.tracer->Paragraph(rc.page, h, *this);
+ 	}
+ 	
+-	bool highlight = pi.highlightpara >= 0 && pi.highlightpara < pl.len || pi.WhenHighlight(format.label);
++	bool highlight = (pi.highlightpara >= 0 && pi.highlightpara < pl.len) || pi.WhenHighlight(format.label);
+ 	int hy = rc.py.y - format.before - format.ruler;
+ 	int phy = rc.py.page;
+ 	if(format.ruler && hy >= 0 && hy + format.ruler < rc.page.bottom)
+@@ -595,7 +595,7 @@
+ 				break;
+ 		}
+ 		lni += sgn(dir);
+-		if(lni < 0 || lni >= pl.GetCount() || lni == 0 && pl.number_chars == pl[lni].len)
++		if(lni < 0 || lni >= pl.GetCount() || (lni == 0 && pl.number_chars == pl[lni].len))
+ 			return -1;
+ 	}
+ 	else
+diff -ru a/uppsrc/RichText/ParaType.cpp b/uppsrc/RichText/ParaType.cpp
+--- a/uppsrc/RichText/ParaType.cpp	2026-10-20 13:03:35.751463735 -0700
++++ b/uppsrc/RichText/ParaType.cpp	2026-10-20 13:03:35.751463735 -0700
+@@ -334,9 +334,9 @@
+ 				space = NULL;
+ 			}
+ 			if(*s == '\n' || // fieldparts with newline
+-			   cx + *w > rcx && s > text ||
+-			   *s == '\t' && (t.align == ALIGN_RIGHT ? t.pos - format.lm > rcx
+-			                                         : t.pos - format.lm >= rcx)) {
++			   (cx + *w > rcx && s > text) ||
++			   (*s == '\t' && (t.align == ALIGN_RIGHT ? t.pos - format.lm > rcx
++			                                         : t.pos - format.lm >= rcx))) {
+ 				if(*s == '\n') // fieldparts with newline
+ 					space = NULL;
+ 				Line& l = lines.line.Add();
+diff -ru a/uppsrc/RichText/TxtData.cpp b/uppsrc/RichText/TxtData.cpp
+--- a/uppsrc/RichText/TxtData.cpp	2026-10-20 13:03:35.755463738 -0700
++++ b/uppsrc/RichText/TxtData.cpp	2026-10-20 13:03:35.755463738 -0700
+@@ -198,7 +198,7 @@
+ 
+ bool RichTxt::IsEmpty() const
+ {
+-	return part.IsEmpty() || part.GetCount() == 1 && ComputeLength() == 0;
++	return part.IsEmpty() || (part.GetCount() == 1 && ComputeLength() == 0);
+ }
+ 
+ int RichTxt::ComputeLength() const
+diff -ru a/uppsrc/RichText/TxtPaint.cpp b/uppsrc/RichText/TxtPaint.cpp
+--- a/uppsrc/RichText/TxtPaint.cpp	2026-10-20 13:03:35.757463739 -0700
++++ b/uppsrc/RichText/TxtPaint.cpp	2026-10-20 13:03:35.758463740 -0700
+@@ -55,7 +55,7 @@
+ void RichTxt::Sync(int parti, const RichContext& rc) const {
+ 	ASSERT(part[parti].Is<Para>());
+ 	const Para& pp = part[parti].Get<Para>();
+-	if(rc.page.Width() != pp.ccx || pp.number_fmt && pp.number != rc.number)
++	if(rc.page.Width() != pp.ccx || (pp.number_fmt && pp.number != rc.number))
+ 		Sync0(pp, parti, rc);
+ }
+ 
+@@ -109,8 +109,8 @@
+ 			}
+ 			if(pp.newhdrftr && rc.text == this)
+ 				rc.HeaderFooter(~pp.header, ~pp.footer);
+-			if(pp.firstonpage && rc.py.y > rc.page.top ||
+-			   pp.newpage || rc.py.y + cy + nbefore + nline > rc.page.bottom && cy < rc.page.Height())
++			if((pp.firstonpage && rc.py.y > rc.page.top) ||
++			   pp.newpage || (rc.py.y + cy + nbefore + nline > rc.page.bottom && cy < rc.page.Height()))
+ 				rc.Page();
+ 			begin = rc;
+ 			rc.py.y += pp.before + pp.ruler;
+diff -ru a/uppsrc/Sql/MassInsert.cpp b/uppsrc/Sql/MassInsert.cpp
+--- a/uppsrc/Sql/MassInsert.cpp	2026-10-20 13:03:35.554463602 -0700
++++ b/uppsrc/Sql/MassInsert.cpp	2026-10-20 13:03:35.555463603 -0700
+@@ -38,7 +38,7 @@
+ 	cache.Top().remove = remove;
+ 	if(pos == 0)
+ 		return *this;
+-	if(cache.GetCount() && cache[0].value.GetCount() * cache.GetCount() > 5000 || cache.GetCount() > 990) // MSSQL maximum is 1000
++	if((cache.GetCount() && cache[0].value.GetCount() * cache.GetCount() > 5000) || cache.GetCount() > 990) // MSSQL maximum is 1000
+ 		Flush();
+ 	ASSERT(column.GetCount() == pos);
+ 	pos = 0;
+diff -ru a/uppsrc/Sql/SqlCode.cpp b/uppsrc/Sql/SqlCode.cpp
+--- a/uppsrc/Sql/SqlCode.cpp	2026-10-20 13:03:35.558463605 -0700
++++ b/uppsrc/Sql/SqlCode.cpp	2026-10-20 13:03:35.558463605 -0700
+@@ -299,7 +299,7 @@
+ 					lvl++;
+ 				if(c == ')')
+ 					lvl--;
+-				if((c == ',' && lvl == 0 || end) && s - 1 > b) {
++				if(((c == ',' && lvl == 0) || end) && s - 1 > b) {
+ 					while(*b == ' ')
+ 						b++;
+ 					split->Add(SqlVal(String(b, s - 1), SqlS::HIGH));
+diff -ru a/uppsrc/Sql/Sql.cpp b/uppsrc/Sql/Sql.cpp
+--- a/uppsrc/Sql/Sql.cpp	2026-10-20 13:03:35.561463607 -0700
++++ b/uppsrc/Sql/Sql.cpp	2026-10-20 13:03:35.562463608 -0700
+@@ -5,7 +5,7 @@
+ #define LLOG(x) // DLOG(x)
+ 
+ bool SqlToBool(const String& s) {
+-	return !(IsNull(s) || *s == '0' && s[1] == '\0');
++	return !(IsNull(s) || (*s == '0' && s[1] == '\0'));
+ }
+ 
+ bool SqlToBool(const Value& v) {

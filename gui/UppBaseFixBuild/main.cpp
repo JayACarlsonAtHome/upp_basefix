@@ -49,6 +49,27 @@ static String SettingsPath()
 	return GetHomeDirFile(".config/upp_basefix/build");
 }
 
+// What the window shows, as it shows it: logs/gui-latest.log (one run) and
+// logs/gui-history.log (all runs) in the work area, so it can be read back later.
+static String GuiLogPath(const char *name)
+{
+	String work = GetEnv("UPP_BASEFIX_WORK");
+	return AppendFileName(work.GetCount() ? work : GetHomeDirFile("upp_basefix_work"), String("logs/") + name);
+}
+
+static void GuiLog(const String& text, bool fresh = false)
+{
+	String line = Format("%s  %s\n", FormatTime(GetSysTime(), "hh:mm:ss"), text);
+	String latest = GuiLogPath("gui-latest.log");
+	RealizePath(latest);
+	if(fresh)
+		SaveFile(latest, "");
+	for(String path : { latest, GuiLogPath("gui-history.log") }) {
+		FileAppend f(path);
+		f.Put(line);
+	}
+}
+
 namespace {
 
 struct Step : Moveable<Step> {
@@ -70,9 +91,8 @@ class BuildWindow : public TopWindow {
 	Option    strict, clean, verbose, tests, asan, tsan, valgrind, helgrind;
 	Label     tree_status;
 	Button    pristine_b, patch_b, verify_b, status_b;
-	Label     command;
 
-	Splitter  split;
+	Splitter  split, lists;   // output | steps over results
 	ArrayCtrl steps_list, results_list;
 	LineEdit  output;
 
@@ -86,6 +106,7 @@ class BuildWindow : public TopWindow {
 	bool         stopping = false;
 	int64        all_started = 0;
 	String       partial;
+	int          plan_pos = 0;  // where the "next run" commands start in the output
 
 	void Plan();
 	void ShowCommand();
@@ -132,13 +153,13 @@ BuildWindow::BuildWindow()
 	tree.Add("patched", "Patched (18619 + patches)").Add("pristine", "Pristine (18619)");
 	build_pane.Add(tree.HSizePosZ(84, 8).TopPosZ(68, 22));
 	strict.SetLabel("Strict (-Wall -Wextra)");
-	strict.Tip("U++ house style (unused parameters, deprecated copies, && within ||, and the sites in "
-	           "supp/strict-reviewed.txt) is counted apart; any other U++ warning turns the row yellow");
+	strict.Tip("Every warning counts: any warning turns the build row yellow");
 	build_pane.Add(strict.LeftPosZ(12, 230).TopPosZ(92, 22));
 	clean.SetLabel("Clean build (all files)");
 	clean.Tip("Compile everything: the warning counts then cover the whole tree");
 	build_pane.Add(clean.LeftPosZ(250, 230).TopPosZ(92, 22));
-	verbose.SetLabel("Show every file compiled");
+	verbose.SetLabel("Whole compiler output");
+	verbose.Tip("The compiler's messages as they come (parallel compiles mix their lines); without it: each file compiled, and the warnings and errors listed whole after each build");
 	build_pane.Add(verbose.LeftPosZ(12, 230).TopPosZ(116, 22));
 
 	checks_pane.Add(checks_box.SetLabel("Checks").SizePos());
@@ -173,8 +194,6 @@ BuildWindow::BuildWindow()
 	verify_b.Tip("upp_basefix.sh verify: the pristine tree against pin/uppsrc-18619.sha256 (3031 files)");
 	status_b.Tip("upp_basefix.sh status: which patches the patched tree has");
 
-	command.SetFont(Monospace());
-	Add(command.HSizePosZ(8, 8).TopPosZ(154, 80));
 
 	// Steps, results, output
 	steps_list.AddColumn("Step", 50);
@@ -191,9 +210,12 @@ BuildWindow::BuildWindow()
 	results_list.Tip("Double-click a build result to see its whole log below");
 	output.SetReadOnly();
 	output.SetFont(Monospace());
-	split.Vert() << steps_list << results_list << output;
-	split.SetPos(1800, 0).SetPos(4300, 1);
-	Add(split.HSizePosZ(8, 8).VSizePosZ(238, 66));
+	// column 1: the commands, each file compiled, the messages; column 2: steps over results
+	lists.Vert(steps_list, results_list);
+	lists.SetPos(3500);
+	split.Horz(output, lists);
+	split.SetPos(5500);
+	Add(split.HSizePosZ(8, 8).VSizePosZ(154, 66));
 
 	Add(start.SetLabel("Start").LeftPosZ(8, 110).BottomPosZ(8, 28));
 	Add(stop.SetLabel("Stop").LeftPosZ(124, 110).BottomPosZ(8, 28));
@@ -218,7 +240,7 @@ BuildWindow::BuildWindow()
 	Busy(false);
 	if(script.IsEmpty()) {
 		start.Disable();
-		command = "upp_basefix.sh not found: set UPP_BASEFIX_HOME, or start this with ./upp_basefix.sh gui";
+		output <<= "upp_basefix.sh not found: set UPP_BASEFIX_HOME, or start this with ./upp_basefix.sh gui";
 	}
 	running = script.GetCount() ? "Ready.  Script: " + script : String();
 }
@@ -276,10 +298,15 @@ void BuildWindow::Plan()
 void BuildWindow::ShowCommand()
 {
 	Plan();
-	String text;
-	for(const Step& s : steps)
-		text << (text.GetCount() ? "\n" : "") << "./upp_basefix.sh " << Join(s.args, " ");
-	command = text;
+	if(!proc) { // idle: the commands Start will run, after what the last run printed
+		String text = plan_pos ? "\n== Start will run:\n" : "== Start will run:\n";
+		for(const Step& s : steps)
+			text << "$ ./upp_basefix.sh " << Join(s.args, " ") << "\n";
+		plan_pos = min(plan_pos, output.GetLength());
+		output.Remove(plan_pos, output.GetLength() - plan_pos);
+		output.Insert(plan_pos, text.ToWString());
+		output.SetCursor(output.GetLength());
+	}
 	for(Option *o : { &asan, &tsan, &valgrind, &helgrind })
 		o->Enable(tests);
 }
@@ -349,11 +376,21 @@ void BuildWindow::Busy(bool b)
 void BuildWindow::RunPlan()
 {
 	Plan();
+	GuiLog("=== Start " + AsString(GetSysTime()) + "  compiler " + AsString(~compiler) + ", " + AsString(~type) +
+	       ", tree " + AsString(~tree) + (strict ? ", strict" : "") + (clean ? ", clean" : "") +
+	       (verbose ? ", verbose" : "") + (tests ? ", tests" : "") + (asan ? ", asan" : "") + (tsan ? ", tsan" : "") +
+	       (valgrind ? ", valgrind" : "") + (helgrind ? ", helgrind" : ""), true);
+	for(const Step& s : steps)
+		GuiLog("plan: ./upp_basefix.sh " + Join(s.args, " "));
 	steps_list.Clear();
 	results_list.Clear();
 	for(const Step& s : steps)
 		steps_list.Add(s.title, "waiting", "", "");
 	output.Clear();
+	String text = "== Commands:\n";
+	for(const Step& s : steps)
+		text << "$ ./upp_basefix.sh " << Join(s.args, " ") << "\n";
+	Out(text);
 	stopping = false;
 	all_started = (int64)time(nullptr);
 	step = -1;
@@ -368,6 +405,7 @@ void BuildWindow::RunOne(const String& title, const Vector<String>& args)
 	Step& s = steps.Add();
 	s.title = title;
 	s.args = clone(args);
+	GuiLog("=== Button " + AsString(GetSysTime()) + "  " + title, true);
 	steps_list.Clear();
 	results_list.Clear();
 	steps_list.Add(s.title, "waiting", "", "");
@@ -433,8 +471,10 @@ void BuildWindow::Out(const String& text)
 	partial << text;
 	int nl = partial.ReverseFind('\n');
 	if(nl >= 0) {
-		for(const String& line : Split(partial.Left(nl), '\n', false))
+		for(const String& line : Split(partial.Left(nl), '\n', false)) {
+			GuiLog("| " + line);
 			Line(line);
+		}
 		partial = partial.Mid(nl + 1);
 	}
 	output.Insert(output.GetLength(), text.ToWString());
@@ -491,6 +531,8 @@ void BuildWindow::Line(const String& line)
 			results_list.SetLineColor(row, Color(255, 215, 215));
 		else if(warned)
 			results_list.SetLineColor(row, Color(255, 240, 190));
+		GuiLog(Format("row %s: %s | %s | %s | %s", state.StartsWith("FAILED") ? "RED" : warned ? "YELLOW" : "plain",
+		              what, state, secs, detail));
 		results_list.ScrollEnd();
 	}
 }
@@ -504,6 +546,10 @@ void BuildWindow::StepDone()
 	steps_list.Set(step, 3, s.summary);
 	if(s.code != 0)
 		steps_list.SetLineColor(step, Color(255, 215, 215));
+	if(partial.GetCount())
+		GuiLog("| " + partial);
+	GuiLog(Format("step %d of %d %s: %s, exit %d, %s, %s", step + 1, steps.GetCount(), s.title,
+	              stopping ? "stopped" : s.code == 0 ? "good" : "FAILED", s.code, HmsClock(s.stopped - s.started), s.summary));
 	NextStep();
 }
 
@@ -520,6 +566,8 @@ void BuildWindow::Finish()
 	          String("  -  ") + TrimBoth(HmsClock((int64)time(nullptr) - all_started)) + " in all";
 	running.SetInk(good ? Color(0, 128, 0) : LtRed());
 	TreeStatus();
+	GuiLog("=== " + AsString(running.GetText()) + "  (" + AsString(tree_status.GetText()) + ")");
+	plan_pos = output.GetLength();
 }
 
 void BuildWindow::ShowLog()
@@ -536,12 +584,15 @@ void BuildWindow::ShowLog()
 		PromptOK("Wait for the run to finish (its output is in the pane below), then double-click again.");
 		return;
 	}
+	GuiLog("show log: " + log);
 	output <<= "== " + log + "\n\n" + LoadFile(log);
+	plan_pos = output.GetLength();
 	output.SetCursor(0);
 }
 
 void BuildWindow::Stop()
 {
+	GuiLog("Stop pressed");
 	stopping = true;
 	if(proc && proc->IsRunning())
 		kill(-proc->GetPid(), SIGTERM);

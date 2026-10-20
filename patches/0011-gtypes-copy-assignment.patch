@@ -1,0 +1,27 @@
+diff -ru a/uppsrc/Core/Gtypes.h b/uppsrc/Core/Gtypes.h
+--- a/uppsrc/Core/Gtypes.h	2026-10-20 13:03:35.488463558 -0700
++++ b/uppsrc/Core/Gtypes.h	2026-10-20 13:03:35.489463559 -0700
+@@ -67,6 +67,7 @@
+ 	Size_(const Size_<int16>& sz)  : cx((T)sz.cx), cy((T)sz.cy) {}
+ 	Size_(const Size_<double>& sz)  : cx((T)sz.cx), cy((T)sz.cy) {}
+ 	Size_(const Size_<int64>& sz) : cx((T)sz.cx), cy((T)sz.cy) {}
++	Size_& operator=(const Size_&) = default; // one of the above is the copy constructor
+ 
+ 	Size_(const Point_<T>& pt) : cx(pt.x), cy(pt.y) {}
+ 
+@@ -178,6 +179,7 @@
+ 	Point_(const Point_<int16>& pt) : x((T)pt.x), y((T)pt.y) {}
+ 	Point_(const Point_<double>& pt) : x((T)pt.x), y((T)pt.y) {}
+ 	Point_(const Point_<int64>& pt) : x((T)pt.x), y((T)pt.y) {}
++	Point_& operator=(const Point_&) = default; // one of the above is the copy constructor
+ 
+ 	Point_(const Size_<T>& sz)  : x(sz.cx), y(sz.cy) {}
+ 
+@@ -371,6 +373,7 @@
+ 	Rect_(const Rect_<int16>& r) { Set((T)r.left, (T)r.top, (T)r.right, (T)r.bottom); }
+ 	Rect_(const Rect_<double>& r) { Set((T)r.left, (T)r.top, (T)r.right, (T)r.bottom); }
+ 	Rect_(const Rect_<int64>& r) { Set((T)r.left, (T)r.top, (T)r.right, (T)r.bottom); }
++	Rect_& operator=(const Rect_&) = default; // one of the above is the copy constructor
+ 
+ 	Rect_(const Nuller&)             { SetNull(); }
+ 

@@ -1,0 +1,3733 @@
+diff -ru a/uppsrc/Core/App.cpp b/uppsrc/Core/App.cpp
+--- a/uppsrc/Core/App.cpp	2026-10-20 13:03:35.804463771 -0700
++++ b/uppsrc/Core/App.cpp	2026-10-20 13:03:35.805463772 -0700
+@@ -273,7 +273,7 @@
+ 
+ #ifdef PLATFORM_POSIX
+ 
+-String GetUserConfigDir(const String& exe, bool *sandboxed)
++String GetUserConfigDir(const String& /*exe*/, bool *sandboxed)
+ {
+ 	String cfgdir;
+ 	String h = GetExeFolder();
+diff -ru a/uppsrc/Core/BlockStream.cpp b/uppsrc/Core/BlockStream.cpp
+--- a/uppsrc/Core/BlockStream.cpp	2026-10-20 13:03:35.807463773 -0700
++++ b/uppsrc/Core/BlockStream.cpp	2026-10-20 13:03:35.808463774 -0700
+@@ -234,16 +234,16 @@
+ 	Seek(pos < size ? pos : size);
+ }
+ 
+-dword BlockStream::Read(int64 at, void *ptr, dword size) {
++dword BlockStream::Read(int64 /*at*/, void */*ptr*/, dword /*size*/) {
+ 	NEVER();
+ 	return 0;
+ }
+ 
+-void  BlockStream::Write(int64 at, const void *data, dword size) {
++void  BlockStream::Write(int64 /*at*/, const void */*data*/, dword /*size*/) {
+ 	NEVER();
+ }
+ 
+-void  BlockStream::SetStreamSize(int64 pos) {
++void  BlockStream::SetStreamSize(int64 /*pos*/) {
+ 	NEVER();
+ }
+ 
+diff -ru a/uppsrc/Core/Complex.h b/uppsrc/Core/Complex.h
+--- a/uppsrc/Core/Complex.h	2026-10-20 13:03:35.810463775 -0700
++++ b/uppsrc/Core/Complex.h	2026-10-20 13:03:35.811463776 -0700
+@@ -20,7 +20,7 @@
+ 	bool operator==(double x) const         { return (const C&)(*this) == x; }
+ 	bool operator!=(double x) const         { return (const C&)(*this) != x; }
+ 	
+-	int  Compare(const Complex& c) const    { NEVER(); return 0; }
++	int  Compare(const Complex& /*c*/) const    { NEVER(); return 0; }
+ 
+ 	void Serialize(Stream& s);
+ 	void Xmlize(XmlIO& xio);
+@@ -44,7 +44,7 @@
+ }
+ 
+ template<>
+-inline int  PolyCompare(const Complex& a, const Value& b)
++inline int  PolyCompare(const Complex& /*a*/, const Value& /*b*/)
+ {
+ 	NEVER(); return 0;
+ }
+diff -ru a/uppsrc/Core/Convert.cpp b/uppsrc/Core/Convert.cpp
+--- a/uppsrc/Core/Convert.cpp	2026-10-20 13:03:35.813463777 -0700
++++ b/uppsrc/Core/Convert.cpp	2026-10-20 13:03:35.814463778 -0700
+@@ -542,7 +542,7 @@
+ 	return Single<NoConvertClass>();
+ }
+ 
+-Value ErrorConvertClass::Scan(const Value& v) const
++Value ErrorConvertClass::Scan(const Value& /*v*/) const
+ {
+ 	return ErrorValue();
+ }
+diff -ru a/uppsrc/Core/CoWork.cpp b/uppsrc/Core/CoWork.cpp
+--- a/uppsrc/Core/CoWork.cpp	2026-10-20 13:03:35.816463779 -0700
++++ b/uppsrc/Core/CoWork.cpp	2026-10-20 13:03:35.816463779 -0700
+@@ -138,7 +138,7 @@
+ 	LLOG("Finished, remaining todo " << work->todo);
+ }
+ 
+-void CoWork::Pool::ThreadRun(int tno)
++void CoWork::Pool::ThreadRun([[maybe_unused]] int tno)
+ {
+ 	LLOG("CoWork thread #" << tno << " started");
+ 	Pool& p = GetPool();
+diff -ru a/uppsrc/Core/Debug.cpp b/uppsrc/Core/Debug.cpp
+--- a/uppsrc/Core/Debug.cpp	2026-10-20 13:03:35.820463782 -0700
++++ b/uppsrc/Core/Debug.cpp	2026-10-20 13:03:35.820463782 -0700
+@@ -30,7 +30,7 @@
+ 	return s;
+ }
+ 
+-void CheckLogEtalon(const char *etalon_path)
++void CheckLogEtalon([[maybe_unused]] const char *etalon_path)
+ {
+ #ifdef _DEBUG
+ 	auto LoadLog = [](const String& path) {
+diff -ru a/uppsrc/Core/Defs.h b/uppsrc/Core/Defs.h
+--- a/uppsrc/Core/Defs.h	2026-10-20 13:03:35.822463783 -0700
++++ b/uppsrc/Core/Defs.h	2026-10-20 13:03:35.823463784 -0700
+@@ -290,7 +290,7 @@
+ template<> inline bool  IsNull(const int64& i)   { return i == INT64_NULL; }
+ template<> inline bool  IsNull(const double& r)  { return !(std::abs(r) < std::numeric_limits<double>::infinity()); }
+ template<> inline bool  IsNull(const float& r)   { return !(std::abs(r) < std::numeric_limits<float>::infinity()); }
+-template<> inline bool  IsNull(const bool& r  )  { return false; }
++template<> inline bool  IsNull(const bool& /*r*/  )  { return false; }
+ 
+ #include "Heap.h"
+ #ifdef CPU_X86
+diff -ru a/uppsrc/Core/Diag.h b/uppsrc/Core/Diag.h
+--- a/uppsrc/Core/Diag.h	2026-10-20 13:03:35.825463785 -0700
++++ b/uppsrc/Core/Diag.h	2026-10-20 13:03:35.826463786 -0700
+@@ -85,7 +85,7 @@
+ 
+ #else
+ 
+-inline void LOGF(const char *format, ...) {}
++inline void LOGF(const char */*format*/, ...) {}
+ 
+ #define LOG(a)           LOG_NOP
+ #define LOGBEGIN()       LOG_NOP
+diff -ru a/uppsrc/Core/FilterStream.h b/uppsrc/Core/FilterStream.h
+--- a/uppsrc/Core/FilterStream.h	2026-10-20 13:03:35.828463787 -0700
++++ b/uppsrc/Core/FilterStream.h	2026-10-20 13:03:35.829463788 -0700
+@@ -19,7 +19,7 @@
+ 	void   SetRd();
+ 
+ private:
+-	void   SetSize(int64 size)  { NEVER(); } // removed
++	void   SetSize(int64 /*size*/)  { NEVER(); } // removed
+ 	int64  GetSize() const      { NEVER(); return 0; }
+ 
+ public:
+diff -ru a/uppsrc/Core/Fn.h b/uppsrc/Core/Fn.h
+--- a/uppsrc/Core/Fn.h	2026-10-20 13:03:35.832463790 -0700
++++ b/uppsrc/Core/Fn.h	2026-10-20 13:03:35.832463790 -0700
+@@ -52,7 +52,7 @@
+ }
+ 
+ template <class T>
+-constexpr const char *decode_chr_(const T& sel, const char *def)
++constexpr const char *decode_chr_(const T& /*sel*/, const char *def)
+ {
+ 	return def;
+ }
+@@ -70,7 +70,7 @@
+ }
+ 
+ template <class T, class V>
+-constexpr const V& decode(const T& sel, const V& def)
++constexpr const V& decode(const T& /*sel*/, const V& def)
+ {
+ 	return def;
+ }
+diff -ru a/uppsrc/Core/Format.cpp b/uppsrc/Core/Format.cpp
+--- a/uppsrc/Core/Format.cpp	2026-10-20 13:03:35.835463792 -0700
++++ b/uppsrc/Core/Format.cpp	2026-10-20 13:03:35.835463792 -0700
+@@ -291,7 +291,7 @@
+ 	return FormatTime(ToTime(date), format, language);
+ }
+ 
+-String FormatTime(Time t, const char *s, int language)
++String FormatTime(Time t, const char *s, int /*language*/)
+ {
+ 	if(IsNull(t))
+ 		return Null;
+diff -ru a/uppsrc/Core/Heap.h b/uppsrc/Core/Heap.h
+--- a/uppsrc/Core/Heap.h	2026-10-20 13:03:35.839463795 -0700
++++ b/uppsrc/Core/Heap.h	2026-10-20 13:03:35.840463795 -0700
+@@ -150,9 +150,9 @@
+ inline void   MemoryIgnoreLeaksBegin() {}
+ inline void   MemoryIgnoreLeaksEnd() {}
+ 
+-inline size_t GetMemoryBlockSize(void *ptr) { return 0; }
++inline size_t GetMemoryBlockSize(void */*ptr*/) { return 0; }
+ 
+-inline bool   MemoryTryRealloc(void *ptr, size_t& newsize) { return false; }
++inline bool   MemoryTryRealloc(void */*ptr*/, size_t& /*newsize*/) { return false; }
+ 
+ struct MemoryProfile {
+ 	int empty__ = 0; // AsString(MemoryProfile) prints it
+diff -ru a/uppsrc/Core/HeapImp.h b/uppsrc/Core/HeapImp.h
+--- a/uppsrc/Core/HeapImp.h	2026-10-20 13:03:35.842463797 -0700
++++ b/uppsrc/Core/HeapImp.h	2026-10-20 13:03:35.843463797 -0700
+@@ -66,10 +66,10 @@
+ 	static void  FillFree(BlkHeader *h);
+ 	static void  CheckFree(BlkHeader *h);
+ #else
+-	static void  DbgFreeFill(void *ptr, size_t size) {}
+-	static void  DbgFreeCheck(void *ptr, size_t size) {}
+-	static void  FillFree(BlkHeader *h) {}
+-	static void  CheckFree(BlkHeader *h) {}
++	static void  DbgFreeFill(void */*ptr*/, size_t /*size*/) {}
++	static void  DbgFreeCheck(void */*ptr*/, size_t /*size*/) {}
++	static void  FillFree(BlkHeader */*h*/) {}
++	static void  CheckFree(BlkHeader */*h*/) {}
+ #endif
+ };
+ 
+@@ -256,7 +256,7 @@
+ 
+ 	static int  Cv(int n)                         { return n < 16 ? 0 : SignificantBits(n - 16) + 1; }
+ 	static void LinkFree(BlkHeader_<4096> *h)     { Dbl_LinkAfter(h, freelist[Cv(h->GetSize())]); }
+-	static void NewFreeSize(BlkHeader_<4096> *h)  {}
++	static void NewFreeSize(BlkHeader_<4096> */*h*/)  {}
+ };
+ 
+ struct Heap : BlkHeap<HugeHeapDetail, 4096> {
+@@ -396,14 +396,14 @@
+ 	static void  DbgFreeFillK(void *ptr, int k);
+ 	static void *DbgFreeCheckK(void *p, int k);
+ #else
+-	static void  DbgFreeFillK(void *ptr, int k) {}
+-	static void *DbgFreeCheckK(void *p, int k) { return p; }
++	static void  DbgFreeFillK(void */*ptr*/, int /*k*/) {}
++	static void *DbgFreeCheckK(void *p, int /*k*/) { return p; }
+ #endif
+ 
+ #ifdef flagHEAPSTAT
+ 	static void  Stat(size_t sz);
+ #else
+-	static void  Stat(size_t sz) {}
++	static void  Stat(size_t /*sz*/) {}
+ #endif
+ 
+ 	void  Init();
+diff -ru a/uppsrc/Core/Index.h b/uppsrc/Core/Index.h
+--- a/uppsrc/Core/Index.h	2026-10-20 13:03:35.845463799 -0700
++++ b/uppsrc/Core/Index.h	2026-10-20 13:03:35.846463799 -0700
+@@ -114,7 +114,7 @@
+ 	void        Clear()                      { key.Clear(); IndexCommon::Clear(); }
+ 
+ 	void        Trim(int n = 0)              { IndexCommon::Trim(n, GetCount()); key.Trim(n); }
+-	void        Drop(int n = 1)              { Trim(GetCount() - 1); }
++	void        Drop(int /*n*/ = 1)              { Trim(GetCount() - 1); }
+ 	const T&    Top() const                  { return key.Top(); }
+ 	T           Pop()                        { T x = pick(Top()); Drop(); return x; }
+ 
+@@ -176,7 +176,7 @@
+ 	ConstIterator  GetIter(int pos) const                   { return key.GetIter(pos); }
+ 
+ 	void     ClearIndex()                    {}
+-	void     Reindex(int n)                  {}
++	void     Reindex(int /*n*/)                  {}
+ 	void     Reindex()                       {}
+ 
+ 	typedef T             value_type;
+diff -ru a/uppsrc/Core/Index.hpp b/uppsrc/Core/Index.hpp
+--- a/uppsrc/Core/Index.hpp	2026-10-20 13:03:35.848463801 -0700
++++ b/uppsrc/Core/Index.hpp	2026-10-20 13:03:35.848463801 -0700
+@@ -70,7 +70,7 @@
+ template <typename T>
+ template <typename U>
+ never_inline
+-void Index<T>::GrowAdd(U&& k, dword sh)
++void Index<T>::GrowAdd(U&& k, dword /*sh*/)
+ {
+ 	int n = key.GetCount();
+ 	key.GrowAdd(std::forward<U>(k));
+@@ -103,7 +103,7 @@
+ 
+ template <typename T>
+ force_inline
+-int Index<T>::FindFrom(int i, dword sh, const T& k, int end) const
++int Index<T>::FindFrom(int i, dword /*sh*/, const T& k, int end) const
+ {
+ 	if(i >= 0)
+ 		do {
+@@ -133,7 +133,7 @@
+ 
+ template <typename T>
+ force_inline
+-int Index<T>::FindBack(int i, dword sh, const T& k, int end) const
++int Index<T>::FindBack(int i, dword /*sh*/, const T& k, int end) const
+ {
+ 	do {
+ 		const Hash& ih = hash[i];
+diff -ru a/uppsrc/Core/LangInfo.cpp b/uppsrc/Core/LangInfo.cpp
+--- a/uppsrc/Core/LangInfo.cpp	2026-10-20 13:03:35.851463803 -0700
++++ b/uppsrc/Core/LangInfo.cpp	2026-10-20 13:03:35.851463803 -0700
+@@ -438,7 +438,7 @@
+ 	return dest;
+ }
+ 
+-String LanguageInfo::FormatDouble(double value, int digits, int FD_flags, int fill_exp) const
++String LanguageInfo::FormatDouble(double value, int digits, int FD_flags, int /*fill_exp*/) const
+ {
+ 	if(IsNull(value))
+ 		return Null;
+diff -ru a/uppsrc/Core/LocalProcess.h b/uppsrc/Core/LocalProcess.h
+--- a/uppsrc/Core/LocalProcess.h	2026-10-20 13:03:35.853463804 -0700
++++ b/uppsrc/Core/LocalProcess.h	2026-10-20 13:03:35.854463805 -0700
+@@ -4,7 +4,7 @@
+ 	virtual bool IsRunning() = 0;
+ 	virtual void Write(String s) = 0;
+ 	virtual bool Read(String& s) = 0;
+-	virtual bool Read2(String& os, String& es) { NEVER(); return false; }
++	virtual bool Read2(String& /*os*/, String& /*es*/) { NEVER(); return false; }
+ 	virtual int  GetExitCode() = 0;
+ 	virtual String GetExitMessage() { return String(); };
+ 	virtual void CloseRead()        {}
+diff -ru a/uppsrc/Core/Mt.cpp b/uppsrc/Core/Mt.cpp
+--- a/uppsrc/Core/Mt.cpp	2026-10-20 13:03:35.856463806 -0700
++++ b/uppsrc/Core/Mt.cpp	2026-10-20 13:03:35.857463807 -0700
+@@ -460,14 +460,14 @@
+ #endif
+ }
+ 
+-void Thread::Start(Function<void ()> cb, bool noshutdown)
++void Thread::Start(Function<void ()> cb, bool /*noshutdown*/)
+ {
+ 	Thread t;
+ 	t.Run(cb);
+ 	t.Detach();
+ }
+ 
+-void Thread::StartNice(Function<void ()> cb, bool noshutdown)
++void Thread::StartNice(Function<void ()> cb, bool /*noshutdown*/)
+ {
+ 	Thread t;
+ 	t.Run(cb);
+@@ -475,7 +475,7 @@
+ 	t.Detach();
+ }
+ 
+-void Thread::StartCritical(Function<void ()> cb, bool noshutdown)
++void Thread::StartCritical(Function<void ()> cb, bool /*noshutdown*/)
+ {
+ 	Thread t;
+ 	t.Run(cb);
+diff -ru a/uppsrc/Core/Path.cpp b/uppsrc/Core/Path.cpp
+--- a/uppsrc/Core/Path.cpp	2026-10-20 13:03:35.859463808 -0700
++++ b/uppsrc/Core/Path.cpp	2026-10-20 13:03:35.860463809 -0700
+@@ -969,7 +969,7 @@
+ #endif
+ }
+ 
+-Array<FileSystemInfo::FileInfo> FileSystemInfo::Find(String mask, int max_count, bool unmounted) const
++Array<FileSystemInfo::FileInfo> FileSystemInfo::Find(String mask, int max_count, [[maybe_unused]] bool unmounted) const
+ {
+ 	Array<FileInfo> fi;
+ 	if(IsNull(mask))
+diff -ru a/uppsrc/Core/Range.h b/uppsrc/Core/Range.h
+--- a/uppsrc/Core/Range.h	2026-10-20 13:03:35.862463810 -0700
++++ b/uppsrc/Core/Range.h	2026-10-20 13:03:35.863463811 -0700
+@@ -77,7 +77,7 @@
+ 	typedef T value_type;
+ 	typedef value_type ValueType;
+ 
+-	const value_type& operator[](int i) const { return value; }
++	const value_type& operator[](int /*i*/) const { return value; }
+ 	int GetCount() const                      { return count; }
+ 
+ 	typedef ConstIIterator<ConstRangeClass> Iterator;
+diff -ru a/uppsrc/Core/sheap.cpp b/uppsrc/Core/sheap.cpp
+--- a/uppsrc/Core/sheap.cpp	2026-10-20 13:03:35.865463812 -0700
++++ b/uppsrc/Core/sheap.cpp	2026-10-20 13:03:35.866463813 -0700
+@@ -505,9 +505,9 @@
+ 
+ #else
+ 
+-inline void LogFree(void *ptr) {}
++inline void LogFree(void */*ptr*/) {}
+ 
+-inline void *LogAlloc(void *ptr, size_t sz) { return ptr; }
++inline void *LogAlloc(void *ptr, size_t /*sz*/) { return ptr; }
+ 
+ #endif
+ 
+diff -ru a/uppsrc/Core/SSH/Channels.h b/uppsrc/Core/SSH/Channels.h
+--- a/uppsrc/Core/SSH/Channels.h	2026-10-20 13:03:36.164464014 -0700
++++ b/uppsrc/Core/SSH/Channels.h	2026-10-20 13:03:36.165464015 -0700
+@@ -60,7 +60,7 @@
+ 
+     dword               EventWait(int fd, dword events, int tv = 10);
+     bool                ProcessEvents(String& input);
+-    virtual void        ReadWrite(String& in, const void* out, int out_len)                 {}
++    virtual void        ReadWrite(String& /*in*/, const void* /*out*/, int /*out_len*/)                 {}
+ 
+     bool                Shut(const String& msg, bool nowait = true);
+     
+diff -ru a/uppsrc/Core/SSH/Session.cpp b/uppsrc/Core/SSH/Session.cpp
+--- a/uppsrc/Core/SSH/Session.cpp	2026-10-20 13:03:36.167464016 -0700
++++ b/uppsrc/Core/SSH/Session.cpp	2026-10-20 13:03:36.168464017 -0700
+@@ -34,7 +34,7 @@
+ 
+ // sChangePasswordCallback: Requests that the client's password be changed.
+ 
+-static void sChangePasswordCallback(LIBSSH2_SESSION *session, char **pwd, int *len, void **abstract)
++static void sChangePasswordCallback(LIBSSH2_SESSION */*session*/, char **pwd, int */*len*/, void **abstract)
+ {
+ 	String newpwd = reinterpret_cast<SshSession*>(*abstract)->WhenPasswordChange();
+ #ifdef UPP_HEAP
+@@ -47,7 +47,7 @@
+ 
+ // sX11RequestCallback: Dispatches incoming X11 requests.
+ 
+-static void sX11RequestCallback(LIBSSH2_SESSION *session, LIBSSH2_CHANNEL *channel, char *shost, int sport, void **abstract)
++static void sX11RequestCallback(LIBSSH2_SESSION */*session*/, LIBSSH2_CHANNEL *channel, char */*shost*/, int /*sport*/, void **abstract)
+ {
+ 	reinterpret_cast<SshSession*>(*abstract)->WhenX11((SshX11Handle) channel);
+ }
+diff -ru a/uppsrc/Core/SSH/SFtp.cpp b/uppsrc/Core/SSH/SFtp.cpp
+--- a/uppsrc/Core/SSH/SFtp.cpp	2026-10-20 13:03:36.170464018 -0700
++++ b/uppsrc/Core/SSH/SFtp.cpp	2026-10-20 13:03:36.171464018 -0700
+@@ -189,7 +189,7 @@
+ 	return GetDone();
+ }
+ 
+-bool SFtp::CopyData(Stream& dest, Stream& src, int64 maxsize)
++bool SFtp::CopyData(Stream& dest, Stream& src, int64 /*maxsize*/)
+ {
+ 	if(IsError())
+ 		return false;
+@@ -607,7 +607,7 @@
+ 	*a = attrs;
+ }
+ 
+-Array<FileSystemInfo::FileInfo> SFtpFileSystemInfo::Find(String mask, int max_count, bool unmounted) const
++Array<FileSystemInfo::FileInfo> SFtpFileSystemInfo::Find(String mask, int max_count, bool /*unmounted*/) const
+ {
+ 	ASSERT(browser);
+ 	Array<FileInfo> fi;
+diff -ru a/uppsrc/Core/SSH/SFtpStream.cpp b/uppsrc/Core/SSH/SFtpStream.cpp
+--- a/uppsrc/Core/SSH/SFtpStream.cpp	2026-10-20 13:03:36.173464020 -0700
++++ b/uppsrc/Core/SSH/SFtpStream.cpp	2026-10-20 13:03:36.174464021 -0700
+@@ -7,7 +7,7 @@
+ 	sftp->Seek(handle, pos);
+ }
+ 
+-void SFtpStream::SetStreamSize(int64 size)
++void SFtpStream::SetStreamSize(int64 /*size*/)
+ {
+ 	// TODO
+ }
+diff -ru a/uppsrc/Core/SSH/Shell.cpp b/uppsrc/Core/SSH/Shell.cpp
+--- a/uppsrc/Core/SSH/Shell.cpp	2026-10-20 13:03:36.176464022 -0700
++++ b/uppsrc/Core/SSH/Shell.cpp	2026-10-20 13:03:36.177464023 -0700
+@@ -15,7 +15,7 @@
+ 	return Shut(IsError() ? GetErrorDesc() : Null);
+ }
+ 
+-void SshShell::ReadWrite(String& in, const void* out, int out_len)
++void SshShell::ReadWrite(String& /*in*/, const void* out, int out_len)
+ {
+ 	switch(mode) {
+ 		case GENERIC: {
+diff -ru a/uppsrc/Core/Stream.cpp b/uppsrc/Core/Stream.cpp
+--- a/uppsrc/Core/Stream.cpp	2026-10-20 13:03:35.869463815 -0700
++++ b/uppsrc/Core/Stream.cpp	2026-10-20 13:03:35.869463815 -0700
+@@ -26,7 +26,7 @@
+ 	return sz;
+ }
+ 
+-void Stream::_Put(int w) {
++void Stream::_Put(int /*w*/) {
+ 	SetError(ERROR_NOT_ENOUGH_SPACE);
+ }
+ 
+@@ -886,7 +886,7 @@
+ 	ptr = buffer;
+ }
+ 
+-void SizeStream::_Put(int w)
++void SizeStream::_Put(int /*w*/)
+ {
+ 	_Put(NULL, 1);
+ }
+@@ -1059,7 +1059,7 @@
+ }
+ 
+ struct NilStreamClass : public Stream {
+-	virtual void    _Put(int w)    {}
++	virtual void    _Put(int /*w*/)    {}
+ 	virtual bool    IsOpen() const { return true; }
+ 	virtual   int   _Term()        { return -1; }
+ 	virtual   int   _Get()         { return -1; }
+diff -ru a/uppsrc/Core/Topt.h b/uppsrc/Core/Topt.h
+--- a/uppsrc/Core/Topt.h	2026-10-20 13:03:35.873463817 -0700
++++ b/uppsrc/Core/Topt.h	2026-10-20 13:03:35.873463817 -0700
+@@ -406,7 +406,7 @@
+ 	operator bool() const     { return ii < 0; }
+ 
+ 	ConstIIterator()          {}
+-	ConstIIterator(NP *null)  { ASSERT(null == NULL); ii = -1; }
++	ConstIIterator([[maybe_unused]] NP *null)  { ASSERT(null == NULL); ii = -1; }
+ 	ConstIIterator(const V& _cont, int ii) : cont(&_cont), ii(ii) {}
+ 
+ 	STL_ITERATOR_COMPATIBILITY
+@@ -452,7 +452,7 @@
+ 	operator bool() const                      { return ii < 0; }
+ 
+ 	IIterator()          {}
+-	IIterator(NP *null)  { ASSERT(null == NULL); ii = -1; }
++	IIterator([[maybe_unused]] NP *null)  { ASSERT(null == NULL); ii = -1; }
+ 	IIterator(V& _cont, int ii) : cont(&_cont), ii(ii) {}
+ 
+ 	STL_ITERATOR_COMPATIBILITY
+diff -ru a/uppsrc/Core/Tuple.h b/uppsrc/Core/Tuple.h
+--- a/uppsrc/Core/Tuple.h	2026-10-20 13:03:35.876463819 -0700
++++ b/uppsrc/Core/Tuple.h	2026-10-20 13:03:35.876463819 -0700
+@@ -27,8 +27,8 @@
+ 	
+ 	int   GetCount() const                    { return 1; }
+ 
+-	Value Get(int i) const                    { ASSERT(i == 0); return a; }
+-	void  Set(int i, const Value& v)          { ASSERT(i == 0); a = v; }
++	Value Get([[maybe_unused]] int i) const                    { ASSERT(i == 0); return a; }
++	void  Set([[maybe_unused]] int i, const Value& v)          { ASSERT(i == 0); a = v; }
+ 
+ 	TupleN(const A& a) : a(a) {}
+ 	TupleN() {}
+diff -ru a/uppsrc/Core/Utf.cpp b/uppsrc/Core/Utf.cpp
+--- a/uppsrc/Core/Utf.cpp	2026-10-20 13:03:35.879463822 -0700
++++ b/uppsrc/Core/Utf.cpp	2026-10-20 13:03:35.879463822 -0700
+@@ -32,7 +32,7 @@
+ int Utf8Len(const char16 *s, int len)
+ {
+ 	int rlen = 0;
+-	FromUtf16_([&](wchar code) { ToUtf8_([&](char c) { rlen++; }, code); }, s, len);
++	FromUtf16_([&](wchar code) { ToUtf8_([&](char /*c*/) { rlen++; }, code); }, s, len);
+ 	return rlen;
+ }
+ 
+diff -ru a/uppsrc/Core/ValueCache.h b/uppsrc/Core/ValueCache.h
+--- a/uppsrc/Core/ValueCache.h	2026-10-20 13:03:35.882463824 -0700
++++ b/uppsrc/Core/ValueCache.h	2026-10-20 13:03:35.883463824 -0700
+@@ -60,7 +60,7 @@
+ }
+ 
+ template <class K, class M>
+-String MakeKey_(const K& k, const M& m)
++String MakeKey_(const K& k, const M& /*m*/)
+ {
+ 	StringBuffer key;
+ 	RawCat(key, StaticTypeNo<K>());
+diff -ru a/uppsrc/Core/Value.cpp b/uppsrc/Core/Value.cpp
+--- a/uppsrc/Core/Value.cpp	2026-10-20 13:03:35.885463826 -0700
++++ b/uppsrc/Core/Value.cpp	2026-10-20 13:03:35.886463826 -0700
+@@ -284,14 +284,14 @@
+ SVO_FN(s_time, Time);
+ 
+ struct SvoVoidFn {
+-	static bool       IsNull(const void *p)                      { return true; }
+-	static void       Serialize(void *p, Stream& s)              {}
+-	static void       Xmlize(void *p, XmlIO& xio)               {}
+-	static void       Jsonize(void *p, JsonIO& jio)             {}
+-	static hash_t     GetHashValue(const void *p)                { return 0; }
+-	static bool       IsEqual(const void *p1, const void *p2)    { return true; }
+-	static bool       IsPolyEqual(const void *p, const Value& v) { return false; }
+-	static String     AsString(const void *p)                    { return String(); }
++	static bool       IsNull(const void */*p*/)                      { return true; }
++	static void       Serialize(void */*p*/, Stream& /*s*/)              {}
++	static void       Xmlize(void */*p*/, XmlIO& /*xio*/)               {}
++	static void       Jsonize(void */*p*/, JsonIO& /*jio*/)             {}
++	static hash_t     GetHashValue(const void */*p*/)                { return 0; }
++	static bool       IsEqual(const void */*p1*/, const void */*p2*/)    { return true; }
++	static bool       IsPolyEqual(const void */*p*/, const Value& /*v*/) { return false; }
++	static String     AsString(const void */*p*/)                    { return String(); }
+ };
+ 
+ static Value::Sval s_void = {
+@@ -750,7 +750,7 @@
+ public:
+ 	virtual dword      GetType() const             { return ERROR_V; }
+ 	virtual bool       IsNull() const              { return true; }
+-	virtual void       Serialize(Stream& s)        {}
++	virtual void       Serialize(Stream& /*s*/)        {}
+ 	virtual String     AsString() const            { return "<error: \'" + v + "\'>"; }
+ 
+ 	ValueErrorCls(const String& s) : RichValueRep<String>(s)  {}
+diff -ru a/uppsrc/Core/Value.h b/uppsrc/Core/Value.h
+--- a/uppsrc/Core/Value.h	2026-10-20 13:03:35.888463828 -0700
++++ b/uppsrc/Core/Value.h	2026-10-20 13:03:35.889463828 -0700
+@@ -59,9 +59,9 @@
+ 	friend dword ValueTypeNo(const T*)              { return T::ValueTypeNo(); }
+ 
+ 	bool     IsNullInstance() const                 { return false; }
+-	void     Serialize(Stream& s)                   { NEVER(); }
+-	void     Xmlize(XmlIO& xio)                     { NEVER(); }
+-	void     Jsonize(JsonIO& jio)                   { NEVER(); }
++	void     Serialize(Stream& /*s*/)                   { NEVER(); }
++	void     Xmlize(XmlIO& /*xio*/)                     { NEVER(); }
++	void     Jsonize(JsonIO& /*jio*/)                   { NEVER(); }
+ 	hash_t   GetHashValue() const                   { return 0; }
+ 	bool     operator==(const T&) const             { NEVER(); return false; }
+ 	String   ToString() const                       { return typeid(T).name(); }
+@@ -89,15 +89,15 @@
+ 		int                GetRefCount() const         { return refcount; }
+ 
+ 		virtual bool       IsNull() const              { return true; }
+-		virtual void       Serialize(Stream& s)        {}
+-		virtual void       Xmlize(XmlIO& xio)          {}
+-		virtual void       Jsonize(JsonIO& jio)        {}
++		virtual void       Serialize(Stream& /*s*/)        {}
++		virtual void       Xmlize(XmlIO& /*xio*/)          {}
++		virtual void       Jsonize(JsonIO& /*jio*/)        {}
+ 		virtual hash_t     GetHashValue() const        { return 0; }
+-		virtual bool       IsEqual(const Void *p)      { return false; }
+-		virtual bool       IsPolyEqual(const Value& v) { return false; }
++		virtual bool       IsEqual(const Void */*p*/)      { return false; }
++		virtual bool       IsPolyEqual(const Value& /*v*/) { return false; }
+ 		virtual String     AsString() const            { return ""; }
+-		virtual int        Compare(const Void *p)      { return 0; }
+-		virtual int        PolyCompare(const Value& p) { return 0; }
++		virtual int        Compare(const Void */*p*/)      { return 0; }
++		virtual int        PolyCompare(const Value& /*p*/) { return 0; }
+ 
+ 		Void()                                         { refcount = 1; }
+ 		virtual ~Void()                                {}
+@@ -330,7 +330,7 @@
+ const Value& ErrorValue();
+ 
+ template <class T>
+-inline bool IsPolyEqual(const T& x, const Value& v) {
++inline bool IsPolyEqual(const T& /*x*/, const Value& /*v*/) {
+ 	return false;
+ }
+ 
+diff -ru a/uppsrc/Core/ValueUtil.cpp b/uppsrc/Core/ValueUtil.cpp
+--- a/uppsrc/Core/ValueUtil.cpp	2026-10-20 13:03:35.891463830 -0700
++++ b/uppsrc/Core/ValueUtil.cpp	2026-10-20 13:03:35.892463830 -0700
+@@ -131,7 +131,7 @@
+ 	Create() = pick(v);
+ }
+ 
+-ValueArray::ValueArray(const Vector<Value>& v, int deep)
++ValueArray::ValueArray(const Vector<Value>& v, int /*deep*/)
+ {
+ 	Create() = clone(v);
+ }
+@@ -440,14 +440,14 @@
+ 	d.value = ValueArray(m.PickValues());
+ }
+ 
+-ValueMap::ValueMap(const Index<Value>& k, const Vector<Value>& v, int deep)
++ValueMap::ValueMap(const Index<Value>& k, const Vector<Value>& v, int /*deep*/)
+ {
+ 	Data& d = Create();
+ 	d.key = clone(k);
+ 	d.value = ValueArray(v, 0);
+ }
+ 
+-ValueMap::ValueMap(const VectorMap<Value, Value>& m, int deep)
++ValueMap::ValueMap(const VectorMap<Value, Value>& m, int /*deep*/)
+ {
+ 	Data& d = Create();
+ 	d.key = clone(m.GetKeys());
+diff -ru a/uppsrc/Core/ValueUtil.h b/uppsrc/Core/ValueUtil.h
+--- a/uppsrc/Core/ValueUtil.h	2026-10-20 13:03:35.894463832 -0700
++++ b/uppsrc/Core/ValueUtil.h	2026-10-20 13:03:35.894463832 -0700
+@@ -99,7 +99,7 @@
+ 	virtual int   GetType() = 0;
+ 	virtual Value GetValue(const void *)            { return Null; }
+ 	virtual bool  IsNull(const void *)              { return false; }
+-	virtual void  SetValue(void *, const Value& v)  { NEVER(); }
++	virtual void  SetValue(void *, const Value& /*v*/)  { NEVER(); }
+ 	virtual void  SetNull(void *)                   { NEVER(); }
+ 	virtual ~RefManager() {}
+ };
+@@ -156,7 +156,7 @@
+ };
+ 
+ template <class T>
+-T& GetRef(Ref r, T *x = NULL) {
++T& GetRef(Ref r, T */*x*/ = NULL) {
+ 	ASSERT(GetValueTypeNo<T>() == r.GetType());
+ 	return *(T *) r.GetVoidPtr();
+ }
+diff -ru a/uppsrc/Core/Vcont.h b/uppsrc/Core/Vcont.h
+--- a/uppsrc/Core/Vcont.h	2026-10-20 13:03:35.897463834 -0700
++++ b/uppsrc/Core/Vcont.h	2026-10-20 13:03:35.897463834 -0700
+@@ -460,7 +460,7 @@
+ 		operator bool() const                   { return ptr; }
+ 
+ 		ConstIterator()                         {}
+-		ConstIterator(NP *null)                 { ASSERT(null == NULL); ptr = NULL; }
++		ConstIterator([[maybe_unused]] NP *null)                 { ASSERT(null == NULL); ptr = NULL; }
+ 		
+ 		STL_ITERATOR_COMPATIBILITY
+ 	};
+diff -ru a/uppsrc/Core/z.cpp b/uppsrc/Core/z.cpp
+--- a/uppsrc/Core/z.cpp	2026-10-20 13:03:35.900463836 -0700
++++ b/uppsrc/Core/z.cpp	2026-10-20 13:03:35.901463836 -0700
+@@ -15,12 +15,12 @@
+ 
+ //////////////////////////////////////////////////////////////////////
+ 
+-static voidpf zalloc_new(voidpf opaque, uInt items, uInt size)
++static voidpf zalloc_new(voidpf /*opaque*/, uInt items, uInt size)
+ {
+ 	return MemoryAlloc(items * size);
+ }
+ 
+-static void zfree_new(voidpf opaque, voidpf address)
++static void zfree_new(voidpf /*opaque*/, voidpf address)
+ {
+ 	MemoryFree(address);
+ }
+diff -ru a/uppsrc/Core/z.h b/uppsrc/Core/z.h
+--- a/uppsrc/Core/z.h	2026-10-20 13:03:35.903463838 -0700
++++ b/uppsrc/Core/z.h	2026-10-20 13:03:35.903463838 -0700
+@@ -84,10 +84,10 @@
+ 
+ 	dword  GetCRC() const                  { return z.GetCRC(); }
+ 	
+-	Zlib& GZip(bool gzip_ = true)          { return z.GZip(); }
+-	Zlib& Header(bool hdr_ = true)         { return z.Header(); }
++	Zlib& GZip(bool /*gzip_*/ = true)          { return z.GZip(); }
++	Zlib& Header(bool /*hdr_*/ = true)         { return z.Header(); }
+ 	Zlib& NoHeader()                       { return Header(false); }
+-	Zlib& CRC(bool b = true)               { return z.CRC(); }
++	Zlib& CRC(bool /*b*/ = true)               { return z.CRC(); }
+ 	Zlib& NoCRC()                          { return CRC(false); }
+ 	Zlib& ChunkSize(int n)                 { return z.ChunkSize(n); }
+ 	Zlib& Level(int compression_lvl)       { return z.Level(compression_lvl); }
+@@ -107,10 +107,10 @@
+ 	String GetGZipName() const             { return z.GetGZipName(); }
+ 	String GetGZipComment() const          { return z.GetGZipComment(); }
+ 	
+-	Zlib& GZip(bool gzip_ = true)          { return z.GZip(); }
+-	Zlib& Header(bool hdr_ = true)         { return z.Header(); }
++	Zlib& GZip(bool /*gzip_*/ = true)          { return z.GZip(); }
++	Zlib& Header(bool /*hdr_*/ = true)         { return z.Header(); }
+ 	Zlib& NoHeader()                       { return Header(false); }
+-	Zlib& CRC(bool b = true)               { return z.CRC(); }
++	Zlib& CRC(bool /*b*/ = true)               { return z.CRC(); }
+ 	Zlib& NoCRC()                          { return CRC(false); }
+ 	Zlib& ChunkSize(int n)                 { return z.ChunkSize(n); }
+ 	Zlib& Level(int compression_lvl)       { return z.Level(compression_lvl); }
+diff -ru a/uppsrc/CtrlCore/CtrlClip.cpp b/uppsrc/CtrlCore/CtrlClip.cpp
+--- a/uppsrc/CtrlCore/CtrlClip.cpp	2026-10-20 13:03:35.905463839 -0700
++++ b/uppsrc/CtrlCore/CtrlClip.cpp	2026-10-20 13:03:35.906463840 -0700
+@@ -19,10 +19,10 @@
+ :	render(sRawClipData)
+ {}
+ 
+-void Ctrl::DragAndDrop(Point p, PasteClip& d)       {}
+-void Ctrl::FrameDragAndDrop(Point p, PasteClip& d)  {}
++void Ctrl::DragAndDrop(Point /*p*/, PasteClip& /*d*/)       {}
++void Ctrl::FrameDragAndDrop(Point /*p*/, PasteClip& /*d*/)  {}
+ void Ctrl::DragEnter()                              {}
+-void Ctrl::DragRepeat(Point p) {}
++void Ctrl::DragRepeat(Point /*p*/) {}
+ void Ctrl::DragLeave() {}
+ 
+ PasteClip& Ctrl::Clipboard()
+@@ -46,7 +46,7 @@
+ 	return GetSelectionData(fmt);
+ }
+ 
+-String Ctrl::GetSelectionData(const String& fmt) const
++String Ctrl::GetSelectionData(const String& /*fmt*/) const
+ {
+ 	return Null;
+ }
+diff -ru a/uppsrc/CtrlCore/CtrlCore.h b/uppsrc/CtrlCore/CtrlCore.h
+--- a/uppsrc/CtrlCore/CtrlCore.h	2026-10-20 13:03:35.908463841 -0700
++++ b/uppsrc/CtrlCore/CtrlCore.h	2026-10-20 13:03:35.908463841 -0700
+@@ -383,7 +383,7 @@
+ }
+ 
+ template <class T>
+-const T& GetInternal(PasteClip& d)
++const T& GetInternal(PasteClip& /*d*/)
+ {
+ 	return *(T *)GetInternalDropPtr__();
+ }
+@@ -1037,7 +1037,7 @@
+ 
+ 	virtual String GetDesc() const;
+ 
+-	virtual void   SetMinSize(Size sz) {}
++	virtual void   SetMinSize(Size /*sz*/) {}
+ 
+ 	virtual void   Skin() {}
+ 
+@@ -1459,7 +1459,7 @@
+ 	CtrlIterator end()              { CtrlIterator c; c.q = NULL; return c; }
+ 
+ #ifdef DEPRECATED
+-	Ctrl&   BackPaint(int bp = 0)   { return *this; }
++	Ctrl&   BackPaint(int /*bp*/ = 0)   { return *this; }
+ 	Ctrl&   BackPaintHint()         { return BackPaint(); }
+ 
+ 	void    ScrollView(const Rect& r, int dx, int dy);
+diff -ru a/uppsrc/CtrlCore/Ctrl.cpp b/uppsrc/CtrlCore/Ctrl.cpp
+--- a/uppsrc/CtrlCore/Ctrl.cpp	2026-10-20 13:03:35.910463843 -0700
++++ b/uppsrc/CtrlCore/Ctrl.cpp	2026-10-20 13:03:35.911463843 -0700
+@@ -43,7 +43,7 @@
+ void   Ctrl::SetData(const Value&) {}
+ Value  Ctrl::GetData() const       { return Value(); }
+ 
+-void Ctrl::Paint(Draw& w)                           {}
++void Ctrl::Paint(Draw& /*w*/)                           {}
+ int  Ctrl::OverPaint() const                        { return 0; }
+ 
+ void Ctrl::Activate()                               {}
+@@ -51,28 +51,28 @@
+ void Ctrl::DeactivateBy(Ctrl *)                     {}
+ 
+ void Ctrl::CancelMode()                             {}
+-void Ctrl::MouseEnter(Point p, dword keyflags)      {}
+-void Ctrl::LeftDown(Point p, dword keyflags)        {}
+-void Ctrl::RightDown(Point p, dword keyflags)       {}
+-void Ctrl::LeftRepeat(Point p, dword keyflags)      {}
+-void Ctrl::RightRepeat(Point p, dword keyflags)     {}
+-void Ctrl::MouseMove(Point p, dword keyflags)       {}
+-void Ctrl::LeftUp(Point, dword keyflags)            {}
+-void Ctrl::RightUp(Point p, dword keyflags)         {}
++void Ctrl::MouseEnter(Point /*p*/, dword /*keyflags*/)      {}
++void Ctrl::LeftDown(Point /*p*/, dword /*keyflags*/)        {}
++void Ctrl::RightDown(Point /*p*/, dword /*keyflags*/)       {}
++void Ctrl::LeftRepeat(Point /*p*/, dword /*keyflags*/)      {}
++void Ctrl::RightRepeat(Point /*p*/, dword /*keyflags*/)     {}
++void Ctrl::MouseMove(Point /*p*/, dword /*keyflags*/)       {}
++void Ctrl::LeftUp(Point, dword /*keyflags*/)            {}
++void Ctrl::RightUp(Point /*p*/, dword /*keyflags*/)         {}
+ void Ctrl::MouseLeave()                             {}
+-void Ctrl::LeftDrag(Point p, dword keyflags)        {}
+-void Ctrl::LeftHold(Point p, dword keyflags)        {}
+-void Ctrl::RightDrag(Point p, dword keyflags)       {}
+-void Ctrl::RightHold(Point p, dword keyflags)       {}
+-void Ctrl::MiddleDown(Point p, dword keyflags)      {}
+-void Ctrl::MiddleDouble(Point p, dword keyflags)    {}
+-void Ctrl::MiddleTriple(Point p, dword keyflags)    {}
+-void Ctrl::MiddleRepeat(Point p, dword keyflags)    {}
+-void Ctrl::MiddleDrag(Point p, dword keyflags)      {}
+-void Ctrl::MiddleHold(Point p, dword keyflags)      {}
+-void Ctrl::MiddleUp(Point p, dword keyflags)        {}
++void Ctrl::LeftDrag(Point /*p*/, dword /*keyflags*/)        {}
++void Ctrl::LeftHold(Point /*p*/, dword /*keyflags*/)        {}
++void Ctrl::RightDrag(Point /*p*/, dword /*keyflags*/)       {}
++void Ctrl::RightHold(Point /*p*/, dword /*keyflags*/)       {}
++void Ctrl::MiddleDown(Point /*p*/, dword /*keyflags*/)      {}
++void Ctrl::MiddleDouble(Point /*p*/, dword /*keyflags*/)    {}
++void Ctrl::MiddleTriple(Point /*p*/, dword /*keyflags*/)    {}
++void Ctrl::MiddleRepeat(Point /*p*/, dword /*keyflags*/)    {}
++void Ctrl::MiddleDrag(Point /*p*/, dword /*keyflags*/)      {}
++void Ctrl::MiddleHold(Point /*p*/, dword /*keyflags*/)      {}
++void Ctrl::MiddleUp(Point /*p*/, dword /*keyflags*/)        {}
+ 
+-void Ctrl::Pen(Point p, const PenInfo& pen, dword keyflags) {}
++void Ctrl::Pen(Point /*p*/, const PenInfo& /*pen*/, dword /*keyflags*/) {}
+ 
+ void Ctrl::Layout()                                 {}
+ 
+@@ -138,7 +138,7 @@
+ 
+ void Ctrl::ParentChange() {}
+ 
+-bool Ctrl::Key(dword key, int count)
++bool Ctrl::Key(dword /*key*/, int /*count*/)
+ {
+ 	return false;
+ }
+diff -ru a/uppsrc/CtrlCore/CtrlDraw.cpp b/uppsrc/CtrlCore/CtrlDraw.cpp
+--- a/uppsrc/CtrlCore/CtrlDraw.cpp	2026-10-20 13:03:35.913463844 -0700
++++ b/uppsrc/CtrlCore/CtrlDraw.cpp	2026-10-20 13:03:35.913463844 -0700
+@@ -90,7 +90,7 @@
+ 	return view - GetScreenRect().TopLeft();
+ }
+ 
+-void  Ctrl::ScrollView(const Rect& _r, int dx, int dy)
++void  Ctrl::ScrollView(const Rect& _r, [[maybe_unused]] int dx, [[maybe_unused]] int dy)
+ {
+ 	GuiLock __;
+ 	LLOG("ScrollView " << _r << " " << dx << " " << dy);
+@@ -269,7 +269,7 @@
+ 		                 q.InView() ? cview : clip);
+ }
+ 
+-void Ctrl::UpdateArea0(SystemDraw& draw, const Rect& clip, int backpaint)
++void Ctrl::UpdateArea0(SystemDraw& draw, const Rect& clip, int /*backpaint*/)
+ {
+ 	GuiLock __;
+ 	LTIMING("UpdateArea");
+diff -ru a/uppsrc/CtrlCore/CtrlKbd.cpp b/uppsrc/CtrlCore/CtrlKbd.cpp
+--- a/uppsrc/CtrlCore/CtrlKbd.cpp	2026-10-20 13:03:35.916463846 -0700
++++ b/uppsrc/CtrlCore/CtrlKbd.cpp	2026-10-20 13:03:35.916463846 -0700
+@@ -162,7 +162,7 @@
+ 	}
+ }
+ 
+-void Ctrl::DoKillFocus(Ptr<Ctrl> pfocusCtrl, Ptr<Ctrl> nfocusCtrl)
++void Ctrl::DoKillFocus(Ptr<Ctrl> pfocusCtrl, Ptr<Ctrl> /*nfocusCtrl*/)
+ {
+ 	GuiLock __;
+ 	if(pfocusCtrl && !pfocusCtrl->destroying) {
+diff -ru a/uppsrc/CtrlCore/CtrlMouse.cpp b/uppsrc/CtrlCore/CtrlMouse.cpp
+--- a/uppsrc/CtrlCore/CtrlMouse.cpp	2026-10-20 13:03:35.918463848 -0700
++++ b/uppsrc/CtrlCore/CtrlMouse.cpp	2026-10-20 13:03:35.919463849 -0700
+@@ -34,7 +34,7 @@
+ 	return style;
+ }
+ 
+-void Ctrl::LogMouseEvent(const char *f, const Ctrl *ctrl, int event, Point p, int zdelta, dword keyflags)
++void Ctrl::LogMouseEvent(const char *f, const Ctrl *ctrl, int event, Point p, int /*zdelta*/, dword keyflags)
+ {
+ 	if(!Ini::user_log)
+ 		return;
+@@ -83,7 +83,7 @@
+ 	return this_ ? FrameMouseEvent(event, p, zdelta, keyflags) : Image();
+ }
+ 
+-Image Ctrl::FrameMouseEvent(int event, Point p, int zdelta, dword keyflags)
++Image Ctrl::FrameMouseEvent(int /*event*/, Point /*p*/, int /*zdelta*/, dword /*keyflags*/)
+ {
+ 	return Image::Arrow();
+ }
+@@ -250,7 +250,7 @@
+ 	return Image::Arrow();
+ }
+ 
+-Image Ctrl::CursorImage(Point p, dword keyflags)
++Image Ctrl::CursorImage(Point /*p*/, dword /*keyflags*/)
+ {
+ 	return Image::Arrow();
+ }
+diff -ru a/uppsrc/CtrlCore/EncodeRTF.cpp b/uppsrc/CtrlCore/EncodeRTF.cpp
+--- a/uppsrc/CtrlCore/EncodeRTF.cpp	2026-10-20 13:03:35.921463850 -0700
++++ b/uppsrc/CtrlCore/EncodeRTF.cpp	2026-10-20 13:03:35.921463850 -0700
+@@ -123,7 +123,7 @@
+ }
+ 
+ RTFEncoder::RTFEncoder(Stream& stream_, const RichText& richtext_, byte charset_,
+-	Size dot_page_size_, const Rect& dot_margins_, void *context_)
++	Size dot_page_size_, const Rect& dot_margins_, void */*context_*/)
+ : stream(stream_)
+ , richtext(richtext_)
+ , charset(charset_)
+diff -ru a/uppsrc/CtrlCore/Frame.cpp b/uppsrc/CtrlCore/Frame.cpp
+--- a/uppsrc/CtrlCore/Frame.cpp	2026-10-20 13:03:35.923463851 -0700
++++ b/uppsrc/CtrlCore/Frame.cpp	2026-10-20 13:03:35.924463852 -0700
+@@ -2,14 +2,14 @@
+ 
+ namespace Upp {
+ 
+-void CtrlFrame::FramePaint(Draw& draw, const Rect& r) {}
+-void CtrlFrame::FrameAdd(Ctrl& ctrl) {}
++void CtrlFrame::FramePaint(Draw& /*draw*/, const Rect& /*r*/) {}
++void CtrlFrame::FrameAdd(Ctrl& /*ctrl*/) {}
+ void CtrlFrame::FrameRemove() {}
+ int CtrlFrame::OverPaint() const { return 0; }
+ 
+-void NullFrameClass::FrameLayout(Rect& r) {}
+-void NullFrameClass::FramePaint(Draw& draw, const Rect& r) {}
+-void NullFrameClass::FrameAddSize(Size& sz) {}
++void NullFrameClass::FrameLayout(Rect& /*r*/) {}
++void NullFrameClass::FramePaint(Draw& /*draw*/, const Rect& /*r*/) {}
++void NullFrameClass::FrameAddSize(Size& /*sz*/) {}
+ 
+ CtrlFrame& NullFrame() { return Single<NullFrameClass>(); }
+ 
+diff -ru a/uppsrc/CtrlCore/GtkApp.cpp b/uppsrc/CtrlCore/GtkApp.cpp
+--- a/uppsrc/CtrlCore/GtkApp.cpp	2026-10-20 13:03:35.926463853 -0700
++++ b/uppsrc/CtrlCore/GtkApp.cpp	2026-10-20 13:03:35.926463853 -0700
+@@ -18,10 +18,10 @@
+ #define LLOG(x) // DLOG(x)
+ 
+ #if CATCH_ERRORS
+-void CatchError(const gchar *log_domain,
+-             GLogLevelFlags log_level,
++void CatchError(const gchar */*log_domain*/,
++             GLogLevelFlags /*log_level*/,
+              const gchar *message,
+-             gpointer user_data)
++             gpointer /*user_data*/)
+ {
+ 	RLOG((const char *)message);
+ 	// __BREAK__;
+@@ -101,7 +101,7 @@
+ extern Function<bool (const TopWindow *)> is_custom_titlebar__;
+ extern Function<Ctrl *(TopWindow *, Color, int)> custom_titlebar_make__;
+ 
+-bool InitGtkApp(int argc, char **argv, const char **envptr)
++bool InitGtkApp(int argc, char **argv, const char **/*envptr*/)
+ {
+ 	LLOG(rmsecs() << " InitGtkApp");
+ 
+diff -ru a/uppsrc/CtrlCore/GtkClip.cpp b/uppsrc/CtrlCore/GtkClip.cpp
+--- a/uppsrc/CtrlCore/GtkClip.cpp	2026-10-20 13:03:35.928463855 -0700
++++ b/uppsrc/CtrlCore/GtkClip.cpp	2026-10-20 13:03:35.929463855 -0700
+@@ -38,7 +38,7 @@
+ 		gtk_selection_data_set(selection_data, GAtom(fmt), 8, (const guchar*)~data, data.GetCount());
+ }
+ 
+-void Ctrl::GtkGetClipData(GtkClipboard *clipboard, GtkSelectionData *selection_data,
++void Ctrl::GtkGetClipData(GtkClipboard */*clipboard*/, GtkSelectionData *selection_data,
+                           guint info, gpointer user_data)
+ {
+ 	VectorMap<String, ClipData>& target = ((Gclipboard *)user_data)->target;
+@@ -46,7 +46,7 @@
+ 	GtkSelectionDataSet(selection_data, target.GetKey(info), target[info].Render());
+ }
+ 
+-void ClearClipData(GtkClipboard *clipboard, gpointer) {}
++void ClearClipData(GtkClipboard */*clipboard*/, gpointer) {}
+ 
+ Ctrl::Gclipboard::Gclipboard(GdkAtom type)
+ {
+@@ -206,7 +206,7 @@
+ 		Ctrl::gclipboard().Put(s[i], ClipData(data));
+ }
+ 
+-String ReadClipboard(const char *format)
++String ReadClipboard(const char */*format*/)
+ {
+ 	GuiLock __;
+ 	return Null;
+diff -ru a/uppsrc/CtrlCore/GtkCreate.cpp b/uppsrc/CtrlCore/GtkCreate.cpp
+--- a/uppsrc/CtrlCore/GtkCreate.cpp	2026-10-20 13:03:35.931463857 -0700
++++ b/uppsrc/CtrlCore/GtkCreate.cpp	2026-10-20 13:03:35.931463857 -0700
+@@ -261,7 +261,7 @@
+ 			i++;
+ }
+ 
+-void Ctrl::PopUp(Ctrl *owner, bool savebits, bool activate, bool, bool)
++void Ctrl::PopUp(Ctrl *owner, bool /*savebits*/, bool activate, bool, bool)
+ {
+ 	GuiLock __;
+ 	LLOG("POPUP " << Name() << ", " << GetRect() << ", activate " << activate);
+diff -ru a/uppsrc/CtrlCore/GtkCtrl.cpp b/uppsrc/CtrlCore/GtkCtrl.cpp
+--- a/uppsrc/CtrlCore/GtkCtrl.cpp	2026-10-20 13:03:35.933463858 -0700
++++ b/uppsrc/CtrlCore/GtkCtrl.cpp	2026-10-20 13:03:35.934463859 -0700
+@@ -18,11 +18,11 @@
+ {
+ }
+ 
+-void Ctrl::GuiPlatformGetTopRect(Rect& r) const
++void Ctrl::GuiPlatformGetTopRect(Rect& /*r*/) const
+ {
+ }
+ 
+-bool Ctrl::GuiPlatformRefreshFrameSpecial(const Rect& r)
++bool Ctrl::GuiPlatformRefreshFrameSpecial(const Rect& /*r*/)
+ {
+ 	return false;
+ }
+@@ -50,7 +50,7 @@
+ 	}
+ }
+ 
+-Color GuiPlatformGetScreenPixel(int x, int y)
++Color GuiPlatformGetScreenPixel(int /*x*/, int /*y*/)
+ {
+ 	return Black;
+ }
+diff -ru a/uppsrc/CtrlCore/GtkCustomBar.cpp b/uppsrc/CtrlCore/GtkCustomBar.cpp
+--- a/uppsrc/CtrlCore/GtkCustomBar.cpp	2026-10-20 13:03:35.936463860 -0700
++++ b/uppsrc/CtrlCore/GtkCustomBar.cpp	2026-10-20 13:03:35.937463861 -0700
+@@ -14,17 +14,17 @@
+ 	w.DrawImage(0, 0, img);
+ }
+ 
+-void TopWindow::CustomBarIcon::MouseMove(Point p, dword keyflags)
++void TopWindow::CustomBarIcon::MouseMove(Point /*p*/, dword /*keyflags*/)
+ {
+ 	Refresh();
+ }
+ 
+-void TopWindow::CustomBarIcon::LeftDown(Point p, dword keyflags)
++void TopWindow::CustomBarIcon::LeftDown(Point /*p*/, dword /*keyflags*/)
+ {
+ 	SetCapture();
+ }
+ 
+-void TopWindow::CustomBarIcon::LeftUp(Point, dword keyflags)
++void TopWindow::CustomBarIcon::LeftUp(Point, dword /*keyflags*/)
+ {
+ 	if(HasMouse())
+ 		Action();
+@@ -36,7 +36,7 @@
+ 	Refresh();
+ }
+ 
+-void TopWindow::BarCtrl::LeftDouble(Point p, dword keyflags)
++void TopWindow::BarCtrl::LeftDouble(Point /*p*/, dword /*keyflags*/)
+ {
+ 	WhenAction();
+ }
+diff -ru a/uppsrc/CtrlCore/GtkDnD.cpp b/uppsrc/CtrlCore/GtkDnD.cpp
+--- a/uppsrc/CtrlCore/GtkDnD.cpp	2026-10-20 13:03:35.940463863 -0700
++++ b/uppsrc/CtrlCore/GtkDnD.cpp	2026-10-20 13:03:35.940463863 -0700
+@@ -21,7 +21,7 @@
+ 
+ cairo_surface_t *CreateCairoSurface(const Image& img);
+ 
+-void Ctrl::GtkDragBegin(GtkWidget *widget, GdkDragContext *context, gpointer user_data)
++void Ctrl::GtkDragBegin(GtkWidget */*widget*/, GdkDragContext *context, gpointer /*user_data*/)
+ {
+ 	if(IsNull(dnd_icon))
+ 		gtk_drag_set_icon_default(context);
+@@ -37,13 +37,13 @@
+ 	LLOG("GtkDragBegin");
+ }
+ 
+-void Ctrl::GtkDragDelete(GtkWidget *widget, GdkDragContext *context, gpointer user_data)
++void Ctrl::GtkDragDelete(GtkWidget */*widget*/, GdkDragContext */*context*/, gpointer /*user_data*/)
+ {
+ 	LLOG("GtkDragDelete");
+ }
+ 
+-void Ctrl::GtkDragGetData(GtkWidget *widget, GdkDragContext *context, GtkSelectionData *data,
+-                          guint info, guint time, gpointer user_data)
++void Ctrl::GtkDragGetData(GtkWidget */*widget*/, GdkDragContext */*context*/, GtkSelectionData *data,
++                          guint info, guint /*time*/, gpointer /*user_data*/)
+ {
+ 	LLOG("GtkDragGetData");
+ 	if(!dnd_source)
+@@ -59,7 +59,7 @@
+ 	}
+ }
+ 
+-void Ctrl::GtkDragEnd(GtkWidget *widget, GdkDragContext *context, gpointer user_data)
++void Ctrl::GtkDragEnd(GtkWidget */*widget*/, GdkDragContext *context, gpointer /*user_data*/)
+ {
+ 	LLOG("GtkDragEnd");
+ 	dnd_result = DND_NONE;
+@@ -68,8 +68,8 @@
+ 	dnd_source = NULL;
+ }
+                                                        
+-gboolean Ctrl::GtkDragFailed(GtkWidget *widget, GdkDragContext *context, GtkDragResult   result,
+-                             gpointer user_data)
++gboolean Ctrl::GtkDragFailed(GtkWidget */*widget*/, GdkDragContext */*context*/, GtkDragResult   /*result*/,
++                             gpointer /*user_data*/)
+ {
+ 	LLOG("GtkDragFailed");
+ 	dnd_source = NULL;
+@@ -78,7 +78,7 @@
+ 
+ Image MakeDragImage(const Image& arrow, Image sample);
+ 
+-Image MakeDragImage(const Image& arrow, const Image& arrow98, Image sample)
++Image MakeDragImage(const Image& /*arrow*/, const Image& arrow98, Image /*sample*/)
+ {
+ 	return arrow98;
+ }
+@@ -218,9 +218,9 @@
+ 	}
+ }
+ 
+-void Ctrl::GtkDragDataReceived(GtkWidget *widget, GdkDragContext *context,
+-                               gint x, gint y, GtkSelectionData *data,
+-                               guint info, guint time, gpointer user_data)
++void Ctrl::GtkDragDataReceived(GtkWidget */*widget*/, GdkDragContext */*context*/,
++                               gint /*x*/, gint /*y*/, GtkSelectionData *data,
++                               guint /*info*/, guint /*time*/, gpointer /*user_data*/)
+ {
+ 	dnd_data_wait = false;
+ 	if(dnd_data_fmt == "text") {
+@@ -326,7 +326,7 @@
+ 	return TRUE;
+ }
+ 
+-void Ctrl::GtkDragLeave(GtkWidget *widget, GdkDragContext *context, guint time, gpointer user_data)
++void Ctrl::GtkDragLeave(GtkWidget */*widget*/, GdkDragContext */*context*/, guint /*time*/, gpointer /*user_data*/)
+ {
+ 	LLOG("GtkDragLeave");
+ 	DnDLeave();
+diff -ru a/uppsrc/CtrlCore/GtkDrawImage.cpp b/uppsrc/CtrlCore/GtkDrawImage.cpp
+--- a/uppsrc/CtrlCore/GtkDrawImage.cpp	2026-10-20 13:03:35.942463864 -0700
++++ b/uppsrc/CtrlCore/GtkDrawImage.cpp	2026-10-20 13:03:35.943463865 -0700
+@@ -9,7 +9,7 @@
+ #define LTIMING(x) // RTIMING(x)
+ #define LLOG(x)
+ 
+-void SetSurface(SystemDraw& w, const Rect& dest, const RGBA *pixels, Size srcsz, Point poff)
++void SetSurface(SystemDraw& w, const Rect& dest, const RGBA *pixels, Size /*srcsz*/, Point /*poff*/)
+ {
+ 	w.FlushText();
+ 	Size dsz = dest.GetSize();
+@@ -220,11 +220,11 @@
+ 	}
+ }
+ 
+-void BackDraw::Put(SystemDraw& w, int x, int y)
++void BackDraw::Put(SystemDraw& /*w*/, int /*x*/, int /*y*/)
+ {
+ }
+ 
+-void BackDraw::Create(SystemDraw& w, int cx, int cy)
++void BackDraw::Create(SystemDraw& /*w*/, int /*cx*/, int /*cy*/)
+ {
+ }
+ 
+diff -ru a/uppsrc/CtrlCore/GtkDrawOp.cpp b/uppsrc/CtrlCore/GtkDrawOp.cpp
+--- a/uppsrc/CtrlCore/GtkDrawOp.cpp	2026-10-20 13:03:35.945463866 -0700
++++ b/uppsrc/CtrlCore/GtkDrawOp.cpp	2026-10-20 13:03:35.945463866 -0700
+@@ -215,7 +215,7 @@
+ }
+ 
+ void SystemDraw::DrawPolyPolylineOp(const Point *vertices, int vertex_count, const int *counts,
+-                                    int count_count, int width, Color color, Color doxor)
++                                    int count_count, int width, Color color, Color /*doxor*/)
+ {
+ 	if(vertex_count < 2 || IsNull(color))
+ 		return;
+@@ -234,9 +234,9 @@
+ 
+ cairo_surface_t *CreateCairoSurface(const Image& img);
+ 
+-void SystemDraw::DrawPolyPolyPolygonOp(const Point *vertices, int vertex_count,
+-                                  const int *subpolygon_counts, int scc, const int *disjunct_polygon_counts,
+-                                  int dpcc, Color color, int width, Color outline, uint64 pattern, Color doxor)
++void SystemDraw::DrawPolyPolyPolygonOp(const Point *vertices, int /*vertex_count*/,
++                                  const int *subpolygon_counts, int /*scc*/, const int *disjunct_polygon_counts,
++                                  int dpcc, Color color, int width, Color outline, uint64 pattern, Color /*doxor*/)
+ {
+ 	FlushText();
+ 	Image fill_img;
+diff -ru a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
+--- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 13:03:35.947463867 -0700
++++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 13:03:35.948463868 -0700
+@@ -173,7 +173,7 @@
+ 		top->sync_rect = true;
+ }
+ 
+-gboolean Ctrl::TopGtkEvent(GtkWidget *widget, GdkEvent *event, gpointer user_data)
++gboolean Ctrl::TopGtkEvent(GtkWidget */*widget*/, GdkEvent *event, gpointer user_data)
+ {
+ #ifdef LOG_EVENTS
+ 	String ev = "? " + AsString((int)event->type);
+@@ -203,7 +203,7 @@
+ 	return false;
+ }
+ 
+-gboolean Ctrl::GtkEvent(GtkWidget *widget, GdkEvent *event, gpointer user_data)
++gboolean Ctrl::GtkEvent(GtkWidget */*widget*/, GdkEvent *event, gpointer user_data)
+ {
+ 	GuiLock __;
+ 	GdkEventKey *key;
+@@ -305,7 +305,7 @@
+ 	return retval;
+ }
+ 
+-int Ctrl::DoButtonEvent(GdkEvent *event, bool press)
++int Ctrl::DoButtonEvent(GdkEvent *event, bool /*press*/)
+ {
+ 	GdkEventButton *e = (GdkEventButton *)event;
+ /*	static int mask[] = { GDK_BUTTON1_MASK, GDK_BUTTON2_MASK, GDK_BUTTON3_MASK };
+@@ -493,7 +493,7 @@
+ #endif
+ }
+ 
+-void Ctrl::IMCommit(GtkIMContext *context, gchar *str, gpointer user_data)
++void Ctrl::IMCommit(GtkIMContext */*context*/, gchar *str, gpointer user_data)
+ {
+ 	GuiLock __;
+ 	AddEvent(user_data, EVENT_TEXT, ToUtf32(str), NULL);
+@@ -534,7 +534,7 @@
+ 		CancelPreedit();
+ }
+ 
+-void Ctrl::IMPreeditEnd(GtkIMContext *context, gpointer user_data)
++void Ctrl::IMPreeditEnd(GtkIMContext */*context*/, gpointer user_data)
+ {
+ 	GuiLock __;
+ 	Ctrl *w = GetTopCtrlFromId((uint32)(uintptr_t)user_data);
+diff -ru a/uppsrc/CtrlCore/GtkTop.cpp b/uppsrc/CtrlCore/GtkTop.cpp
+--- a/uppsrc/CtrlCore/GtkTop.cpp	2026-10-20 13:03:35.949463869 -0700
++++ b/uppsrc/CtrlCore/GtkTop.cpp	2026-10-20 13:03:35.950463870 -0700
+@@ -111,7 +111,7 @@
+ 	}
+ }
+ 
+-gboolean TopWindow::StateEvent(GtkWidget *widget, GdkEventWindowState *event, gpointer user_data)
++gboolean TopWindow::StateEvent(GtkWidget */*widget*/, GdkEventWindowState *event, gpointer user_data)
+ {
+ 	TopWindow *w = (TopWindow *)user_data;
+ 	dword h = event->new_window_state;
+@@ -180,7 +180,7 @@
+ 		gtk_window_set_keep_above(gtk(), topmost);
+ }
+ 
+-void TopWindow::SetMode(int mode)
++void TopWindow::SetMode(int /*mode*/)
+ {
+ 	GuiLock __;
+ 	GtkWindow *w = gtk();
+@@ -207,7 +207,7 @@
+ 		}
+ }
+ 
+-void TopWindow::Minimize(bool effect)
++void TopWindow::Minimize(bool /*effect*/)
+ {
+ 	SetMode(MINIMIZED);
+ }
+@@ -218,12 +218,12 @@
+ 	return *this;
+ }
+ 
+-void TopWindow::Maximize(bool effect)
++void TopWindow::Maximize(bool /*effect*/)
+ {
+ 	SetMode(MAXIMIZED);
+ }
+ 
+-void TopWindow::Overlap(bool effect)
++void TopWindow::Overlap(bool /*effect*/)
+ {
+ 	SetMode(OVERLAPPED);
+ }
+diff -ru a/uppsrc/CtrlCore/GtkWnd.cpp b/uppsrc/CtrlCore/GtkWnd.cpp
+--- a/uppsrc/CtrlCore/GtkWnd.cpp	2026-10-20 13:03:35.952463871 -0700
++++ b/uppsrc/CtrlCore/GtkWnd.cpp	2026-10-20 13:03:35.953463872 -0700
+@@ -275,7 +275,7 @@
+ 	return top && top->window && gtk_widget_get_window(top->window);
+ }
+ 
+-void Ctrl::SetAlpha(byte alpha)
++void Ctrl::SetAlpha(byte /*alpha*/)
+ {
+ 	GuiLock __;
+ }
+@@ -601,7 +601,7 @@
+ 	}
+ }
+ 
+-void Ctrl::WndUpdate(const Rect& r)
++void Ctrl::WndUpdate([[maybe_unused]] const Rect& r)
+ {
+ 	GuiLock __;
+ 	LLOG("WndUpdate0r " << r);
+diff -ru a/uppsrc/CtrlCore/GtkX11Util.cpp b/uppsrc/CtrlCore/GtkX11Util.cpp
+--- a/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-20 13:03:35.955463873 -0700
++++ b/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-20 13:03:35.956463873 -0700
+@@ -163,7 +163,7 @@
+ 	}
+ }
+ 
+-GdkFilterReturn Ctrl::RootKeyFilter(GdkXEvent *xevent, GdkEvent *Xevent, gpointer data)
++GdkFilterReturn Ctrl::RootKeyFilter(GdkXEvent *xevent, GdkEvent */*Xevent*/, gpointer /*data*/)
+ {
+ 	if(IsWayland())
+ 		return GDK_FILTER_CONTINUE; // Not supported on Wayland...
+diff -ru a/uppsrc/CtrlCore/lay0.h b/uppsrc/CtrlCore/lay0.h
+--- a/uppsrc/CtrlCore/lay0.h	2026-10-20 13:03:35.958463875 -0700
++++ b/uppsrc/CtrlCore/lay0.h	2026-10-20 13:03:35.958463875 -0700
+@@ -53,7 +53,7 @@
+ #undef  END_LAYOUT
+ 
+ #define LAYOUT(nm, x, y)       template <class L, class D> \
+-                               void InitLayout(UPP::Ctrl& parent, L& layout, D& uts, nm##__layid&) { \
++                               void InitLayout(UPP::Ctrl& parent, [[maybe_unused]] L& layout, [[maybe_unused]] D& uts, nm##__layid&) { \
+                                   parent.LayoutIdLiteral(#nm);
+ #define UNTYPED(var, param)       uts.var.param; uts.var.LayoutIdLiteral(#var); parent.Add(uts.var);
+ #define ITEM(clss, var, param)    layout.var.param; layout.var.LayoutIdLiteral(#var); parent.Add(layout.var);
+diff -ru a/uppsrc/CtrlCore/LocalLoop.cpp b/uppsrc/CtrlCore/LocalLoop.cpp
+--- a/uppsrc/CtrlCore/LocalLoop.cpp	2026-10-20 13:03:35.961463877 -0700
++++ b/uppsrc/CtrlCore/LocalLoop.cpp	2026-10-20 13:03:35.961463877 -0700
+@@ -282,7 +282,7 @@
+ 	EndLoop();
+ }
+ 
+-Image PointLooper::CursorImage(Point p, dword keyflags)
++Image PointLooper::CursorImage(Point /*p*/, dword /*keyflags*/)
+ {
+ 	return ani[int(GetTimeClick() / ani_ms % ani.GetCount())];
+ }
+diff -ru a/uppsrc/CtrlCore/TopWindow.cpp b/uppsrc/CtrlCore/TopWindow.cpp
+--- a/uppsrc/CtrlCore/TopWindow.cpp	2026-10-20 13:03:35.964463879 -0700
++++ b/uppsrc/CtrlCore/TopWindow.cpp	2026-10-20 13:03:35.964463879 -0700
+@@ -517,7 +517,7 @@
+ }
+ 
+ struct DialogBackground : public Display {
+-	void Paint(Draw& w, const Rect& r, const Value& q, Color ink, Color paper, dword style) const
++	void Paint(Draw& w, const Rect& r, const Value& /*q*/, Color /*ink*/, Color /*paper*/, dword /*style*/) const
+ 	{
+ 		w.DrawRect(r, SColorFace());
+ 	}
+diff -ru a/uppsrc/CtrlLib/AKeys.cpp b/uppsrc/CtrlLib/AKeys.cpp
+--- a/uppsrc/CtrlLib/AKeys.cpp	2026-10-20 13:03:35.966463880 -0700
++++ b/uppsrc/CtrlLib/AKeys.cpp	2026-10-20 13:03:35.967463881 -0700
+@@ -44,7 +44,7 @@
+ 
+ struct KeyDisplay : Display {
+ 	virtual void Paint(Draw& w, const Rect& r, const Value& q,
+-	                   Color ink, Color paper, dword flags) const {
++	                   Color ink, Color paper, dword /*flags*/) const {
+ 		w.DrawRect(r, paper);
+ 		String txt = GetKeyDesc(int(q));
+ 		int tcy = GetTextSize(txt, StdFont()).cy;
+@@ -60,7 +60,7 @@
+ 	virtual void  GotFocus()              { Refresh(); }
+ 	virtual void  LostFocus()             { Refresh(); }
+ 
+-	virtual void  LeftDown(Point p, dword) { SetFocus(); }
++	virtual void  LeftDown(Point /*p*/, dword) { SetFocus(); }
+ 
+ 	virtual void Paint(Draw& w) {
+ 		Single<KeyDisplay>().Paint(w, GetSize(), key,
+diff -ru a/uppsrc/CtrlLib/ArrayCtrl.cpp b/uppsrc/CtrlLib/ArrayCtrl.cpp
+--- a/uppsrc/CtrlLib/ArrayCtrl.cpp	2026-10-20 13:03:35.970463883 -0700
++++ b/uppsrc/CtrlLib/ArrayCtrl.cpp	2026-10-20 13:03:35.970463883 -0700
+@@ -2160,13 +2160,13 @@
+ }
+ 
+ struct ArrayCtrlSeparatorDisplay : Display {
+-	virtual void Paint(Draw& w, const Rect& r, const Value& q, Color ink, Color paper, dword style) const {
++	virtual void Paint(Draw& w, const Rect& r, const Value& /*q*/, Color /*ink*/, Color paper, dword /*style*/) const {
+ 		int y = r.top + r.GetHeight() / 2;
+ 		w.DrawRect(r, paper);
+ 		w.DrawRect(r.left, y, r.GetWidth(), 1, SColorShadow());
+ 		w.DrawRect(r.left, y + 1, r.GetWidth(), 1, SColorLight());
+ 	}
+-	virtual Size GetStdSize(const Value& q) const {
++	virtual Size GetStdSize(const Value& /*q*/) const {
+ 		return Size(0, 2);
+ 	}
+ };
+@@ -2625,7 +2625,7 @@
+ 	return (*o)(GetConvertedColumn(i1, column), GetConvertedColumn(i2, column));
+ }
+ 
+-void ArrayCtrl::ColumnSort(int column, Gate<int, int> order)
++void ArrayCtrl::ColumnSort(int /*column*/, Gate<int, int> order)
+ {
+ 	Value key = GetKey();
+ 	CHECK(KillCursor());
+@@ -2791,7 +2791,7 @@
+ 		DoColumnSort();
+ }
+ 
+-void ArrayCtrl::Serialize(Stream& s)
++void ArrayCtrl::Serialize(Stream& /*s*/)
+ {
+ }
+ 
+@@ -2851,7 +2851,7 @@
+ 	info.Cancel();
+ }
+ 
+-void ArrayCtrl::MouseWheel(Point p, int zdelta, dword keyflags) {
++void ArrayCtrl::MouseWheel(Point /*p*/, int zdelta, dword keyflags) {
+ 	if(keyflags & K_SHIFT)
+ 		header.sb.Wheel(zdelta);
+ 	else
+@@ -3259,7 +3259,7 @@
+ }
+ 
+ void ArrayOption::Paint(Draw& w, const Rect& r, const Value& q,
+-		                Color ink, Color paper, dword style) const
++		                Color /*ink*/, Color paper, dword /*style*/) const
+ {
+ 	bool gray = (array && !array->IsEnabled());
+ 	w.DrawRect(r, paper);
+diff -ru a/uppsrc/CtrlLib/ArrayCtrl.h b/uppsrc/CtrlLib/ArrayCtrl.h
+--- a/uppsrc/CtrlLib/ArrayCtrl.h	2026-10-20 13:03:35.972463884 -0700
++++ b/uppsrc/CtrlLib/ArrayCtrl.h	2026-10-20 13:03:35.973463885 -0700
+@@ -495,7 +495,7 @@
+ 
+ 	void       Add(const Vector<Value>& v)                      { Set(array.GetCount(), v); }
+ 	void       Add(Vector<Value>&& v)                           { Set(array.GetCount(), pick(v)); }
+-	void       Add(const Nuller& null)                          { Add((Value)Null); }
++	void       Add(const Nuller& /*null*/)                          { Add((Value)Null); }
+ 	void       Add(const VectorMap<String, Value>& m);
+ 	template <typename... Args>
+ 	void       Add(const Args& ...args)                         { Add(gather<Vector<Value>>(args...)); }
+@@ -667,8 +667,8 @@
+ 	bool       IsAppending() const                     { return appending || autoappend; }
+ 	ArrayCtrl& AutoAppending(bool b = true)            { autoappend = b; return *this; }
+ 	bool       IsAutoAppending() const                 { return autoappend; }
+-	ArrayCtrl& BeforeAfterInserting(int q = 1)         { bains = 1; return *this; }
+-	ArrayCtrl& AfterBeforeInserting(int q = 2)         { bains = 2; return *this; }
++	ArrayCtrl& BeforeAfterInserting(int /*q*/ = 1)         { bains = 1; return *this; }
++	ArrayCtrl& AfterBeforeInserting(int /*q*/ = 2)         { bains = 2; return *this; }
+ 	ArrayCtrl& Duplicating(bool b = true)              { duplicating = b; return *this; }
+ 	ArrayCtrl& NoInsertAppend(bool b = true)           { noinsertappend = b; return *this; }
+ 	bool       IsDuplicating() const                   { return duplicating; }
+diff -ru a/uppsrc/CtrlLib/Bar.cpp b/uppsrc/CtrlLib/Bar.cpp
+--- a/uppsrc/CtrlLib/Bar.cpp	2026-10-20 13:03:35.975463886 -0700
++++ b/uppsrc/CtrlLib/Bar.cpp	2026-10-20 13:03:35.975463886 -0700
+@@ -4,7 +4,7 @@
+ 
+ #define LLOG(x) // LOG(x)
+ 
+-void BarPane::LeftDown(Point pt, dword keyflags)
++void BarPane::LeftDown(Point /*pt*/, dword /*keyflags*/)
+ {
+ 	WhenLeftClick();
+ }
+@@ -147,7 +147,7 @@
+ 	return LayOut(horz, maxsize, true);
+ }
+ 
+-Size BarPane::GetPaneSize(bool _horz, int maxsize) const
++Size BarPane::GetPaneSize(bool /*_horz*/, int maxsize) const
+ {
+ 	return const_cast<BarPane *>(this)->LayOut(horz, maxsize, false);
+ }
+@@ -196,18 +196,18 @@
+ Bar::Item::Item() {}
+ Bar::Item::~Item() {}
+ 
+-Bar::Item& Bar::Item::Text(const char *text)        { return *this; }
+-Bar::Item& Bar::Item::Key(dword key)                { return *this; }
+-Bar::Item& Bar::Item::Repeat(bool b)                { return *this; }
+-Bar::Item& Bar::Item::Image(const UPP::Image& img)  { return *this; }
+-Bar::Item& Bar::Item::Bold(bool bold)               { return *this; }
+-Bar::Item& Bar::Item::Enable(bool _enable)          { return *this; }
+-Bar::Item& Bar::Item::Tip(const char *tip)          { return *this; }
+-Bar::Item& Bar::Item::Help(const char *help)        { return *this; }
+-Bar::Item& Bar::Item::Topic(const char *topic)      { return *this; }
+-Bar::Item& Bar::Item::Description(const char *desc) { return *this; }
+-Bar::Item& Bar::Item::Check(bool check)             { return *this; }
+-Bar::Item& Bar::Item::Radio(bool check)             { return *this; }
++Bar::Item& Bar::Item::Text(const char */*text*/)        { return *this; }
++Bar::Item& Bar::Item::Key(dword /*key*/)                { return *this; }
++Bar::Item& Bar::Item::Repeat(bool /*b*/)                { return *this; }
++Bar::Item& Bar::Item::Image(const UPP::Image& /*img*/)  { return *this; }
++Bar::Item& Bar::Item::Bold(bool /*bold*/)               { return *this; }
++Bar::Item& Bar::Item::Enable(bool /*_enable*/)          { return *this; }
++Bar::Item& Bar::Item::Tip(const char */*tip*/)          { return *this; }
++Bar::Item& Bar::Item::Help(const char */*help*/)        { return *this; }
++Bar::Item& Bar::Item::Topic(const char */*topic*/)      { return *this; }
++Bar::Item& Bar::Item::Description(const char */*desc*/) { return *this; }
++Bar::Item& Bar::Item::Check(bool /*check*/)             { return *this; }
++Bar::Item& Bar::Item::Radio(bool /*check*/)             { return *this; }
+ void       Bar::Item::FinalSync() {}
+ 
+ Bar::Item& Bar::Item::Label(const char *text)
+@@ -423,7 +423,7 @@
+ void   Bar::AddTool(Ctrl& ctrl)            { if(IsToolBar()) Add(ctrl); }
+ void   Bar::AddTool(Ctrl& ctrl, Size sz)   { if(IsToolBar()) Add(ctrl, sz); }
+ 
+-void   Bar::AddKey(dword key, Event<>  cb) {}
++void   Bar::AddKey(dword /*key*/, Event<>  /*cb*/) {}
+ 
+ void Bar::AddKey(KeyInfo& (*key)(), Event<>  cb)
+ {
+@@ -447,15 +447,15 @@
+ 		Event<>       action;
+ 
+ 		virtual Item& Text(const char *)             { return *this; }
+-		virtual Item& Check(bool check)              { return *this; }
+-		virtual Item& Radio(bool check)              { return *this; }
++		virtual Item& Check(bool /*check*/)              { return *this; }
++		virtual Item& Radio(bool /*check*/)              { return *this; }
+ 		virtual Item& Key(dword _key)                { if(_key) key.Add(_key); return *this; }
+-		virtual Item& Image(const UPP::Image& img)   { return *this;  }
++		virtual Item& Image(const UPP::Image& /*img*/)   { return *this;  }
+ 		virtual Item& Enable(bool _enable = true)    { enabled = _enable; return *this; }
+-		virtual Item& Tip(const char *tip)           { return *this; }
+-		virtual Item& Help(const char *help)         { return *this; }
+-		virtual Item& Topic(const char *help)        { return *this; }
+-		virtual Item& Description(const char *help)  { return *this; }
++		virtual Item& Tip(const char */*tip*/)           { return *this; }
++		virtual Item& Help(const char */*help*/)         { return *this; }
++		virtual Item& Topic(const char */*help*/)        { return *this; }
++		virtual Item& Description(const char */*help*/)  { return *this; }
+ 	};
+ 
+ 	Array<KeyItem> key;
+@@ -465,8 +465,8 @@
+ protected:
+ 	virtual Item&  AddItem(Event<>  cb);
+ 	virtual Item&  AddSubMenu(Event<Bar&> proc);
+-	virtual void   AddCtrl(Ctrl *ctrl, int gapsize) {};
+-	virtual void   AddCtrl(Ctrl *ctrl, Size sz) {};
++	virtual void   AddCtrl(Ctrl */*ctrl*/, int /*gapsize*/) {};
++	virtual void   AddCtrl(Ctrl */*ctrl*/, Size /*sz*/) {};
+ 
+ public:
+ 	virtual bool   IsMenuBar() const                 { return true; }
+diff -ru a/uppsrc/CtrlLib/Bar.h b/uppsrc/CtrlLib/Bar.h
+--- a/uppsrc/CtrlLib/Bar.h	2026-10-20 13:03:35.977463888 -0700
++++ b/uppsrc/CtrlLib/Bar.h	2026-10-20 13:03:35.978463888 -0700
+@@ -157,7 +157,7 @@
+ 	Item&  Add(const char *text, const Callback1<Bar&>& proc);
+ 	Item&  Add(const String& text, const Callback1<Bar&>& proc) { return Add(~text, proc); }
+ 	Item&  Add(bool enable, const char *text, const UPP::Image& image, const Callback1<Bar&>& proc);
+-	Item&  Add(bool enable, const String& text, const UPP::Image& image, const Callback1<Bar&>& proc) { return Add(enable, ~text, proc); }
++	Item&  Add(bool enable, const String& text, const UPP::Image& /*image*/, const Callback1<Bar&>& proc) { return Add(enable, ~text, proc); }
+ 	Item&  Add(const char *text, const UPP::Image& image, const Callback1<Bar&>& proc);
+ 	Item&  Add(const String& text, const UPP::Image& image, const Callback1<Bar&>& proc) { return Add(~text, image, proc); }
+ 	Item&  Sub(bool enable, const char *text, const Function<void (Bar&)>& submenu);
+diff -ru a/uppsrc/CtrlLib/BeginnerInfo.cpp b/uppsrc/CtrlLib/BeginnerInfo.cpp
+--- a/uppsrc/CtrlLib/BeginnerInfo.cpp	2026-10-20 13:03:35.980463890 -0700
++++ b/uppsrc/CtrlLib/BeginnerInfo.cpp	2026-10-20 13:03:35.981463890 -0700
+@@ -93,8 +93,8 @@
+ 			Stop();
+ 			return false;
+ 		});
+-		Ctrl::InstallMouseHook([](Ctrl *ctrl, bool inframe, int event, Point p,
+-	                          int zdelta, dword keyflags) -> bool {
++		Ctrl::InstallMouseHook([](Ctrl */*ctrl*/, bool /*inframe*/, int event, Point /*p*/,
++	                          int /*zdelta*/, dword /*keyflags*/) -> bool {
+ 			if(event == Ctrl::MOUSEMOVE)
+ 				Stop(true);
+ 			else
+diff -ru a/uppsrc/CtrlLib/Button.cpp b/uppsrc/CtrlLib/Button.cpp
+--- a/uppsrc/CtrlLib/Button.cpp	2026-10-20 13:03:35.983463892 -0700
++++ b/uppsrc/CtrlLib/Button.cpp	2026-10-20 13:03:35.983463892 -0700
+@@ -34,7 +34,7 @@
+ 	SetCapture();
+ }
+ 
+-void Pusher::MouseMove(Point, dword style) {
++void Pusher::MouseMove(Point, dword /*style*/) {
+ 	LLOG("Mouse move !");
+ 	if(IsReadOnly() || !HasCapture()) return;
+ 	bool b = GetScreenView().Contains(GetMousePos());
+diff -ru a/uppsrc/CtrlLib/Ch.cpp b/uppsrc/CtrlLib/Ch.cpp
+--- a/uppsrc/CtrlLib/Ch.cpp	2026-10-20 13:03:35.986463894 -0700
++++ b/uppsrc/CtrlLib/Ch.cpp	2026-10-20 13:03:35.986463894 -0700
+@@ -381,7 +381,7 @@
+ 	return n ? Color(r / n, g / n, b / n) : SWhite();
+ }
+ 
+-Color AvgColor(const Image& m, RGBA bg, int margin)
++Color AvgColor(const Image& m, RGBA /*bg*/, int margin)
+ {
+ 	return AvgColor(m, Rect(m.GetSize()).Deflated(margin));
+ }
+diff -ru a/uppsrc/CtrlLib/ColorPopup.cpp b/uppsrc/CtrlLib/ColorPopup.cpp
+--- a/uppsrc/CtrlLib/ColorPopup.cpp	2026-10-20 13:03:35.988463895 -0700
++++ b/uppsrc/CtrlLib/ColorPopup.cpp	2026-10-20 13:03:35.989463896 -0700
+@@ -293,17 +293,17 @@
+ 		WhenCancel();
+ }
+ 
+-void ColorPopUp::LeftDown(Point p, dword)
++void ColorPopUp::LeftDown(Point /*p*/, dword)
+ {
+ 	Refresh();
+ }
+ 
+-void ColorPopUp::LeftUp(Point p, dword)
++void ColorPopUp::LeftUp(Point /*p*/, dword)
+ {
+ 	Finish();
+ }
+ 
+-bool ColorPopUp::Key(dword key, int count)
++bool ColorPopUp::Key(dword key, int /*count*/)
+ {
+ 	if(key == K_ESCAPE)	{
+ 		Close();
+diff -ru a/uppsrc/CtrlLib/ColorPusher.cpp b/uppsrc/CtrlLib/ColorPusher.cpp
+--- a/uppsrc/CtrlLib/ColorPusher.cpp	2026-10-20 13:03:35.991463897 -0700
++++ b/uppsrc/CtrlLib/ColorPusher.cpp	2026-10-20 13:03:35.992463898 -0700
+@@ -38,7 +38,7 @@
+ 		DrawFocus(w, GetSize());
+ }
+ 
+-void ColorPusher::LeftDown(Point p, dword)
++void ColorPusher::LeftDown(Point /*p*/, dword)
+ {
+ 	Drop();
+ }
+@@ -149,7 +149,7 @@
+ 		w.DrawImage(center.x + push, center.y + push, staticimage, SColorDisabled());
+ }
+ 
+-void  ColorButton::MouseEnter(Point p, dword keyflags)
++void  ColorButton::MouseEnter(Point /*p*/, dword /*keyflags*/)
+ {
+ 	Refresh();
+ }
+diff -ru a/uppsrc/CtrlLib/ColumnList.cpp b/uppsrc/CtrlLib/ColumnList.cpp
+--- a/uppsrc/CtrlLib/ColumnList.cpp	2026-10-20 13:03:35.994463899 -0700
++++ b/uppsrc/CtrlLib/ColumnList.cpp	2026-10-20 13:03:35.995463900 -0700
+@@ -2,7 +2,7 @@
+ 
+ namespace Upp {
+ 
+-void ColumnList::MouseWheel(Point p, int zdelta, dword keyflags) {
++void ColumnList::MouseWheel(Point /*p*/, int zdelta, dword /*keyflags*/) {
+ 	sb.Wheel(zdelta);
+ }
+ 
+@@ -138,13 +138,13 @@
+ 	ReleaseCapture();
+ }
+ 
+-void ColumnList::LeftDrag(Point p, dword keyflags)
++void ColumnList::LeftDrag(Point /*p*/, dword /*keyflags*/)
+ {
+ 	if(!HasCapture())
+ 		WhenDrag();
+ }
+ 
+-void ColumnList::RightDown(Point p, dword flags) {
++void ColumnList::RightDown(Point p, dword /*flags*/) {
+ 	int i = GetItem(p);
+ 	if(!(i >= 0 && multi && IsSel(i))) // Do not change selection if clicking on it
+ 		DoClick(p, 0);
+@@ -249,7 +249,7 @@
+ 	return key;
+ }
+ 
+-bool ColumnList::Key(dword _key, int count) {
++bool ColumnList::Key(dword _key, int /*count*/) {
+ 	int c = cursor;
+ 	bool sel = (_key & K_SHIFT) && multi;
+ 	int key = _key & ~K_SHIFT;
+diff -ru a/uppsrc/CtrlLib/DateTimeCtrl.cpp b/uppsrc/CtrlLib/DateTimeCtrl.cpp
+--- a/uppsrc/CtrlLib/DateTimeCtrl.cpp	2026-10-20 13:03:35.997463901 -0700
++++ b/uppsrc/CtrlLib/DateTimeCtrl.cpp	2026-10-20 13:03:35.997463901 -0700
+@@ -200,7 +200,7 @@
+ 	return weeknum;
+ }
+ 
+-void Calendar::LeftDown(Point p, dword keyflags)
++void Calendar::LeftDown(Point p, dword /*keyflags*/)
+ {
+ 	if(WhenWeek && newweek >= 0) {
+ 		if(PopUpCtrl::IsPopUp())
+@@ -301,7 +301,7 @@
+ 	WhenSelect();
+ }
+ 
+-void Calendar::MouseMove(Point p, dword keyflags)
++void Calendar::MouseMove(Point p, dword /*keyflags*/)
+ {
+ 	newday = GetDay(p);
+ 	if(newday != oldday)
+@@ -339,7 +339,7 @@
+ 	}
+ }
+ 
+-Image Calendar::CursorImage(Point p, dword keyflags)
++Image Calendar::CursorImage(Point /*p*/, dword /*keyflags*/)
+ {
+ 	bool b = (selall == false ? Day(newday) > 0 : true);
+ 	if((newday != nullday && b) || istoday)
+@@ -771,19 +771,19 @@
+ 	Refresh();
+ }
+ 
+-void LineCtrl::LeftDown(Point p, dword keyflags)
++void LineCtrl::LeftDown(Point p, dword /*keyflags*/)
+ {
+ 	SetCapture();
+ 	SetPos(p);
+ }
+ 
+-void LineCtrl::MouseMove(Point p, dword keyflags)
++void LineCtrl::MouseMove(Point p, dword /*keyflags*/)
+ {
+ 	if(HasCapture())
+ 		SetPos(p);
+ }
+ 
+-void LineCtrl::LeftUp(Point p, dword keyflags)
++void LineCtrl::LeftUp(Point /*p*/, dword /*keyflags*/)
+ {
+ 	ReleaseCapture();
+ }
+@@ -948,7 +948,7 @@
+ 	return 0;
+ }
+ 
+-void Clock::MouseMove(Point p, dword keyflags)
++void Clock::MouseMove(Point p, dword /*keyflags*/)
+ {
+ 	if(!HasCapture())
+ 	{
+@@ -1002,7 +1002,7 @@
+ 	}
+ }
+ 
+-void Clock::LeftDown(Point p, dword keyflags)
++void Clock::LeftDown(Point /*p*/, dword /*keyflags*/)
+ {
+ 	if(cur_line >= 0)
+ 		SetCapture();
+@@ -1013,7 +1013,7 @@
+ 	}
+ }
+ 
+-void Clock::LeftUp(Point p, dword keyflags)
++void Clock::LeftUp(Point /*p*/, dword /*keyflags*/)
+ {
+ 	ReleaseCapture();
+ 	if(cur_point >= 0)
+@@ -1024,7 +1024,7 @@
+ 	}
+ }
+ 
+-Image Clock::CursorImage(Point p, dword keyflags)
++Image Clock::CursorImage(Point /*p*/, dword /*keyflags*/)
+ {
+ 	if(cur_line >= 0 || accept_time)
+ 		return CtrlImg::HandCursor();
+@@ -1479,7 +1479,7 @@
+ 	w.DrawText((sz.cx - tsz.cx) / 2, (sz.cy - tsz.cy) / 2, text, font.Underline(selected), SColorHighlightText());
+ }
+ 
+-Image FlatSpin::CursorImage(Point p, dword keyflags)
++Image FlatSpin::CursorImage(Point /*p*/, dword /*keyflags*/)
+ {
+ 	if(selectable && selected)
+ 		return CtrlImg::HandCursor();
+@@ -1493,7 +1493,7 @@
+ 	Refresh();
+ }
+ 
+-void FlatSpin::MouseMove(Point p, dword keyflags)
++void FlatSpin::MouseMove(Point p, dword /*keyflags*/)
+ {
+ 	if(!selectable)
+ 		return;
+@@ -1505,7 +1505,7 @@
+ 		Refresh();
+ }
+ 
+-void FlatSpin::LeftDown(Point p, dword keyflags)
++void FlatSpin::LeftDown(Point /*p*/, dword /*keyflags*/)
+ {
+ 	if(selected)
+ 		WhenAction();
+diff -ru a/uppsrc/CtrlLib/DateTimeCtrl.h b/uppsrc/CtrlLib/DateTimeCtrl.h
+--- a/uppsrc/CtrlLib/DateTimeCtrl.h	2026-10-20 13:03:35.999463903 -0700
++++ b/uppsrc/CtrlLib/DateTimeCtrl.h	2026-10-20 13:03:36.000463903 -0700
+@@ -533,7 +533,7 @@
+ 	DateTimeCtrl& Colon(bool b = true)                             { cc.clock.Colon(b); return *this; }
+ 	DateTimeCtrl& NoColon()                                        { cc.clock.Colon(false); return *this; }
+ 	DateTimeCtrl& SwapMonthYear(bool b = true)                     { cc.calendar.SwapMonthYear(b); return *this; }
+-	DateTimeCtrl& OneButton(bool b = true)                         { cc.calendar.OneButton(true); return *this; }
++	DateTimeCtrl& OneButton(bool /*b*/ = true)                         { cc.calendar.OneButton(true); return *this; }
+ 	DateTimeCtrl& NoOneButton()                                    { cc.calendar.OneButton(false); return *this; }
+ 	DateTimeCtrl& DayEnd(bool b = true)                            { ConvertTime::DayEnd(b); return *this; }
+ 	DateTimeCtrl& TimeAlways(bool b = true)                        { ConvertTime::TimeAlways(b); return *this; }
+diff -ru a/uppsrc/CtrlLib/DisplayPopup.cpp b/uppsrc/CtrlLib/DisplayPopup.cpp
+--- a/uppsrc/CtrlLib/DisplayPopup.cpp	2026-10-20 13:03:36.002463904 -0700
++++ b/uppsrc/CtrlLib/DisplayPopup.cpp	2026-10-20 13:03:36.003463905 -0700
+@@ -23,7 +23,7 @@
+ 	}
+ }
+ 
+-void DisplayPopup::PaintHook(Ctrl *tw, Draw& w, const Rect& clip)
++void DisplayPopup::PaintHook(Ctrl *tw, Draw& w, const Rect& /*clip*/)
+ {
+ 	if(ctrl && tw && !IsNull(screen_rect) && ctrl->HasMouseDeep() &&
+ 	   (tw == ctrl->GetTopCtrl() || tw == ctrl->GetTopCtrl()->GetOwner())) {
+@@ -104,7 +104,7 @@
+ }
+ 
+ 
+-bool DisplayPopup::MouseHook(Ctrl *, bool, int event, Point, int, dword)
++bool DisplayPopup::MouseHook(Ctrl *, bool, int /*event*/, Point, int, dword)
+ {
+ 	Sync();
+ 	return false;
+diff -ru a/uppsrc/CtrlLib/DlgColor.cpp b/uppsrc/CtrlLib/DlgColor.cpp
+--- a/uppsrc/CtrlLib/DlgColor.cpp	2026-10-20 13:03:36.005463907 -0700
++++ b/uppsrc/CtrlLib/DlgColor.cpp	2026-10-20 13:03:36.005463907 -0700
+@@ -300,7 +300,7 @@
+ 		SetColor(value, true, true);
+ }
+ 
+-void WheelRampCtrl::LeftUp(Point pt, dword keyflags)
++void WheelRampCtrl::LeftUp(Point /*pt*/, dword /*keyflags*/)
+ {
+ 	firstclick = 0;
+ 	ReleaseCapture();
+@@ -310,7 +310,7 @@
+ inline double hypot(double a, double b) { return _hypot(a, b); }
+ #endif
+ 
+-void WheelRampCtrl::LeftDown(Point pt, dword keyflags)
++void WheelRampCtrl::LeftDown(Point pt, dword /*keyflags*/)
+ {
+ 	if(!HasCapture())
+ 	{
+@@ -361,7 +361,7 @@
+ 	Action();
+ }
+ 
+-void WheelRampCtrl::LeftDouble(Point pt, dword keyflags)
++void WheelRampCtrl::LeftDouble(Point /*pt*/, dword /*keyflags*/)
+ {
+ 	WhenLeftDouble();
+ }
+@@ -552,7 +552,7 @@
+ 		PaintArrow(draw, rect[i], comp[i]);
+ }
+ 
+-void RGBCtrl::LeftDown(Point pt, dword keyflags)
++void RGBCtrl::LeftDown(Point pt, dword /*keyflags*/)
+ {
+ 	int level = ClientToLevel(pt.y);
+ 	int r = GetRValue(color), g = GetGValue(color), b = GetBValue(color);
+@@ -686,7 +686,7 @@
+ 		PaintArrow(draw, rect[i], comp[i]);
+ }
+ 
+-void HSVCtrl::LeftDown(Point pt, dword keyflags)
++void HSVCtrl::LeftDown(Point pt, dword /*keyflags*/)
+ {
+ 	int level = ClientToLevel16(pt.y);
+ 	if(pt.x <= rect[0].right)
+diff -ru a/uppsrc/CtrlLib/DocEdit.cpp b/uppsrc/CtrlLib/DocEdit.cpp
+--- a/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 13:03:36.008463909 -0700
++++ b/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 13:03:36.008463909 -0700
+@@ -2,7 +2,7 @@
+ 
+ namespace Upp {
+ 
+-void DocEdit::MouseWheel(Point p, int zdelta, dword keyflags)
++void DocEdit::MouseWheel(Point /*p*/, int zdelta, dword /*keyflags*/)
+ {
+ 	sb.Wheel(zdelta);
+ }
+@@ -291,7 +291,7 @@
+ 	ReleaseCapture();
+ }
+ 
+-void DocEdit::MouseMove(Point p, dword flags) {
++void DocEdit::MouseMove(Point p, dword /*flags*/) {
+ 	if(!HasCapture()) return;
+ 	PlaceCaret(GetMousePos(p), true);
+ }
+@@ -487,7 +487,7 @@
+ 	Refresh();
+ }
+ 
+-void DocEdit::RightDown(Point p, dword w)
++void DocEdit::RightDown(Point p, dword /*w*/)
+ {
+ 	SetFocus();
+ 	int c = GetMousePos(p);
+@@ -587,7 +587,7 @@
+ 	Layout();
+ }
+ 
+-void DocEdit::LeftDrag(Point p, dword flags)
++void DocEdit::LeftDrag(Point p, dword /*flags*/)
+ {
+ 	int c = GetMousePos(p);
+ 	int l, h;
+diff -ru a/uppsrc/CtrlLib/DropChoice.h b/uppsrc/CtrlLib/DropChoice.h
+--- a/uppsrc/CtrlLib/DropChoice.h	2026-10-20 13:03:36.011463911 -0700
++++ b/uppsrc/CtrlLib/DropChoice.h	2026-10-20 13:03:36.011463911 -0700
+@@ -398,7 +398,7 @@
+ }
+ 
+ template <class T>
+-void WithDropChoice<T>::MouseWheel(Point p, int zdelta, dword keyflags)
++void WithDropChoice<T>::MouseWheel(Point /*p*/, int zdelta, dword /*keyflags*/)
+ {
+ 	if(withwheel)
+ 		select.DoWheel(zdelta);
+diff -ru a/uppsrc/CtrlLib/EditCtrl.h b/uppsrc/CtrlLib/EditCtrl.h
+--- a/uppsrc/CtrlLib/EditCtrl.h	2026-10-20 13:03:36.014463913 -0700
++++ b/uppsrc/CtrlLib/EditCtrl.h	2026-10-20 13:03:36.015463913 -0700
+@@ -142,7 +142,7 @@
+ 	bool    FrameIsEdge();
+ 	void    SetEdge(int i);
+ 	void    RefreshAll();
+-	int     LowChar(int c) const { return 0x25af /*c + 0x2400*/; }
++	int     LowChar(int /*c*/) const { return 0x25af /*c + 0x2400*/; }
+ 	int     GetCharWidth(int c) const { return font[c < 32 ? LowChar(c) : c]; }
+ 	int     GetTextCx(const wchar *text, int n, bool password) const;
+ 	void    Paints(Draw& w, int& x, int fcy, const wchar *&txt,
+@@ -352,7 +352,7 @@
+ template <> inline       Time    WithSpin_DefaultStartValue() { return GetSysTime(); }
+ 
+ template <class DataType, class IncType>
+-void WithSpin_Add(DataType& value, IncType inc, DataType min, bool roundfrommin)
++void WithSpin_Add(DataType& value, IncType inc, DataType /*min*/, bool /*roundfrommin*/)
+ {
+ 	value += inc;
+ }
+diff -ru a/uppsrc/CtrlLib/EditCtrl.hpp b/uppsrc/CtrlLib/EditCtrl.hpp
+--- a/uppsrc/CtrlLib/EditCtrl.hpp	2026-10-20 13:03:36.017463915 -0700
++++ b/uppsrc/CtrlLib/EditCtrl.hpp	2026-10-20 13:03:36.018463915 -0700
+@@ -13,7 +13,7 @@
+ }
+ 
+ template <class DataType, class Base, class IncType>
+-WithSpin<DataType, Base, IncType>::WithSpin(DataType min, DataType max, IncType inc)
++WithSpin<DataType, Base, IncType>::WithSpin(DataType min, DataType max, IncType /*inc*/)
+ :	inc(WithSpin_DefaultIncValue<IncType>())
+ {
+ 	Base::MinMax(min, max);
+diff -ru a/uppsrc/CtrlLib/EditField.cpp b/uppsrc/CtrlLib/EditField.cpp
+--- a/uppsrc/CtrlLib/EditField.cpp	2026-10-20 13:03:36.019463916 -0700
++++ b/uppsrc/CtrlLib/EditField.cpp	2026-10-20 13:03:36.020463917 -0700
+@@ -120,7 +120,7 @@
+ 	RefreshFrame();
+ }
+ 
+-void EditField::MouseEnter(Point p, dword keyflags)
++void EditField::MouseEnter(Point /*p*/, dword /*keyflags*/)
+ {
+ 	edge.Mouse(true);
+ 	RefreshAll();
+@@ -171,7 +171,7 @@
+ 	return font.GetCy() + (sz.cy <= 2 ? 4 : sz.cy <= 4 ? 2 : 0);
+ }
+ 
+-int  EditField::GetStdHeight(Font font)
++int  EditField::GetStdHeight(Font /*font*/)
+ {
+ 	Size sz = Size(10, GetViewHeight());
+ 	EditFieldFrame().FrameAddSize(sz);
+@@ -183,7 +183,7 @@
+ 	return AddFrameSize(10 + GetSpaceLeft() + GetSpaceRight(), font.GetCy() + (no_internal_margin ? 0 : 4));
+ }
+ 
+-void EditField::PaintSpace(Draw& w)
++void EditField::PaintSpace(Draw& /*w*/)
+ {
+ }
+ 
+@@ -544,7 +544,7 @@
+ 	}
+ }
+ 
+-void EditField::LeftUp(Point p, dword flags)
++void EditField::LeftUp(Point p, dword /*flags*/)
+ {
+ 	int c = GetCursor(p.x + sc);
+ 	int l, h;
+@@ -554,21 +554,21 @@
+ 	selclick = false;
+ }
+ 
+-void EditField::LeftDouble(Point p, dword flags)
++void EditField::LeftDouble(Point /*p*/, dword /*flags*/)
+ {
+ 	int64 l, h;
+ 	if(GetWordSelection(cursor, l, h))
+ 		SetSelection((int)l, (int)h);
+ }
+ 
+-void EditField::LeftTriple(Point p, dword keyflags)
++void EditField::LeftTriple(Point /*p*/, dword /*keyflags*/)
+ {
+ 	anchor = 0;
+ 	cursor = text.GetLength();
+ 	Finish();
+ }
+ 
+-void EditField::MouseMove(Point p, dword flags)
++void EditField::MouseMove(Point p, dword /*flags*/)
+ {
+ 	if(!HasEditCapture()) return;
+ 	Move(GetCursor(p.x + sc), true);
+@@ -774,7 +774,7 @@
+ 	dropcaret.Clear();
+ }
+ 
+-void EditField::LeftDrag(Point p, dword flags)
++void EditField::LeftDrag(Point p, dword /*flags*/)
+ {
+ 	if(password)
+ 		return;
+@@ -885,7 +885,7 @@
+ 		.Key(K_CTRL_A);
+ }
+ 
+-void EditField::RightDown(Point p, dword keyflags)
++void EditField::RightDown(Point /*p*/, dword /*keyflags*/)
+ {
+ 	keep_selection = true;
+ 	Ptr<EditField> self = this;
+diff -ru a/uppsrc/CtrlLib/FileList.cpp b/uppsrc/CtrlLib/FileList.cpp
+--- a/uppsrc/CtrlLib/FileList.cpp	2026-10-20 13:03:36.022463918 -0700
++++ b/uppsrc/CtrlLib/FileList.cpp	2026-10-20 13:03:36.022463918 -0700
+@@ -33,7 +33,7 @@
+ 	return NULL;
+ }
+ 
+-void DrawFileName(Draw& ww, int x0, int y, int wcx0, int cy, const WString& mname, bool isdir, Font font,
++void DrawFileName(Draw& ww, int x0, int y, int wcx0, int /*cy*/, const WString& mname, bool isdir, Font font,
+                   Color ink, Color extink, const WString& desc, Font descfont, bool justname, Color uln)
+ {
+ 	for(int pass = IsNull(uln); pass < 2; pass++) {
+@@ -119,7 +119,7 @@
+ }
+ 
+ void FileList::Paint(Draw& w, const Rect& r, const Value& q,
+-		             Color ink, Color paper, dword style) const
++		             Color /*ink*/, Color paper, dword style) const
+ {
+ 	const File& m = ValueTo<File>(q);
+ 	bool inv = ((style & Display::SELECT) || (style & Display::CURSOR)) && (style & Display::FOCUS);
+diff -ru a/uppsrc/CtrlLib/FileSel.cpp b/uppsrc/CtrlLib/FileSel.cpp
+--- a/uppsrc/CtrlLib/FileSel.cpp	2026-10-20 13:03:36.024463920 -0700
++++ b/uppsrc/CtrlLib/FileSel.cpp	2026-10-20 13:03:36.025463920 -0700
+@@ -503,7 +503,7 @@
+ 
+ bool Load(FileList& list, const String& dir, const char *patterns, bool dirs,
+           Event<bool, const String&, Image&> WhenIcon, FileSystemInfo& filesystem,
+-          const String& search, bool hidden, bool hiddenfiles, bool lazyicons)
++          const String& search, bool hidden, bool hiddenfiles, [[maybe_unused]] bool lazyicons)
+ {
+ 	if(dir.IsEmpty()) {
+ 		Array<FileSystemInfo::FileInfo> root = filesystem.Find(Null);
+@@ -1062,7 +1062,7 @@
+ 	return l >= 0 && p[l] == '.' && ToLower(p[l + 1]) == 'l' && ToLower(p[l + 2]) == 'n' && ToLower(p[l + 3]) == 'k';
+ }
+ 
+-String FileSel::ResolveLnk(const String& name) const
++String FileSel::ResolveLnk([[maybe_unused]] const String& name) const
+ {
+ #ifdef PLATFORM_WIN32
+ 	if(IsLnkFile(name))
+@@ -1071,7 +1071,7 @@
+ 	return Null;
+ }
+ 
+-String FileSel::ResolveLnkDir(const String& name) const
++String FileSel::ResolveLnkDir([[maybe_unused]] const String& name) const
+ {
+ #ifdef PLATFORM_WIN32
+ 	String p = ResolveLnk(name);
+@@ -1081,7 +1081,7 @@
+ 	return Null;
+ }
+ 
+-String FileSel::ResolveLnkFile(const String& name) const
++String FileSel::ResolveLnkFile([[maybe_unused]] const String& name) const
+ {
+ #ifdef PLATFORM_WIN32
+ 	String p = ResolveLnk(name);
+@@ -1701,7 +1701,7 @@
+ }
+ 
+ void FolderDisplay::Paint(Draw& w, const Rect& r, const Value& q,
+-                          Color ink, Color paper, dword style) const
++                          Color ink, Color paper, dword /*style*/) const
+ {
+ 	String s = q;
+ 	w.DrawRect(r, paper);
+@@ -1714,7 +1714,7 @@
+ 
+ struct HomeDisplay : public Display {
+ 	virtual void Paint(Draw& w, const Rect& r, const Value& q,
+-	                   Color ink, Color paper, dword style) const {
++	                   Color ink, Color paper, dword /*style*/) const {
+ 		w.DrawRect(r, paper);
+ 		Image img = CtrlImg::Home();
+ 		w.DrawImage(r.left, r.top + (r.Height() - img.GetSize().cx) / 2,
+@@ -2260,7 +2260,7 @@
+ 
+ struct DisplayPlace : Display {
+ 	virtual void Paint(Draw& w, const Rect& r, const Value& q, Color ink, Color paper,
+-	                   dword style) const
++	                   dword /*style*/) const
+ 	{
+ 		w.DrawRect(r, paper);
+ 		ValueArray va = q;
+diff -ru a/uppsrc/CtrlLib/FrameSplitter.cpp b/uppsrc/CtrlLib/FrameSplitter.cpp
+--- a/uppsrc/CtrlLib/FrameSplitter.cpp	2026-10-20 13:03:36.027463921 -0700
++++ b/uppsrc/CtrlLib/FrameSplitter.cpp	2026-10-20 13:03:36.027463921 -0700
+@@ -66,7 +66,7 @@
+ 		Splitter::PaintDots(draw, r, !horz);
+ }
+ 
+-void SplitterFrame::LeftDown(Point p, dword)
++void SplitterFrame::LeftDown(Point /*p*/, dword)
+ {
+ 	SetCapture();
+ 	Refresh();
+@@ -74,7 +74,7 @@
+ 	size0 = BoundSize();
+ }
+ 
+-void SplitterFrame::MouseMove(Point p, dword keyflags)
++void SplitterFrame::MouseMove(Point p, dword /*keyflags*/)
+ {
+ 	if(!HasCapture())
+ 		return;
+@@ -88,13 +88,13 @@
+ 	RefreshParentLayout();
+ }
+ 
+-void SplitterFrame::LeftUp(Point p, dword keyflags)
++void SplitterFrame::LeftUp(Point /*p*/, dword /*keyflags*/)
+ {
+     Refresh();
+     ReleaseCapture();
+ }
+ 
+-Image SplitterFrame::CursorImage(Point p, dword keyflags)
++Image SplitterFrame::CursorImage(Point /*p*/, dword /*keyflags*/)
+ {
+ 	return type == LEFT || type == RIGHT ? Image::SizeHorz() : Image::SizeVert();
+ }
+diff -ru a/uppsrc/CtrlLib/HeaderCtrl.cpp b/uppsrc/CtrlLib/HeaderCtrl.cpp
+--- a/uppsrc/CtrlLib/HeaderCtrl.cpp	2026-10-20 13:03:36.029463923 -0700
++++ b/uppsrc/CtrlLib/HeaderCtrl.cpp	2026-10-20 13:03:36.030463924 -0700
+@@ -534,7 +534,7 @@
+ 	                                  : CtrlImg::HorzPos();
+ }
+ 
+-void HeaderCtrl::LeftDown(Point p, dword keyflags) {
++void HeaderCtrl::LeftDown(Point p, [[maybe_unused]] dword keyflags) {
+ #ifdef _DEBUG
+ 	if(keyflags & K_CTRL) {
+ 		String text;
+@@ -568,7 +568,7 @@
+ 	Refresh();
+ }
+ 
+-void HeaderCtrl::LeftDouble(Point p, dword keyflags)
++void HeaderCtrl::LeftDouble(Point p, dword /*keyflags*/)
+ {
+ 	int q = GetSplit(p.x);
+ 	if(q >= 0 || IsNull(q))
+@@ -593,7 +593,7 @@
+ 	SetCapture();
+ }
+ 
+-void HeaderCtrl::MouseMove(Point p, dword keyflags) {
++void HeaderCtrl::MouseMove(Point p, dword /*keyflags*/) {
+ 	if(isdrag) {
+ 		ti = GetLastVisibleTab() + 1;
+ 		for(int i = 0; i < GetCount(); i++)
+@@ -636,7 +636,7 @@
+ 	}
+ }
+ 
+-void HeaderCtrl::LeftDrag(Point p, dword keyflags)
++void HeaderCtrl::LeftDrag(Point p, dword /*keyflags*/)
+ {
+ 	if(li < 0 || !moving) return;
+ 	int n = 0;
+diff -ru a/uppsrc/CtrlLib/Help.cpp b/uppsrc/CtrlLib/Help.cpp
+--- a/uppsrc/CtrlLib/Help.cpp	2026-10-20 13:03:36.032463925 -0700
++++ b/uppsrc/CtrlLib/Help.cpp	2026-10-20 13:03:36.033463926 -0700
+@@ -7,10 +7,10 @@
+ 	return GetTopic(topic);
+ }
+ 
+-void HelpWindow::BarEx(Bar& bar)
++void HelpWindow::BarEx(Bar& /*bar*/)
+ {}
+ 
+-void HelpWindow::FinishText(RichText& text)
++void HelpWindow::FinishText(RichText& /*text*/)
+ {}
+ 
+ bool HelpWindow::GoTo0(const String& link)
+diff -ru a/uppsrc/CtrlLib/LineEdit.cpp b/uppsrc/CtrlLib/LineEdit.cpp
+--- a/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 13:03:36.036463927 -0700
++++ b/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 13:03:36.036463927 -0700
+@@ -170,7 +170,7 @@
+ 		RemoveRectSelection();
+ 	int64 p = -1; // position after insertion, because of '\t' and double size chars cannot do just left+text.GetCount()
+ 	RectSelectionOp(
+-		[&](int i, Rect rect, int64 l, int64 h, WString& s) {
++		[&](int i, Rect rect, int64 l, int64 /*h*/, WString& s) {
+ 			int x = GetColumnLine(l).x;
+ 			if(x < rect.left) {
+ 				s.Cat(' ', rect.left - x);
+@@ -209,12 +209,12 @@
+ 		RemoveRectSelection();
+ 	else
+ 		RectSelectionOp(
+-			[&](int i, Rect rect, int64 l, int64 h, WString& s) {
++			[&](int i, Rect rect, int64 l, int64 /*h*/, WString& s) {
+ 				int p = int(l - GetPos64(i));
+ 				if(GetColumnLine(l).x == rect.left && p < s.GetCount())
+ 					s.Remove(p, 1);
+ 			},
+-			[&](Rect& r) {}
++			[&](Rect& /*r*/) {}
+ 		);
+ }
+ 
+@@ -762,7 +762,7 @@
+ 	Ctrl  *ctrl;
+ 	bool (*chars)(int c);
+ 	Size   fsz;
+-	virtual void DrawTextOp(int x, int y, int angle, const wchar *text, Font,
++	virtual void DrawTextOp(int x, int y, int /*angle*/, const wchar *text, Font,
+ 	                        Color, int n, const int *dx) {
+ 		if(dx)
+ 			while(n > 0) {
+@@ -773,7 +773,7 @@
+ 				n--;
+ 			}
+ 	}
+-	bool IsPaintingOp(const Rect& r) const {
++	bool IsPaintingOp(const Rect& /*r*/) const {
+ 		return true;
+ 	}
+ };
+@@ -887,7 +887,7 @@
+ }
+ 
+ void LineEdit::NewScrollPos() {}
+-void LineEdit::HighlightLine(int line, Vector<Highlight>& h, int64 pos) {}
++void LineEdit::HighlightLine(int /*line*/, Vector<Highlight>& /*h*/, int64 /*pos*/) {}
+ 
+ void LineEdit::AlignChar() {
+ 	int c = GetCursor32();
+@@ -1041,7 +1041,7 @@
+ 	ReleaseCapture();
+ }
+ 
+-void LineEdit::RightDown(Point p, dword flags)
++void LineEdit::RightDown(Point p, dword /*flags*/)
+ {
+ 	mpos = GetMousePos(p);
+ 	SetFocus();
+@@ -1495,7 +1495,7 @@
+ 	Layout();
+ }
+ 
+-void LineEdit::LeftDrag(Point p, dword flags)
++void LineEdit::LeftDrag(Point p, dword /*flags*/)
+ {
+ 	int64 c = GetMousePos(p);
+ 	int64 l, h;
+diff -ru a/uppsrc/CtrlLib/MenuBar.cpp b/uppsrc/CtrlLib/MenuBar.cpp
+--- a/uppsrc/CtrlLib/MenuBar.cpp	2026-10-20 13:03:36.038463929 -0700
++++ b/uppsrc/CtrlLib/MenuBar.cpp	2026-10-20 13:03:36.039463930 -0700
+@@ -303,22 +303,22 @@
+ 
+ static bool s_doaltkey;
+ 
+-bool MenuKeyHook(Ctrl *ctrl, dword key, int count)
++bool MenuKeyHook(Ctrl */*ctrl*/, dword key, int /*count*/)
+ {
+ 	if(key != K_ALT_KEY && key != (K_ALT_KEY|K_KEYUP))
+ 		s_doaltkey = false;
+ 	return false;
+ }
+ 
+-bool MenuMouseHook(Ctrl *ctrl, bool inframe, int event, Point p,
+-	               int zdelta, dword keyflags)
++bool MenuMouseHook(Ctrl */*ctrl*/, bool /*inframe*/, int event, Point /*p*/,
++	               int /*zdelta*/, dword /*keyflags*/)
+ {
+ 	if(findarg(event & Ctrl::ACTION, Ctrl::MOUSEWHEEL, Ctrl::DOWN, Ctrl::UP) >= 0)
+ 		s_doaltkey = false;
+ 	return false;
+ }
+ 
+-bool MenuStateHook(Ctrl *ctrl, int reason)
++bool MenuStateHook(Ctrl */*ctrl*/, int reason)
+ {
+ 	if(reason == Ctrl::ACTIVATE)
+ 		s_doaltkey = false;
+@@ -332,7 +332,7 @@
+ 	Ctrl::InstallMouseHook(MenuMouseHook);
+ }
+ 
+-bool MenuBar::Key(dword key, int count)
++bool MenuBar::Key(dword key, int /*count*/)
+ {
+ 	LLOG("KEY " << GetKeyDesc(key));
+ 	bool horz = IsChild();
+diff -ru a/uppsrc/CtrlLib/MenuItem.cpp b/uppsrc/CtrlLib/MenuItem.cpp
+--- a/uppsrc/CtrlLib/MenuItem.cpp	2026-10-20 13:03:36.041463931 -0700
++++ b/uppsrc/CtrlLib/MenuItem.cpp	2026-10-20 13:03:36.041463931 -0700
+@@ -59,7 +59,7 @@
+ 	return *this;
+ }
+ 
+-Bar::Item& MenuItemBase::Image(const UPP::Image& img)
++Bar::Item& MenuItemBase::Image(const UPP::Image& /*img*/)
+ {
+ 	return *this;
+ }
+@@ -82,7 +82,7 @@
+ 	return *this;
+ }
+ 
+-Bar::Item& MenuItemBase::Tip(const char *s)
++Bar::Item& MenuItemBase::Tip(const char */*s*/)
+ {
+ 	return *this;
+ }
+@@ -437,7 +437,7 @@
+ 	return false;
+ }
+ 
+-bool MenuItem::Key(dword key, int count)
++bool MenuItem::Key(dword key, int /*count*/)
+ {
+ 	if(key == K_ENTER && isenabled) {
+ 		Action();
+@@ -574,7 +574,7 @@
+ 		parentmenu->SyncState();
+ }
+ 
+-void TopSubMenuItem::MouseEnter(Point p, dword)
++void TopSubMenuItem::MouseEnter(Point /*p*/, dword)
+ {
+ 	LLOG("TopSubMenuItem::MouseEnter");
+ 	Refresh();
+@@ -682,7 +682,7 @@
+ 	Refresh();
+ }
+ 
+-bool TopMenuItem::Key(dword key, int count)
++bool TopMenuItem::Key(dword key, int /*count*/)
+ {
+ 	if(isenabled && key == K_ENTER) {
+ 		Action();
+diff -ru a/uppsrc/CtrlLib/MultiButton.cpp b/uppsrc/CtrlLib/MultiButton.cpp
+--- a/uppsrc/CtrlLib/MultiButton.cpp	2026-10-20 13:03:36.043463932 -0700
++++ b/uppsrc/CtrlLib/MultiButton.cpp	2026-10-20 13:03:36.044463933 -0700
+@@ -648,7 +648,7 @@
+ 		Button(i).WhenPush();
+ }
+ 
+-void MultiButton::LeftDown(Point p, dword flags)
++void MultiButton::LeftDown(Point /*p*/, dword /*flags*/)
+ {
+ 	push = true;
+ 	Refresh();
+@@ -673,7 +673,7 @@
+ 	SyncInfo();
+ }
+ 
+-void MultiButton::LeftUp(Point p, dword flags)
++void MultiButton::LeftUp(Point /*p*/, dword /*flags*/)
+ {
+ 	push = false;
+ 	Refresh();
+diff -ru a/uppsrc/CtrlLib/RichTextView.cpp b/uppsrc/CtrlLib/RichTextView.cpp
+--- a/uppsrc/CtrlLib/RichTextView.cpp	2026-10-20 13:03:36.046463934 -0700
++++ b/uppsrc/CtrlLib/RichTextView.cpp	2026-10-20 13:03:36.046463934 -0700
+@@ -79,7 +79,7 @@
+ 	sb.SetPage((GetSize().cy - margin.top - margin.bottom) / GetZoom());
+ }
+ 
+-bool  RichTextView::Key(dword key, int count)
++bool  RichTextView::Key(dword key, int /*count*/)
+ {
+ 	if(key == K_CTRL_C || key == K_SHIFT_INSERT) {
+ 		Copy();
+@@ -88,13 +88,13 @@
+ 	return sb.VertKey(key);
+ }
+ 
+-void  RichTextView::MouseWheel(Point p, int zdelta, dword keyflags)
++void  RichTextView::MouseWheel(Point /*p*/, int zdelta, dword keyflags)
+ {
+ 	if(!WhenMouseWheel(zdelta, keyflags))
+ 		sb.Wheel(zdelta);
+ }
+ 
+-Image RichTextView::CursorImage(Point p, dword keyflags)
++Image RichTextView::CursorImage(Point p, dword /*keyflags*/)
+ {
+ 	int pos = GetPointPos(p);
+ 	if(WhenLink && pos >= 0 && !IsNull(GetLink(pos, p)))
+@@ -131,7 +131,7 @@
+ 	return GetTextClip(GetSelText(), fmt);
+ }
+ 
+-void RichTextView::RightDown(Point p, dword keyflags)
++void RichTextView::RightDown(Point /*p*/, dword /*keyflags*/)
+ {
+ 	MenuBar b;
+ 	b.Add(cursor != anchor, t_("Copy"), CtrlImg::copy(), THISBACK(Copy)).Key(K_CTRL_C);
+@@ -239,7 +239,7 @@
+ 	}
+ }
+ 
+-void RichTextView::LeftDouble(Point p, dword keyflags)
++void RichTextView::LeftDouble(Point p, dword /*keyflags*/)
+ {
+ 	int pos = GetPointPos(p);
+ 	if(IsLeNum(text[pos])) {
+@@ -256,7 +256,7 @@
+ 	}
+ }
+ 
+-void RichTextView::LeftTriple(Point p, dword keyflags)
++void RichTextView::LeftTriple(Point p, dword /*keyflags*/)
+ {
+     int pos = GetPointPos(p);
+ 	RichPos rp = text.GetRichPos(pos);
+@@ -266,7 +266,7 @@
+     SetFocus();
+ }
+ 
+-void RichTextView::MouseMove(Point p, dword keyflags)
++void RichTextView::MouseMove(Point p, dword /*keyflags*/)
+ {
+ 	int pos = GetPointPos(p);
+ 	WhenMouseMove(pos);
+diff -ru a/uppsrc/CtrlLib/ScrollBar.cpp b/uppsrc/CtrlLib/ScrollBar.cpp
+--- a/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-20 13:03:36.048463936 -0700
++++ b/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-20 13:03:36.048463936 -0700
+@@ -95,7 +95,7 @@
+ 	return Null;
+ }
+ 
+-bool ScrollBar::ButtonEnabled(int i) const
++bool ScrollBar::ButtonEnabled(int /*i*/) const
+ {
+ 	return is_active || !autodisable;
+ }
+@@ -336,7 +336,7 @@
+ 		Refresh();
+ }
+ 
+-void ScrollBar::MouseEnter(Point p, dword)
++void ScrollBar::MouseEnter(Point /*p*/, dword)
+ {
+ 	Refresh();
+ }
+@@ -346,7 +346,7 @@
+ 	Refresh();
+ }
+ 
+-void ScrollBar::LeftUp(Point p, dword) {
++void ScrollBar::LeftUp(Point /*p*/, dword) {
+ 	ReleaseCapture();
+ 	if(!track)
+ 		Position();
+@@ -354,7 +354,7 @@
+ 	push = -1;
+ }
+ 
+-void ScrollBar::LeftRepeat(Point p, dword) {
++void ScrollBar::LeftRepeat(Point /*p*/, dword) {
+ 	if(jump || push < 0 || push == 2) return;
+ 	if(push == 0)
+ 		PrevPage();
+@@ -363,12 +363,12 @@
+ 	Refresh();
+ }
+ 
+-void ScrollBar::MouseWheel(Point p, int zdelta, dword keyflags)
++void ScrollBar::MouseWheel(Point /*p*/, int zdelta, dword /*keyflags*/)
+ {
+ 	Wheel(zdelta);
+ }
+ 
+-void ScrollBar::HorzMouseWheel(Point p, int zdelta, dword keyflags)
++void ScrollBar::HorzMouseWheel(Point /*p*/, int zdelta, dword /*keyflags*/)
+ {
+ 	Wheel(zdelta);
+ }
+@@ -642,7 +642,7 @@
+ 	return *this;
+ }
+ 
+-Image SizeGrip::CursorImage(Point p, dword)
++Image SizeGrip::CursorImage(Point /*p*/, dword)
+ {
+ 	if(GuiPlatformHasSizeGrip()) {
+ 		TopWindow *q = dynamic_cast<TopWindow *>(GetTopCtrl());
+@@ -678,7 +678,7 @@
+ 
+ SizeGrip::~SizeGrip() {}
+ 
+-void SizeGrip::LeftDown(Point p, dword flags)
++void SizeGrip::LeftDown(Point /*p*/, dword /*flags*/)
+ {
+ 	TopWindow *q = dynamic_cast<TopWindow *>(GetTopCtrl());
+ 	if(q && !q->IsMaximized() && q->IsSizeable())
+diff -ru a/uppsrc/CtrlLib/ScrollBar.h b/uppsrc/CtrlLib/ScrollBar.h
+--- a/uppsrc/CtrlLib/ScrollBar.h	2026-10-20 13:03:36.051463938 -0700
++++ b/uppsrc/CtrlLib/ScrollBar.h	2026-10-20 13:03:36.051463938 -0700
+@@ -131,7 +131,7 @@
+ 	ScrollBar& Track(bool b = true)         { track = b; return *this; }
+ 	ScrollBar& NoTrack()                    { return Track(false); }
+ 	ScrollBar& Jump(bool b = true)          { jump = b; return *this; }
+-	ScrollBar& NoJump(bool b = true)        { return Jump(false); }
++	ScrollBar& NoJump(bool /*b*/ = true)        { return Jump(false); }
+ 	ScrollBar& AutoHide(bool b = true);
+ 	ScrollBar& NoAutoHide()                 { return AutoHide(false); }
+ 	bool       IsAutoHide() const           { return autohide; }
+@@ -268,7 +268,7 @@
+ 	ScrollBars& Track(bool b = true);
+ 	ScrollBars& NoTrack()                            { return Track(false); }
+ 	ScrollBars& Jump(bool b = true);
+-	ScrollBars& NoJump(bool b = true)                { return Jump(false); }
++	ScrollBars& NoJump(bool /*b*/ = true)                { return Jump(false); }
+ 	ScrollBars& AutoHide(bool b = true);
+ 	ScrollBars& NoAutoHide()                         { return AutoHide(false); }
+ 	ScrollBars& AutoDisable(bool b = true);
+diff -ru a/uppsrc/CtrlLib/SliderCtrl.cpp b/uppsrc/CtrlLib/SliderCtrl.cpp
+--- a/uppsrc/CtrlLib/SliderCtrl.cpp	2026-10-20 13:03:36.053463939 -0700
++++ b/uppsrc/CtrlLib/SliderCtrl.cpp	2026-10-20 13:03:36.054463940 -0700
+@@ -108,7 +108,7 @@
+ 	return Ctrl::Key(key, repcnt);
+ }
+ 
+-void SliderCtrl::LeftDown(Point pos, dword keyflags)
++void SliderCtrl::LeftDown(Point pos, dword /*keyflags*/)
+ {
+ 	if(!IsEditable())
+ 		return;
+@@ -144,7 +144,7 @@
+ 		LeftDown(p, f);
+ }
+ 
+-void SliderCtrl::LeftUp(Point pos, dword keyflags)
++void SliderCtrl::LeftUp(Point /*pos*/, dword /*keyflags*/)
+ {
+ 	if(HasCapture())
+ 		WhenSlideFinish();
+@@ -152,7 +152,7 @@
+ 	Refresh();
+ }
+ 
+-void SliderCtrl::MouseMove(Point pos, dword keyflags)
++void SliderCtrl::MouseMove(Point pos, dword /*keyflags*/)
+ {
+ 	if(HasCapture()) {
+ 		int n = ClientToSlider(HoVe(pos.x, pos.y));
+@@ -164,7 +164,7 @@
+ 	Refresh();
+ }
+ 
+-void SliderCtrl::MouseEnter(Point p, dword keyflags)
++void SliderCtrl::MouseEnter(Point /*p*/, dword /*keyflags*/)
+ {
+ 	Refresh();
+ }
+diff -ru a/uppsrc/CtrlLib/SmartText.cpp b/uppsrc/CtrlLib/SmartText.cpp
+--- a/uppsrc/CtrlLib/SmartText.cpp	2026-10-20 13:03:36.056463941 -0700
++++ b/uppsrc/CtrlLib/SmartText.cpp	2026-10-20 13:03:36.056463941 -0700
+@@ -62,7 +62,7 @@
+ 	void OffsetOp(Point p) override;
+ 	bool ClipOp(const Rect& r) override;
+ 	bool ClipoffOp(const Rect& r) override;
+-	bool IsPaintingOp(const Rect& r) const override { return true; }
++	bool IsPaintingOp(const Rect& /*r*/) const override { return true; }
+ 
+ 	void DrawRectOp(int x, int y, int cx, int cy, Color color) override;
+ 	void DrawImageOp(int x, int y, int cx, int cy, const Image& img, const Rect& src, Color color) override;
+@@ -105,7 +105,7 @@
+ 		ptr->OffsetOp(Point(p.y, -p.x));
+ }
+ 
+-bool OriDraw::ClipOp(const Rect& r)
++bool OriDraw::ClipOp(const Rect& /*r*/)
+ {
+ 	Begin();
+ 	return true;
+@@ -123,7 +123,7 @@
+ 	ptr->DrawRectOp(x, y, cx, cy, color);
+ }
+ 
+-void OriDraw::DrawImageOp(int x, int y, int cx, int cy, const Image& img, const Rect& src, Color color)
++void OriDraw::DrawImageOp(int x, int y, int cx, int cy, const Image& img, const Rect& /*src*/, Color color)
+ {
+ 	Transform(x, y, cx, cy);
+ 	Image m = AdjustImage(img, clockwise ? RotateClockwise : RotateAntiClockwise);
+diff -ru a/uppsrc/CtrlLib/Splitter.cpp b/uppsrc/CtrlLib/Splitter.cpp
+--- a/uppsrc/CtrlLib/Splitter.cpp	2026-10-20 13:03:36.059463943 -0700
++++ b/uppsrc/CtrlLib/Splitter.cpp	2026-10-20 13:03:36.059463943 -0700
+@@ -136,7 +136,7 @@
+ 	return best;
+ }
+ 
+-void   Splitter::LeftUp(Point p, dword keyflags) {
++void   Splitter::LeftUp(Point /*p*/, dword /*keyflags*/) {
+ 	if(HasCapture())
+ 		WhenSplitFinish();
+ 	ReleaseCapture();
+diff -ru a/uppsrc/CtrlLib/StatusBar.cpp b/uppsrc/CtrlLib/StatusBar.cpp
+--- a/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 13:03:36.061463944 -0700
++++ b/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 13:03:36.062463945 -0700
+@@ -124,7 +124,7 @@
+ class VCenterDisplay : public Display
+ {
+ public:
+-	void Paint(Draw& w, const Rect& r, const Value& q, Color ink, Color paper, dword s) const {
++	void Paint(Draw& w, const Rect& r, const Value& q, Color ink, Color /*paper*/, dword /*s*/) const {
+ 		if(IsType<Image>(q)) {
+ 			Image img = q;
+ 			Size sz = img.GetSize();
+@@ -261,7 +261,7 @@
+ };
+ 
+ void ProgressDisplayCls::Paint(Draw& w, const Rect& _r, const Value& q,
+-                               Color ink, Color paper, dword s) const
++                               Color /*ink*/, Color /*paper*/, dword /*s*/) const
+ {
+ 	Rect r = _r;
+ 	r.top += 1;
+diff -ru a/uppsrc/CtrlLib/Switch.cpp b/uppsrc/CtrlLib/Switch.cpp
+--- a/uppsrc/CtrlLib/Switch.cpp	2026-10-20 13:03:36.064463946 -0700
++++ b/uppsrc/CtrlLib/Switch.cpp	2026-10-20 13:03:36.065463947 -0700
+@@ -20,7 +20,7 @@
+ 	return *this;
+ }
+ 
+-Switch& Switch::Add(const Value& val, const char *text, int gap) {
++Switch& Switch::Add(const Value& val, const char *text, int /*gap*/) {
+ 	Set(cs.GetCount(), val, text);
+ 	return *this;
+ }
+@@ -244,7 +244,7 @@
+ 	MouseMove(p, keyflags);
+ }
+ 
+-void Switch::LeftUp(Point p, dword keyflags) {
++void Switch::LeftUp(Point /*p*/, dword /*keyflags*/) {
+ 	if(IsReadOnly()) return;
+ 	if(pushindex >= 0 && pushindex < cs.GetCount()) {
+ 		const Value& v = cs[pushindex].value;
+diff -ru a/uppsrc/CtrlLib/TabCtrl.cpp b/uppsrc/CtrlLib/TabCtrl.cpp
+--- a/uppsrc/CtrlLib/TabCtrl.cpp	2026-10-20 13:03:36.067463948 -0700
++++ b/uppsrc/CtrlLib/TabCtrl.cpp	2026-10-20 13:03:36.068463949 -0700
+@@ -248,12 +248,12 @@
+ 		hot = -1;
+ }
+ 
+-void TabCtrl::MouseMove(Point p, dword keyflags)
++void TabCtrl::MouseMove(Point /*p*/, dword /*keyflags*/)
+ {
+ 	SyncHot();
+ }
+ 
+-void TabCtrl::LeftDown(Point p, dword keyflags)
++void TabCtrl::LeftDown(Point p, dword /*keyflags*/)
+ {
+ 	if(!IsEditable())
+ 		return;
+diff -ru a/uppsrc/CtrlLib/Text.cpp b/uppsrc/CtrlLib/Text.cpp
+--- a/uppsrc/CtrlLib/Text.cpp	2026-10-20 13:03:36.070463951 -0700
++++ b/uppsrc/CtrlLib/Text.cpp	2026-10-20 13:03:36.070463951 -0700
+@@ -88,23 +88,23 @@
+ 	Refresh();
+ }
+ 
+-void TextCtrl::DirtyFrom(int line) {}
++void TextCtrl::DirtyFrom(int /*line*/) {}
+ void TextCtrl::SelectionChanged() {}
+ void TextCtrl::ClearLines() {}
+-void TextCtrl::InsertLines(int line, int count) {}
+-void TextCtrl::RemoveLines(int line, int count) {}
+-void TextCtrl::PreInsert(int pos, const WString& text) {}
+-void TextCtrl::PostInsert(int pos, const WString& text) {}
+-void TextCtrl::PreRemove(int pos, int size) {}
+-void TextCtrl::PostRemove(int pos, int size) {}
+-void TextCtrl::RefreshLine(int i) {}
+-void TextCtrl::InvalidateLine(int i) {}
++void TextCtrl::InsertLines(int /*line*/, int /*count*/) {}
++void TextCtrl::RemoveLines(int /*line*/, int /*count*/) {}
++void TextCtrl::PreInsert(int /*pos*/, const WString& /*text*/) {}
++void TextCtrl::PostInsert(int /*pos*/, const WString& /*text*/) {}
++void TextCtrl::PreRemove(int /*pos*/, int /*size*/) {}
++void TextCtrl::PostRemove(int /*pos*/, int /*size*/) {}
++void TextCtrl::RefreshLine(int /*i*/) {}
++void TextCtrl::InvalidateLine(int /*i*/) {}
+ void TextCtrl::SetSb() {}
+-void TextCtrl::PlaceCaret(int64 newcursor, bool sel) {}
++void TextCtrl::PlaceCaret(int64 /*newcursor*/, bool /*sel*/) {}
+ 
+ int TextCtrl::RemoveRectSelection() { return 0; }
+ WString TextCtrl::CopyRectSelection() { return Null; }
+-int TextCtrl::PasteRectSelection(const WString& s) { return 0; }
++int TextCtrl::PasteRectSelection(const WString& /*s*/) { return 0; }
+ 
+ void   TextCtrl::CachePos(int64 pos)
+ {
+diff -ru a/uppsrc/CtrlLib/ToolTip.cpp b/uppsrc/CtrlLib/ToolTip.cpp
+--- a/uppsrc/CtrlLib/ToolTip.cpp	2026-10-20 13:03:36.072463952 -0700
++++ b/uppsrc/CtrlLib/ToolTip.cpp	2026-10-20 13:03:36.073463953 -0700
+@@ -106,7 +106,7 @@
+ 	}
+ }
+ 
+-bool ToolTipHook(Ctrl *ctrl, bool inframe, int event, Point p, int zdelta, dword keyflags)
++bool ToolTipHook(Ctrl *ctrl, bool inframe, int event, Point p, int /*zdelta*/, dword /*keyflags*/)
+ {
+ 	if(event == Ctrl::MOUSEMOVE && ctrl != &AppToolTip())
+ 	{
+diff -ru a/uppsrc/CtrlLib/TrayIconGtk.cpp b/uppsrc/CtrlLib/TrayIconGtk.cpp
+--- a/uppsrc/CtrlLib/TrayIconGtk.cpp	2026-10-20 13:03:36.075463954 -0700
++++ b/uppsrc/CtrlLib/TrayIconGtk.cpp	2026-10-20 13:03:36.075463954 -0700
+@@ -54,7 +54,7 @@
+ 	((TrayIcon *)user_data)->ExecuteMenu();
+ }
+ 
+-void TrayIcon::DoActivate(GtkStatusIcon *icon, gpointer user_data)
++void TrayIcon::DoActivate(GtkStatusIcon */*icon*/, gpointer user_data)
+ {
+ 	((TrayIcon *)user_data)->LeftDown();
+ 	((TrayIcon *)user_data)->LeftDouble();
+diff -ru a/uppsrc/CtrlLib/TreeCtrl.cpp b/uppsrc/CtrlLib/TreeCtrl.cpp
+--- a/uppsrc/CtrlLib/TreeCtrl.cpp	2026-10-20 13:03:36.077463955 -0700
++++ b/uppsrc/CtrlLib/TreeCtrl.cpp	2026-10-20 13:03:36.078463956 -0700
+@@ -843,7 +843,7 @@
+ 	UpdateSelect();
+ }
+ 
+-void TreeCtrl::LeftDrag(Point p, dword keyflags)
++void TreeCtrl::LeftDrag(Point p, dword /*keyflags*/)
+ {
+ 	OkEdit();
+ 	if(p.y + sb.y > sb.GetTotal().cy)
+@@ -1042,7 +1042,7 @@
+ 		WhenLeftDouble();
+ }
+ 
+-void TreeCtrl::RightDown(Point p, dword flags)
++void TreeCtrl::RightDown(Point p, dword /*flags*/)
+ {
+ 	OkEdit();
+ 	Point org = sb;
+@@ -1228,7 +1228,7 @@
+ 		sb.WheelY(zdelta);
+ }
+ 
+-void TreeCtrl::HorzMouseWheel(Point, int zdelta, dword keyflags)
++void TreeCtrl::HorzMouseWheel(Point, int zdelta, dword /*keyflags*/)
+ {
+ 	sb.WheelX(zdelta);
+ }
+@@ -1590,7 +1590,7 @@
+ 	}
+ }
+ 
+-void TreeCtrl::SetOption(int id)
++void TreeCtrl::SetOption(int /*id*/)
+ {
+ }
+ 
+diff -ru a/uppsrc/CtrlLib/VirtualButtons.cpp b/uppsrc/CtrlLib/VirtualButtons.cpp
+--- a/uppsrc/CtrlLib/VirtualButtons.cpp	2026-10-20 13:03:36.080463957 -0700
++++ b/uppsrc/CtrlLib/VirtualButtons.cpp	2026-10-20 13:03:36.080463957 -0700
+@@ -3,15 +3,15 @@
+ namespace Upp {
+ 
+ int                  VirtualButtons::ButtonCount() const        { return 0; }
+-Rect                 VirtualButtons::ButtonRect(int i) const    { return Null; }
+-const Button::Style& VirtualButtons::ButtonStyle(int i) const   { return Button::StyleEdge(); }
+-Image                VirtualButtons::ButtonImage(int i) const   { return Null; }
+-bool                 VirtualButtons::ButtonEnabled(int i) const { return true; }
+-bool                 VirtualButtons::ButtonMono(int i) const    { return false; }
++Rect                 VirtualButtons::ButtonRect(int /*i*/) const    { return Null; }
++const Button::Style& VirtualButtons::ButtonStyle(int /*i*/) const   { return Button::StyleEdge(); }
++Image                VirtualButtons::ButtonImage(int /*i*/) const   { return Null; }
++bool                 VirtualButtons::ButtonEnabled(int /*i*/) const { return true; }
++bool                 VirtualButtons::ButtonMono(int /*i*/) const    { return false; }
+ 
+-void VirtualButtons::ButtonPush(int i)   {}
+-void VirtualButtons::ButtonRepeat(int i) {}
+-void VirtualButtons::ButtonAction(int i) {}
++void VirtualButtons::ButtonPush(int /*i*/)   {}
++void VirtualButtons::ButtonRepeat(int /*i*/) {}
++void VirtualButtons::ButtonAction(int /*i*/) {}
+ 
+ int VirtualButtons::FindButton(Point p) const
+ {
+diff -ru a/uppsrc/Draw/Display.cpp b/uppsrc/Draw/Display.cpp
+--- a/uppsrc/Draw/Display.cpp	2026-10-20 13:03:36.082463958 -0700
++++ b/uppsrc/Draw/Display.cpp	2026-10-20 13:03:36.083463959 -0700
+@@ -90,7 +90,7 @@
+ };
+ 
+ void Display::PaintBackground(Draw& w, const Rect& r, const Value& q,
+-                              Color ink, Color paper, dword style) const
++                              Color /*ink*/, Color paper, dword style) const
+ {
+ 	if(IsType<AttrText>(q)) {
+ 		const AttrText& t = ValueTo<AttrText>(q);
+@@ -108,7 +108,7 @@
+ 	Single<StdDisplayClass>().Paint0(w, r, q, ink, paper, style);
+ }
+ 
+-Size Display::RatioSize(const Value& q, int cx, int cy) const {
++Size Display::RatioSize(const Value& /*q*/, int cx, int cy) const {
+ 	return Size(cx, cy);
+ }
+ 
+@@ -268,7 +268,7 @@
+ class CenteredImageDisplayCls : public Display {
+ public:
+ 	virtual void Paint(Draw& w, const Rect& r, const Value& q,
+-		               Color ink, Color paper, dword style) const
++		               Color /*ink*/, Color paper, dword /*style*/) const
+ 	{
+ 		w.DrawRect(r, paper);
+ 		Image m = q;
+@@ -287,7 +287,7 @@
+ class CenteredHighlightImageDisplayCls : public Display {
+ public:
+ 	virtual void Paint(Draw& w, const Rect& r, const Value& q,
+-		               Color ink, Color paper, dword style) const
++		               Color /*ink*/, Color paper, dword /*style*/) const
+ 	{
+ 		w.DrawRect(r, paper);
+ 		Image m = q;
+@@ -310,7 +310,7 @@
+ class ImageDisplayCls : public Display {
+ public:
+ 	virtual void Paint(Draw& w, const Rect& r, const Value& q,
+-		               Color ink, Color paper, dword style) const
++		               Color /*ink*/, Color paper, dword /*style*/) const
+ 	{
+ 		w.DrawRect(r, paper);
+ 		Image m = q;
+@@ -328,7 +328,7 @@
+ class FittedImageDisplayCls : public Display {
+ public:
+ 	virtual void Paint(Draw& w, const Rect& r, const Value& q,
+-		               Color ink, Color paper, dword style) const
++		               Color /*ink*/, Color paper, dword /*style*/) const
+ 	{
+ 		w.DrawRect(r, paper);
+ 		Image m = q;
+diff -ru a/uppsrc/Draw/Draw.cpp b/uppsrc/Draw/Draw.cpp
+--- a/uppsrc/Draw/Draw.cpp	2026-10-20 13:03:36.085463961 -0700
++++ b/uppsrc/Draw/Draw.cpp	2026-10-20 13:03:36.086463961 -0700
+@@ -120,11 +120,11 @@
+ 
+ int Draw::GetCloffLevel() const { return 0; }
+ 
+-void Draw::Escape(const String& data) {}
++void Draw::Escape(const String& /*data*/) {}
+ 
+ // -------------------------------
+ 
+-void Draw::SysDrawImageOp(int x, int y, const Image& img, Color color)
++void Draw::SysDrawImageOp(int /*x*/, int /*y*/, const Image& /*img*/, Color /*color*/)
+ {
+ 	NEVER();
+ }
+@@ -510,24 +510,24 @@
+ Size NilDraw::GetPageSize() const { return Size(0, 0); }
+ void NilDraw::BeginOp() {}
+ void NilDraw::EndOp() {}
+-void NilDraw::OffsetOp(Point p) {}
+-bool NilDraw::ClipOp(const Rect& r) { return false; }
+-bool NilDraw::ClipoffOp(const Rect& r) { return false; }
+-bool NilDraw::ExcludeClipOp(const Rect& r) { return false; }
+-bool NilDraw::IntersectClipOp(const Rect& r) { return false; }
+-bool NilDraw::IsPaintingOp(const Rect& r) const { return false; }
++void NilDraw::OffsetOp(Point /*p*/) {}
++bool NilDraw::ClipOp(const Rect& /*r*/) { return false; }
++bool NilDraw::ClipoffOp(const Rect& /*r*/) { return false; }
++bool NilDraw::ExcludeClipOp(const Rect& /*r*/) { return false; }
++bool NilDraw::IntersectClipOp(const Rect& /*r*/) { return false; }
++bool NilDraw::IsPaintingOp(const Rect& /*r*/) const { return false; }
+ Rect NilDraw::GetPaintRect() const { return Rect(0, 0, 0, 0); }
+-void NilDraw::DrawRectOp(int x, int y, int cx, int cy, Color color) {}
+-void NilDraw::DrawImageOp(int x, int y, int cx, int cy, const Image& img, const Rect& src, Color color) {}
+-void NilDraw::DrawDataOp(int x, int y, int cx, int cy, const String& data, const char *id) {}
+-void NilDraw::DrawLineOp(int x1, int y1, int x2, int y2, int width, Color color) {}
+-void NilDraw::DrawPolyPolylineOp(const Point *vertices, int vertex_count, const int *counts, int count_count, int width, Color color, Color doxor) {}
+-void NilDraw::DrawPolyPolyPolygonOp(const Point *vertices, int vertex_count, const int *subpolygon_counts, int scc, const int *disjunct_polygon_counts, int dpcc, Color color, int width, Color outline, uint64 pattern, Color doxor) {}
+-void NilDraw::DrawArcOp(const Rect& rc, Point start, Point end, int width, Color color) {}
+-void NilDraw::DrawEllipseOp(const Rect& r, Color color, int pen, Color pencolor) {}
+-void NilDraw::DrawTextOp(int x, int y, int angle, const wchar *text, Font font, Color ink, int n, const int *dx) {}
+-void NilDraw::DrawDrawingOp(const Rect& target, const Drawing& w) {}
+-void NilDraw::DrawPaintingOp(const Rect& target, const Painting& w) {}
++void NilDraw::DrawRectOp(int /*x*/, int /*y*/, int /*cx*/, int /*cy*/, Color /*color*/) {}
++void NilDraw::DrawImageOp(int /*x*/, int /*y*/, int /*cx*/, int /*cy*/, const Image& /*img*/, const Rect& /*src*/, Color /*color*/) {}
++void NilDraw::DrawDataOp(int /*x*/, int /*y*/, int /*cx*/, int /*cy*/, const String& /*data*/, const char */*id*/) {}
++void NilDraw::DrawLineOp(int /*x1*/, int /*y1*/, int /*x2*/, int /*y2*/, int /*width*/, Color /*color*/) {}
++void NilDraw::DrawPolyPolylineOp(const Point */*vertices*/, int /*vertex_count*/, const int */*counts*/, int /*count_count*/, int /*width*/, Color /*color*/, Color /*doxor*/) {}
++void NilDraw::DrawPolyPolyPolygonOp(const Point */*vertices*/, int /*vertex_count*/, const int */*subpolygon_counts*/, int /*scc*/, const int */*disjunct_polygon_counts*/, int /*dpcc*/, Color /*color*/, int /*width*/, Color /*outline*/, uint64 /*pattern*/, Color /*doxor*/) {}
++void NilDraw::DrawArcOp(const Rect& /*rc*/, Point /*start*/, Point /*end*/, int /*width*/, Color /*color*/) {}
++void NilDraw::DrawEllipseOp(const Rect& /*r*/, Color /*color*/, int /*pen*/, Color /*pencolor*/) {}
++void NilDraw::DrawTextOp(int /*x*/, int /*y*/, int /*angle*/, const wchar */*text*/, Font /*font*/, Color /*ink*/, int /*n*/, const int */*dx*/) {}
++void NilDraw::DrawDrawingOp(const Rect& /*target*/, const Drawing& /*w*/) {}
++void NilDraw::DrawPaintingOp(const Rect& /*target*/, const Painting& /*w*/) {}
+ 
+ dword DrawProxy::GetInfo() const
+ {
+diff -ru a/uppsrc/Draw/DrawData.cpp b/uppsrc/Draw/DrawData.cpp
+--- a/uppsrc/Draw/DrawData.cpp	2026-10-20 13:03:36.088463963 -0700
++++ b/uppsrc/Draw/DrawData.cpp	2026-10-20 13:03:36.088463963 -0700
+@@ -54,7 +54,7 @@
+ }
+ #endif
+ 
+-void DrawImageBandRLE(Draw& w, int x, int y, const Image& m, int minp)
++void DrawImageBandRLE(Draw& w, int x, int y, const Image& m, int /*minp*/)
+ { // optimizing for some old printers with limited memory which results in problems with printing e.g. full page image
+ 	int xi = 0;
+ 	int cx = m.GetWidth();
+diff -ru a/uppsrc/Draw/Drawing.cpp b/uppsrc/Draw/Drawing.cpp
+--- a/uppsrc/Draw/Drawing.cpp	2026-10-20 13:03:36.091463965 -0700
++++ b/uppsrc/Draw/Drawing.cpp	2026-10-20 13:03:36.091463965 -0700
+@@ -159,7 +159,7 @@
+ 	return true;
+ }
+ 
+-bool DrawingDraw::IsPaintingOp(const Rect& r) const
++bool DrawingDraw::IsPaintingOp(const Rect& /*r*/) const
+ {
+ 	return true;
+ }
+diff -ru a/uppsrc/Draw/DrawText.cpp b/uppsrc/Draw/DrawText.cpp
+--- a/uppsrc/Draw/DrawText.cpp	2026-10-20 13:03:36.093463966 -0700
++++ b/uppsrc/Draw/DrawText.cpp	2026-10-20 13:03:36.094463967 -0700
+@@ -5,7 +5,7 @@
+ #define LLOG(x)    // LOG(x)
+ #define LTIMING(x) // TIMING(x)
+ 
+-WString TextUnicode(const char *s, int n, byte cs, Font font)
++WString TextUnicode(const char *s, int n, byte cs, [[maybe_unused]] Font font)
+ {
+ 	if(n < 0)
+ 		n = (int)strlen(s);
+diff -ru a/uppsrc/Draw/DrawTextUtil.cpp b/uppsrc/Draw/DrawTextUtil.cpp
+--- a/uppsrc/Draw/DrawTextUtil.cpp	2026-10-20 13:03:36.096463968 -0700
++++ b/uppsrc/Draw/DrawTextUtil.cpp	2026-10-20 13:03:36.096463968 -0700
+@@ -73,7 +73,7 @@
+ 	return GetTLTextSize(s, font).cy;
+ }
+ 
+-void DrawTLText(Draw& draw, int x, int y, int cx, const wchar *text,
++void DrawTLText(Draw& draw, int x, int y, int /*cx*/, const wchar *text,
+                 Font font, Color ink, int accesskey) {
+ 	int cy = font.GetCy();
+ 	const wchar *s = text;
+diff -ru a/uppsrc/Draw/Font.cpp b/uppsrc/Draw/Font.cpp
+--- a/uppsrc/Draw/Font.cpp	2026-10-20 13:03:36.098463969 -0700
++++ b/uppsrc/Draw/Font.cpp	2026-10-20 13:03:36.099463970 -0700
+@@ -472,7 +472,7 @@
+ 	}
+ };
+ 
+-CharEntry GetGlyphEntry(Font font, int chr, hash_t hash)
++CharEntry GetGlyphEntry(Font font, int chr, hash_t /*hash*/)
+ {
+ 	Mutex::Lock __(sFontLock);
+ 	GlyphInfoMaker m;
+diff -ru a/uppsrc/Draw/ImageOp.cpp b/uppsrc/Draw/ImageOp.cpp
+--- a/uppsrc/Draw/ImageOp.cpp	2026-10-20 13:03:36.101463971 -0700
++++ b/uppsrc/Draw/ImageOp.cpp	2026-10-20 13:03:36.102463972 -0700
+@@ -82,12 +82,12 @@
+ 	}
+ }
+ 
+-void Copy(ImageBuffer& dest, Point p, const Image& src, const Rect& srect, bool co)
++void Copy(ImageBuffer& dest, Point p, const Image& src, const Rect& srect, bool /*co*/)
+ {
+ 	DstSrcOp(dest, p, src, srect, Copy);
+ }
+ 
+-void Over(ImageBuffer& dest, Point p, const Image& src, const Rect& srect, bool co)
++void Over(ImageBuffer& dest, Point p, const Image& src, const Rect& srect, bool /*co*/)
+ {
+ 	DstSrcOp(dest, p, src, srect, AlphaBlend);
+ }
+@@ -99,7 +99,7 @@
+ 	return r;
+ }
+ 
+-Image Copy(const Image& src, const Rect& srect, bool co)
++Image Copy(const Image& src, const Rect& srect, bool /*co*/)
+ {
+ 	ImageBuffer ib(srect.GetSize());
+ 	Copy(ib, Point(0, 0), src, srect);
+@@ -115,7 +115,7 @@
+ 			Fill(dest[y] + r.left, color, cx);
+ }
+ 
+-void OverStraightOpaque(ImageBuffer& dest, Point p, const Image& src, const Rect& srect, bool co)
++void OverStraightOpaque(ImageBuffer& dest, Point p, const Image& src, const Rect& srect, bool /*co*/)
+ {
+ 	DstSrcOp(dest, p, src, srect, AlphaBlendStraightOpaque);
+ }
+diff -ru a/uppsrc/Draw/ImageScale.cpp b/uppsrc/Draw/ImageScale.cpp
+--- a/uppsrc/Draw/ImageScale.cpp	2026-10-20 13:03:36.104463973 -0700
++++ b/uppsrc/Draw/ImageScale.cpp	2026-10-20 13:03:36.104463973 -0700
+@@ -488,7 +488,7 @@
+ 	return true;
+ }
+ 
+-Image Rescale(const Image& src, Size sz, const Rect& src_rc, Gate<int, int> progress)
++Image Rescale(const Image& src, Size sz, const Rect& src_rc, Gate<int, int> /*progress*/)
+ {
+ 	if(src.GetSize() == sz && src_rc == sz)
+ 		return src;
+diff -ru a/uppsrc/Draw/Iml.cpp b/uppsrc/Draw/Iml.cpp
+--- a/uppsrc/Draw/Iml.cpp	2026-10-20 13:03:36.106463975 -0700
++++ b/uppsrc/Draw/Iml.cpp	2026-10-20 13:03:36.107463975 -0700
+@@ -86,7 +86,7 @@
+ 	data.Shrink();
+ }
+ 
+-void Iml::AddId(int mode1, const char *name)
++void Iml::AddId(int /*mode1*/, const char *name)
+ {
+ 	map.Add(name);
+ }
+diff -ru a/uppsrc/Draw/Palette.cpp b/uppsrc/Draw/Palette.cpp
+--- a/uppsrc/Draw/Palette.cpp	2026-10-20 13:03:36.109463977 -0700
++++ b/uppsrc/Draw/Palette.cpp	2026-10-20 13:03:36.109463977 -0700
+@@ -144,7 +144,7 @@
+ 	sPalMaker(Raster& raster, RGBA *palette, int ncolors);
+ };
+ 
+-void sPalMaker::Update(Box& x, int ii)
++void sPalMaker::Update(Box& x, int /*ii*/)
+ {
+ 	x.colorcount = 0;
+ 	x.population = 0;
+diff -ru a/uppsrc/Draw/Raster.cpp b/uppsrc/Draw/Raster.cpp
+--- a/uppsrc/Draw/Raster.cpp	2026-10-20 13:03:36.111463978 -0700
++++ b/uppsrc/Draw/Raster.cpp	2026-10-20 13:03:36.112463979 -0700
+@@ -17,7 +17,7 @@
+ 	return NULL;
+ }
+ 
+-void Raster::SeekPage(int page)
++void Raster::SeekPage([[maybe_unused]] int page)
+ {
+ 	ASSERT(page == 0);
+ }
+@@ -32,28 +32,28 @@
+ 	return 1;
+ }
+ 
+-int Raster::GetPageAspect(int page)
++int Raster::GetPageAspect(int /*page*/)
+ {
+ 	return 0;
+ }
+ 
+-int Raster::GetPageDelay(int page)
++int Raster::GetPageDelay(int /*page*/)
+ {
+ 	return 0;
+ }
+ 
+-Rect Raster::GetPageRect(int n)
++Rect Raster::GetPageRect(int /*n*/)
+ {
+ 	Size sz = GetSize();
+ 	return Rect(0, 0, sz.cx, sz.cy);
+ }
+ 
+-int Raster::GetPageDisposal(int n)
++int Raster::GetPageDisposal(int /*n*/)
+ {
+ 	return 0;	
+ }
+ 
+-Value Raster::GetMetaData(String id)
++Value Raster::GetMetaData(String /*id*/)
+ {
+ 	return Value();
+ }
+diff -ru a/uppsrc/Draw/SDrawClip.cpp b/uppsrc/Draw/SDrawClip.cpp
+--- a/uppsrc/Draw/SDrawClip.cpp	2026-10-20 13:03:36.114463980 -0700
++++ b/uppsrc/Draw/SDrawClip.cpp	2026-10-20 13:03:36.115463981 -0700
+@@ -57,7 +57,7 @@
+ 	return c.clip.GetCount();
+ }
+ 
+-bool SDraw::IsPaintingOp(const Rect& r) const
++bool SDraw::IsPaintingOp(const Rect& /*r*/) const
+ {
+ 	return true;
+ }
+diff -ru a/uppsrc/Draw/SDraw.cpp b/uppsrc/Draw/SDraw.cpp
+--- a/uppsrc/Draw/SDraw.cpp	2026-10-20 13:03:36.117463982 -0700
++++ b/uppsrc/Draw/SDraw.cpp	2026-10-20 13:03:36.117463982 -0700
+@@ -7,7 +7,7 @@
+ 	return DRAWTEXTLINES;
+ }
+ 
+-void SDraw::DrawArcOp(const Rect& rc, Point start, Point end, int width, Color color)
++void SDraw::DrawArcOp(const Rect& /*rc*/, Point /*start*/, Point /*end*/, int /*width*/, Color /*color*/)
+ {
+ 	// TODO
+ }
+@@ -71,7 +71,7 @@
+ 	}
+ }
+ 
+-void SDraw::DrawPolyPolylineOp(const Point *vertices, int vertex_count,
++void SDraw::DrawPolyPolylineOp(const Point *vertices, int /*vertex_count*/,
+                                const int *counts, int count_count, int width, Color color,
+                                Color /*doxor*/) // Last parameter ignored
+ {
+diff -ru a/uppsrc/Painter/DrawOp.cpp b/uppsrc/Painter/DrawOp.cpp
+--- a/uppsrc/Painter/DrawOp.cpp	2026-10-20 13:03:36.120463984 -0700
++++ b/uppsrc/Painter/DrawOp.cpp	2026-10-20 13:03:36.120463984 -0700
+@@ -71,7 +71,7 @@
+ 	return true;
+ }
+ 
+-bool Painter::IsPaintingOp(const Rect& r) const
++bool Painter::IsPaintingOp(const Rect& /*r*/) const
+ {
+ 	return true;
+ }
+@@ -137,8 +137,8 @@
+ 	DrawLineStroke(width, color);
+ }
+ 
+-void Painter::DrawPolyPolylineOp(const Point *vertices, int vertex_count, const int *counts,
+-                                 int count_count, int width, Color color, Color doxor)
++void Painter::DrawPolyPolylineOp(const Point *vertices, int /*vertex_count*/, const int *counts,
++                                 int count_count, int width, Color color, Color /*doxor*/)
+ {
+ 	while(--count_count >= 0) {
+ 		const Point *lp = vertices;
+@@ -150,9 +150,9 @@
+ 	}
+ }
+ 
+-void Painter::DrawPolyPolyPolygonOp(const Point *vertices, int vertex_count,
+-                                  const int *subpolygon_counts, int scc, const int *disjunct_polygon_counts,
+-                                  int dpcc, Color color, int width, Color outline, uint64 pattern, Color doxor)
++void Painter::DrawPolyPolyPolygonOp(const Point *vertices, int /*vertex_count*/,
++                                  const int *subpolygon_counts, int /*scc*/, const int *disjunct_polygon_counts,
++                                  int dpcc, Color color, int width, Color outline, uint64 pattern, Color /*doxor*/)
+ {
+ 	Image fill_img;
+ 	if(pattern && !IsNull(color)) {
+diff -ru a/uppsrc/Painter/Fillers.cpp b/uppsrc/Painter/Fillers.cpp
+--- a/uppsrc/Painter/Fillers.cpp	2026-10-20 13:03:36.122463985 -0700
++++ b/uppsrc/Painter/Fillers.cpp	2026-10-20 13:03:36.123463986 -0700
+@@ -4,7 +4,7 @@
+ 
+ namespace Upp {
+ 
+-void SolidFiller::Start(int minx, int maxx)
++void SolidFiller::Start(int minx, int /*maxx*/)
+ {
+ 	t += minx;
+ }
+@@ -298,7 +298,7 @@
+ 	last = -1;
+ }
+ 
+-void ClipFiller::Start(int xmin, int xmax)
++void ClipFiller::Start(int xmin, int /*xmax*/)
+ {
+ 	Render(0, xmin);
+ }
+@@ -428,9 +428,9 @@
+ }
+ 
+ struct NilFiller : Rasterizer::Filler {
+-	void Start(int minx, int maxx) {}
+-	void Render(int val, int len)  {}
+-	void Render(int val)           {}
++	void Start(int /*minx*/, int /*maxx*/) {}
++	void Render(int /*val*/, int /*len*/)  {}
++	void Render(int /*val*/)           {}
+ };
+ 
+ void MaskFillerFilter::Start(int minx, int maxx)
+diff -ru a/uppsrc/Painter/Painter.cpp b/uppsrc/Painter/Painter.cpp
+--- a/uppsrc/Painter/Painter.cpp	2026-10-20 13:03:36.126463988 -0700
++++ b/uppsrc/Painter/Painter.cpp	2026-10-20 13:03:36.126463988 -0700
+@@ -306,43 +306,43 @@
+ 	return Ellipse(x, y, r, r);
+ }
+ 
+-void NilPainter::ClearOp(const RGBA& color) {}
+-void NilPainter::MoveOp(const Pointf& p, bool rel) {}
+-void NilPainter::LineOp(const Pointf& p, bool rel) {}
+-void NilPainter::QuadraticOp(const Pointf& p1, const Pointf& p, bool rel) {}
+-void NilPainter::QuadraticOp(const Pointf& p, bool rel) {}
+-void NilPainter::CubicOp(const Pointf& p1, const Pointf& p2, const Pointf& p, bool rel) {}
+-void NilPainter::CubicOp(const Pointf& p2, const Pointf& p, bool rel) {}
+-void NilPainter::ArcOp(const Pointf& c, const Pointf& r, double angle, double sweep, bool rel) {}
+-void NilPainter::SvgArcOp(const Pointf& r, double xangle, bool large, bool sweep, const Pointf& p, bool rel) {}
++void NilPainter::ClearOp(const RGBA& /*color*/) {}
++void NilPainter::MoveOp(const Pointf& /*p*/, bool /*rel*/) {}
++void NilPainter::LineOp(const Pointf& /*p*/, bool /*rel*/) {}
++void NilPainter::QuadraticOp(const Pointf& /*p1*/, const Pointf& /*p*/, bool /*rel*/) {}
++void NilPainter::QuadraticOp(const Pointf& /*p*/, bool /*rel*/) {}
++void NilPainter::CubicOp(const Pointf& /*p1*/, const Pointf& /*p2*/, const Pointf& /*p*/, bool /*rel*/) {}
++void NilPainter::CubicOp(const Pointf& /*p2*/, const Pointf& /*p*/, bool /*rel*/) {}
++void NilPainter::ArcOp(const Pointf& /*c*/, const Pointf& /*r*/, double /*angle*/, double /*sweep*/, bool /*rel*/) {}
++void NilPainter::SvgArcOp(const Pointf& /*r*/, double /*xangle*/, bool /*large*/, bool /*sweep*/, const Pointf& /*p*/, bool /*rel*/) {}
+ void NilPainter::CloseOp() {}
+ void NilPainter::DivOp() {}
+-void NilPainter::FillOp(const RGBA& color) {}
+-void NilPainter::FillOp(const Image& image, const Xform2D& transsrc, dword flags) {}
+-void NilPainter::FillOp(const RGBA& color1, const RGBA& color2, const Xform2D& transsrc, int style) {}
+-void NilPainter::FillOp(const Pointf& p1, const RGBA& color1, const Pointf& p2, const RGBA& color2, int style) {}
+-void NilPainter::FillOp(const Pointf& f, const RGBA& color1, const Pointf& c, double r, const RGBA& color2, int style) {}
+-void NilPainter::FillOp(const Pointf& f, const RGBA& color1, const RGBA& color2, const Xform2D& transsrc, int style) {}
+-void NilPainter::StrokeOp(double width, const RGBA& rgba) {}
+-void NilPainter::StrokeOp(double width, const Image& image, const Xform2D& transsrc, dword flags) {}
+-void NilPainter::StrokeOp(double width, const RGBA& color1, const RGBA& color2, const Xform2D& transsrc, int style) {}
+-void NilPainter::StrokeOp(double width, const Pointf& p1, const RGBA& color1, const Pointf& p2, const RGBA& color2, int style) {}
+-void NilPainter::StrokeOp(double width, const Pointf& f, const RGBA& color1, const Pointf& c, double r, const RGBA& color2, int style) {}
+-void NilPainter::StrokeOp(double width, const Pointf& f, const RGBA& color1, const RGBA& color2, const Xform2D& transsrc, int style) {}
++void NilPainter::FillOp(const RGBA& /*color*/) {}
++void NilPainter::FillOp(const Image& /*image*/, const Xform2D& /*transsrc*/, dword /*flags*/) {}
++void NilPainter::FillOp(const RGBA& /*color1*/, const RGBA& /*color2*/, const Xform2D& /*transsrc*/, int /*style*/) {}
++void NilPainter::FillOp(const Pointf& /*p1*/, const RGBA& /*color1*/, const Pointf& /*p2*/, const RGBA& /*color2*/, int /*style*/) {}
++void NilPainter::FillOp(const Pointf& /*f*/, const RGBA& /*color1*/, const Pointf& /*c*/, double /*r*/, const RGBA& /*color2*/, int /*style*/) {}
++void NilPainter::FillOp(const Pointf& /*f*/, const RGBA& /*color1*/, const RGBA& /*color2*/, const Xform2D& /*transsrc*/, int /*style*/) {}
++void NilPainter::StrokeOp(double /*width*/, const RGBA& /*rgba*/) {}
++void NilPainter::StrokeOp(double /*width*/, const Image& /*image*/, const Xform2D& /*transsrc*/, dword /*flags*/) {}
++void NilPainter::StrokeOp(double /*width*/, const RGBA& /*color1*/, const RGBA& /*color2*/, const Xform2D& /*transsrc*/, int /*style*/) {}
++void NilPainter::StrokeOp(double /*width*/, const Pointf& /*p1*/, const RGBA& /*color1*/, const Pointf& /*p2*/, const RGBA& /*color2*/, int /*style*/) {}
++void NilPainter::StrokeOp(double /*width*/, const Pointf& /*f*/, const RGBA& /*color1*/, const Pointf& /*c*/, double /*r*/, const RGBA& /*color2*/, int /*style*/) {}
++void NilPainter::StrokeOp(double /*width*/, const Pointf& /*f*/, const RGBA& /*color1*/, const RGBA& /*color2*/, const Xform2D& /*transsrc*/, int /*style*/) {}
+ void NilPainter::ClipOp() {}
+-void NilPainter::CharacterOp(const Pointf& p, int ch, Font fnt) {}
+-void NilPainter::TextOp(const Pointf& p, const wchar *text, Font fnt, int n, const double *dx) {}
+-void NilPainter::ColorStopOp(double pos, const RGBA& color) {}
++void NilPainter::CharacterOp(const Pointf& /*p*/, int /*ch*/, Font /*fnt*/) {}
++void NilPainter::TextOp(const Pointf& /*p*/, const wchar */*text*/, Font /*fnt*/, int /*n*/, const double */*dx*/) {}
++void NilPainter::ColorStopOp(double /*pos*/, const RGBA& /*color*/) {}
+ void NilPainter::ClearStopsOp() {}
+-void NilPainter::OpacityOp(double o) {}
+-void NilPainter::LineCapOp(int linecap) {}
+-void NilPainter::LineJoinOp(int linejoin) {}
+-void NilPainter::MiterLimitOp(double l) {}
+-void NilPainter::EvenOddOp(bool evenodd) {}
+-void NilPainter::InvertOp(bool invert) {}
+-void NilPainter::ImageFilterOp(int filter) {}
+-void NilPainter::DashOp(const Vector<double>& dash, double start) {}
+-void NilPainter::TransformOp(const Xform2D& m) {}
++void NilPainter::OpacityOp(double /*o*/) {}
++void NilPainter::LineCapOp(int /*linecap*/) {}
++void NilPainter::LineJoinOp(int /*linejoin*/) {}
++void NilPainter::MiterLimitOp(double /*l*/) {}
++void NilPainter::EvenOddOp(bool /*evenodd*/) {}
++void NilPainter::InvertOp(bool /*invert*/) {}
++void NilPainter::ImageFilterOp(int /*filter*/) {}
++void NilPainter::DashOp(const Vector<double>& /*dash*/, double /*start*/) {}
++void NilPainter::TransformOp(const Xform2D& /*m*/) {}
+ void NilPainter::BeginOp() {}
+ void NilPainter::EndOp() {}
+ void NilPainter::BeginMaskOp() {}
+diff -ru a/uppsrc/Painter/Render.cpp b/uppsrc/Painter/Render.cpp
+--- a/uppsrc/Painter/Render.cpp	2026-10-20 13:03:36.128463990 -0700
++++ b/uppsrc/Painter/Render.cpp	2026-10-20 13:03:36.129463990 -0700
+@@ -6,7 +6,7 @@
+ #define LLOG(x)   // DLOG(x)
+ #define LDUMP(x)  // DDUMP(x)
+ 
+-void PainterTarget::Fill(double width, SpanSource *ss, const RGBA& color) {}
++void PainterTarget::Fill(double /*width*/, SpanSource */*ss*/, const RGBA& /*color*/) {}
+ 
+ BufferPainter::PathJob::PathJob(Rasterizer& rasterizer, double width, const PathInfo *path_info,
+                                 const SimpleAttr& attr, const Rectf& preclip, bool isregular)
+diff -ru a/uppsrc/Painter/Stroker.cpp b/uppsrc/Painter/Stroker.cpp
+--- a/uppsrc/Painter/Stroker.cpp	2026-10-20 13:03:36.131463992 -0700
++++ b/uppsrc/Painter/Stroker.cpp	2026-10-20 13:03:36.131463992 -0700
+@@ -138,7 +138,7 @@
+ 	p2 = p3;
+ }
+ 
+-void Stroker::Cap(const Pointf& p, const Pointf& v, const Pointf& o,
++void Stroker::Cap(const Pointf& p, const Pointf& /*v*/, const Pointf& o,
+                   const Pointf& a, const Pointf& b)
+ {
+ 	PutMove(a);
+diff -ru a/uppsrc/Painter/SvgArc.cpp b/uppsrc/Painter/SvgArc.cpp
+--- a/uppsrc/Painter/SvgArc.cpp	2026-10-20 13:03:36.133463993 -0700
++++ b/uppsrc/Painter/SvgArc.cpp	2026-10-20 13:03:36.133463993 -0700
+@@ -2,7 +2,7 @@
+ 
+ namespace Upp {
+ 
+-void Painter::DoArc0(double theta, double th_sweep, const Xform2D& m, double scale)
++void Painter::DoArc0(double theta, double th_sweep, const Xform2D& m, double /*scale*/)
+ {
+ 	int nsegs = int(ceil(fabs(th_sweep / (M_PI * 0.5 + 0.001))));
+ 	for(int i = 0; i < nsegs; i++) {
+@@ -18,7 +18,7 @@
+ 	}
+ }
+ 
+-void Painter::DoArc(const Pointf& c, const Pointf& r, double angle, double sweep, double xangle, double scale)
++void Painter::DoArc(const Pointf& c, const Pointf& r, double angle, double sweep, double /*xangle*/, double scale)
+ {
+ 	Xform2D m = Xform2D::Scale(r.x, r.y);
+ 	m = m * Xform2D::Translation(c.x, c.y);
+diff -ru a/uppsrc/PdfDraw/PdfDraw.cpp b/uppsrc/PdfDraw/PdfDraw.cpp
+--- a/uppsrc/PdfDraw/PdfDraw.cpp	2026-10-20 13:03:36.136463995 -0700
++++ b/uppsrc/PdfDraw/PdfDraw.cpp	2026-10-20 13:03:36.136463995 -0700
+@@ -195,7 +195,7 @@
+ 	return true;
+ }
+ 
+-bool PdfDraw::ExcludeClipOp(const Rect& r)
++bool PdfDraw::ExcludeClipOp(const Rect& /*r*/)
+ {
+ 	return true; // TODO
+ /*	
+@@ -548,9 +548,9 @@
+ 	     << " cm /Image" << q + 1 << " Do Q\n";
+ }
+ 
+-void PdfDraw::DrawPolyPolylineOp(const Point *vertices, int vertex_count,
++void PdfDraw::DrawPolyPolylineOp(const Point *vertices, int /*vertex_count*/,
+ 	                    const int *counts, int count_count,
+-	                    int width, Color color, Color doxor)
++	                    int width, Color color, Color /*doxor*/)
+ {
+ 	if(IsNull(color) || IsNull(width))
+ 		return;
+@@ -601,16 +601,16 @@
+ 	page << closeop << '\n';
+ }
+ 
+-void PdfDraw::DrawArcOp(const Rect& rc, Point start, Point end, int width, Color color)
++void PdfDraw::DrawArcOp(const Rect& /*rc*/, Point /*start*/, Point /*end*/, int /*width*/, Color /*color*/)
+ {
+ 	//TODO!!
+ 	NEVER();
+ }
+ 
+-void PdfDraw::DrawPolyPolyPolygonOp(const Point *vertices, int vertex_count,
+-	const int *subpolygon_counts, int subpolygon_count_count,
++void PdfDraw::DrawPolyPolyPolygonOp(const Point *vertices, int /*vertex_count*/,
++	const int *subpolygon_counts, int /*subpolygon_count_count*/,
+ 	const int *disjunct_polygon_counts, int disjunct_polygon_count_count,
+-	Color color, int width, Color outline, uint64 pattern, Color doxor)
++	Color color, int width, Color outline, uint64 pattern, Color /*doxor*/)
+ {
+ 	bool fill = !IsNull(color) && ~pattern, stroke = !IsNull(outline) && !IsNull(width);
+ 	if(fill)   PutrgColor(color, pattern);
+diff -ru a/uppsrc/PdfDraw/TTFReader.cpp b/uppsrc/PdfDraw/TTFReader.cpp
+--- a/uppsrc/PdfDraw/TTFReader.cpp	2026-10-20 13:03:36.138463996 -0700
++++ b/uppsrc/PdfDraw/TTFReader.cpp	2026-10-20 13:03:36.139463997 -0700
+@@ -102,7 +102,7 @@
+ 	return font.GetData(tab);
+ }
+ 
+-bool TTFReader::Open(const Font& fnt, bool symbol, bool justcheck)
++bool TTFReader::Open(const Font& fnt, bool /*symbol*/, bool justcheck)
+ {
+ 	try {
+ 		int i;
+diff -ru a/uppsrc/plugin/sqlite3/Sqlite3upp.cpp b/uppsrc/plugin/sqlite3/Sqlite3upp.cpp
+--- a/uppsrc/plugin/sqlite3/Sqlite3upp.cpp	2026-10-20 13:03:36.179464024 -0700
++++ b/uppsrc/plugin/sqlite3/Sqlite3upp.cpp	2026-10-20 13:03:36.180464025 -0700
+@@ -563,7 +563,7 @@
+ 
+ //////////////////////////////////////////////////////////////////////////
+ 
+-Vector<SqlColumnInfo> Sqlite3Session::EnumColumns(String database, String table) {
++Vector<SqlColumnInfo> Sqlite3Session::EnumColumns(String /*database*/, String table) {
+ 	Vector<SqlColumnInfo> out;
+ 	SqlColumnInfo info;
+ 	String ColType;
+diff -ru a/uppsrc/RichText/Diagram.cpp b/uppsrc/RichText/Diagram.cpp
+--- a/uppsrc/RichText/Diagram.cpp	2026-10-20 13:03:36.141463998 -0700
++++ b/uppsrc/RichText/Diagram.cpp	2026-10-20 13:03:36.141463998 -0700
+@@ -205,7 +205,7 @@
+ 	r << ";";
+ }
+ 
+-void DiagramItem::Load(CParser& p, const Diagram& diagram)
++void DiagramItem::Load(CParser& p, const Diagram& /*diagram*/)
+ {
+ 	Reset();
+ 	int q = Shape.Find(p.ReadId());
+diff -ru a/uppsrc/RichText/Object.cpp b/uppsrc/RichText/Object.cpp
+--- a/uppsrc/RichText/Object.cpp	2026-10-20 13:03:36.144464000 -0700
++++ b/uppsrc/RichText/Object.cpp	2026-10-20 13:03:36.144464000 -0700
+@@ -27,7 +27,7 @@
+ 	return sz;
+ }
+ 
+-Size RichObjectType::GetDefaultSize(const Value& data, Size maxsize, void *context) const
++Size RichObjectType::GetDefaultSize(const Value& data, Size maxsize, void */*context*/) const
+ {
+ 	return GetDefaultSize(data, maxsize);
+ }
+@@ -52,12 +52,12 @@
+ 	return false;
+ }
+ 
+-bool RichObjectType::Accept(PasteClip& clip)
++bool RichObjectType::Accept(PasteClip& /*clip*/)
+ {
+ 	return false;
+ }
+ 
+-Value RichObjectType::Read(PasteClip& clip)
++Value RichObjectType::Read(PasteClip& /*clip*/)
+ {
+ 	return Null;
+ }
+@@ -67,40 +67,40 @@
+ 	return Null;
+ }
+ 
+-String RichObjectType::GetClip(const Value& data, const String& fmt) const
++String RichObjectType::GetClip(const Value& /*data*/, const String& /*fmt*/) const
+ {
+ 	return Null;
+ }
+ 
+-void RichObjectType::Menu(Bar& bar, RichObject& data, void *context) const
++void RichObjectType::Menu(Bar& bar, RichObject& data, void */*context*/) const
+ {
+ 	Menu(bar, data);
+ }
+ 
+-void RichObjectType::Menu(Bar& bar, RichObject& data) const {}
++void RichObjectType::Menu(Bar& /*bar*/, RichObject& /*data*/) const {}
+ 
+-void RichObjectType::DefaultAction(RichObject& data, void *context) const
++void RichObjectType::DefaultAction(RichObject& data, void */*context*/) const
+ {
+ 	DefaultAction(data);
+ }
+ 
+-void RichObjectType::DefaultAction(RichObject& data) const {}
++void RichObjectType::DefaultAction(RichObject& /*data*/) const {}
+ 
+-Size RichObjectType::GetPhysicalSize(const Value& data, void *context) const
++Size RichObjectType::GetPhysicalSize(const Value& data, void */*context*/) const
+ {
+ 	return GetPhysicalSize(data);
+ }
+ 
+-Size RichObjectType::GetPhysicalSize(const Value& data) const { return Size(0, 0); }
++Size RichObjectType::GetPhysicalSize(const Value& /*data*/) const { return Size(0, 0); }
+ 
+-Size RichObjectType::GetPixelSize(const Value& data, void *context) const
++Size RichObjectType::GetPixelSize(const Value& data, void */*context*/) const
+ { 
+ 	return GetPixelSize(data);
+ }
+ 
+-Size RichObjectType::GetPixelSize(const Value& data) const { return Size(1, 1); }
++Size RichObjectType::GetPixelSize(const Value& /*data*/) const { return Size(1, 1); }
+ 
+-void RichObjectType::Paint(const Value& data, Draw& w, Size sz, const RichObjectPaintInfo& pi) const {}
++void RichObjectType::Paint(const Value& /*data*/, Draw& /*w*/, Size /*sz*/, const RichObjectPaintInfo& /*pi*/) const {}
+ 
+ Image RichObjectType::ToImage(int64, const Value& data, Size sz, const RichObjectPaintInfo& pi) const
+ {
+@@ -110,12 +110,12 @@
+ 	return iw;
+ }
+ 
+-String RichObjectType::GetLink(const Value& data, Point pt, Size sz, void *context) const
++String RichObjectType::GetLink(const Value& /*data*/, Point /*pt*/, Size /*sz*/, void */*context*/) const
+ {
+ 	return Null;
+ }
+ 
+-void RichObject::InitSize(int cx, int cy, void *context)
++void RichObject::InitSize(int cx, int cy, void */*context*/)
+ {
+ 	Size sz;
+ 	Size phsz = 600 * GetPixelSize() / 96; // 100% size...
+@@ -402,7 +402,7 @@
+ 	return "PING";
+ }
+ 
+-RichObject CreatePNGObject(const Image& img, Size dot_size, Size out_size)
++RichObject CreatePNGObject(const Image& img, Size /*dot_size*/, Size out_size)
+ {
+ 	RichObject obj(RichObjectTypePNG(), PNGEncoder().SaveString(img));
+ 	if(!IsNull(out_size))
+diff -ru a/uppsrc/RichText/Para.h b/uppsrc/RichText/Para.h
+--- a/uppsrc/RichText/Para.h	2026-10-20 13:03:36.146464002 -0700
++++ b/uppsrc/RichText/Para.h	2026-10-20 13:03:36.147464002 -0700
+@@ -171,8 +171,8 @@
+ 	struct FieldType {
+ 		virtual Array<Part> Evaluate(const String& param, VectorMap<String, Value>& vars,
+ 		                             const CharFormat& fmt) = 0;
+-		virtual void        Menu(Bar& bar, String *param) const {}
+-		virtual void        DefaultAction(String *param) const {}
++		virtual void        Menu(Bar& /*bar*/, String */*param*/) const {}
++		virtual void        DefaultAction(String */*param*/) const {}
+ 		virtual ~FieldType() {}
+ 	};
+ 
+diff -ru a/uppsrc/RichText/ParaPaint.cpp b/uppsrc/RichText/ParaPaint.cpp
+--- a/uppsrc/RichText/ParaPaint.cpp	2026-10-20 13:03:36.149464004 -0700
++++ b/uppsrc/RichText/ParaPaint.cpp	2026-10-20 13:03:36.150464005 -0700
+@@ -204,7 +204,7 @@
+ }
+ 
+ void RichPara::Paint(PageDraw& pw, RichContext rc, const PaintInfo& pi,
+-                     const Number& n, const Bits& spellerror, bool baselevel) const
++                     const Number& /*n*/, const Bits& spellerror, bool baselevel) const
+ {
+ 	Zoom z = pi.zoom;
+ 	PageY opy = rc.py;
+diff -ru a/uppsrc/RichText/RichDiagram.cpp b/uppsrc/RichText/RichDiagram.cpp
+--- a/uppsrc/RichText/RichDiagram.cpp	2026-10-20 13:03:36.152464006 -0700
++++ b/uppsrc/RichText/RichDiagram.cpp	2026-10-20 13:03:36.153464007 -0700
+@@ -16,7 +16,7 @@
+ 	static bool  Load(Diagram& m, const Value& zqdf);
+ };
+ 
+-String RichDiagram::GetTypeName(const Value& v) const
++String RichDiagram::GetTypeName(const Value& /*v*/) const
+ {
+ 	return "qdf";
+ }
+diff -ru a/uppsrc/RichText/RichImage.cpp b/uppsrc/RichText/RichImage.cpp
+--- a/uppsrc/RichText/RichImage.cpp	2026-10-20 13:03:36.155464008 -0700
++++ b/uppsrc/RichText/RichImage.cpp	2026-10-20 13:03:36.155464008 -0700
+@@ -20,7 +20,7 @@
+ 	typedef RichImage CLASSNAME;
+ };
+ 
+-String RichImage::GetTypeName(const Value& v) const
++String RichImage::GetTypeName(const Value& /*v*/) const
+ {
+ 	return "image";
+ }
+@@ -187,7 +187,7 @@
+ 	Image  ToImage(int64, const Value& data, Size sz, const RichObjectPaintInfo& pi) const override;
+ };
+ 
+-String RichRawImage::GetTypeName(const Value& v) const
++String RichRawImage::GetTypeName(const Value& /*v*/) const
+ {
+ 	return "rawimage";
+ }
+@@ -310,7 +310,7 @@
+ 	return GetImlImage((String)v);
+ }
+ 
+-String RichImlImage::GetTypeName(const Value& v) const
++String RichImlImage::GetTypeName(const Value& /*v*/) const
+ {
+ 	return "iml";
+ }
+diff -ru a/uppsrc/RichText/RichText.h b/uppsrc/RichText/RichText.h
+--- a/uppsrc/RichText/RichText.h	2026-10-20 13:03:36.157464009 -0700
++++ b/uppsrc/RichText/RichText.h	2026-10-20 13:03:36.158464010 -0700
+@@ -503,8 +503,8 @@
+ public:
+ 	virtual ~HtmlObjectSaver() {}
+ 	
+-	virtual String GetHtml(const RichObject& object)                     { return Null; }
+-	virtual String GetHtml(const RichObject& object, const String& link) { return GetHtml(object); }
++	virtual String GetHtml(const RichObject& /*object*/)                     { return Null; }
++	virtual String GetHtml(const RichObject& object, const String& /*link*/) { return GetHtml(object); }
+ };
+ 
+ String EncodeHtml(const RichText& text, Index<String>& css,
+diff -ru a/uppsrc/RichText/TextData.cpp b/uppsrc/RichText/TextData.cpp
+--- a/uppsrc/RichText/TextData.cpp	2026-10-20 13:03:36.160464011 -0700
++++ b/uppsrc/RichText/TextData.cpp	2026-10-20 13:03:36.161464012 -0700
+@@ -362,13 +362,13 @@
+ 	nolinks = false;
+ }
+ 
+-void RichTextLayoutTracer::Paragraph(const Rect& page, PageY y, const RichPara& para) {}
+-void RichTextLayoutTracer::EndParagraph(PageY y) {}
+-void RichTextLayoutTracer::Table(const Rect& page, PageY y, const RichTable& table) {}
+-void RichTextLayoutTracer::EndTable(PageY y) {}
+-void RichTextLayoutTracer::TableRow(const Rect& page, PageY y, int i, const RichTable& table) {}
+-void RichTextLayoutTracer::EndTableRow(PageY y) {}
+-void RichTextLayoutTracer::TableCell(const Rect& page, PageY y, int i, int j, const RichTable& table, PageY npy) {}
+-void RichTextLayoutTracer::EndTableCell(PageY y) {}
++void RichTextLayoutTracer::Paragraph(const Rect& /*page*/, PageY /*y*/, const RichPara& /*para*/) {}
++void RichTextLayoutTracer::EndParagraph(PageY /*y*/) {}
++void RichTextLayoutTracer::Table(const Rect& /*page*/, PageY /*y*/, const RichTable& /*table*/) {}
++void RichTextLayoutTracer::EndTable(PageY /*y*/) {}
++void RichTextLayoutTracer::TableRow(const Rect& /*page*/, PageY /*y*/, int /*i*/, const RichTable& /*table*/) {}
++void RichTextLayoutTracer::EndTableRow(PageY /*y*/) {}
++void RichTextLayoutTracer::TableCell(const Rect& /*page*/, PageY /*y*/, int /*i*/, int /*j*/, const RichTable& /*table*/, PageY /*npy*/) {}
++void RichTextLayoutTracer::EndTableCell(PageY /*y*/) {}
+ 
+ }
+diff -ru a/uppsrc/Sql/Script.cpp b/uppsrc/Sql/Script.cpp
+--- a/uppsrc/Sql/Script.cpp	2026-10-20 13:03:35.791463762 -0700
++++ b/uppsrc/Sql/Script.cpp	2026-10-20 13:03:35.792463763 -0700
+@@ -19,7 +19,7 @@
+ #endif
+ 
+ bool SqlPerformScript(SqlSession& session, Stream& script,
+-                      Gate<int, int> progress_canceled, bool stoponerror)
++                      Gate<int, int> /*progress_canceled*/, bool stoponerror)
+ {
+ 	String stmt;
+ 	int level = 0;
+diff -ru a/uppsrc/Sql/Session.cpp b/uppsrc/Sql/Session.cpp
+--- a/uppsrc/Sql/Session.cpp	2026-10-20 13:03:35.794463764 -0700
++++ b/uppsrc/Sql/Session.cpp	2026-10-20 13:03:35.795463765 -0700
+@@ -36,12 +36,12 @@
+ SqlConnection *SqlSession::CreateConnection()                            { return NULL; }
+ Vector<String> SqlSession::EnumUsers()                                   { return Vector<String>(); }
+ Vector<String> SqlSession::EnumDatabases()                               { return Vector<String>(); }
+-Vector<String> SqlSession::EnumTables(String database)                   { return Vector<String>(); }
+-Vector<String> SqlSession::EnumViews(String database)                    { return Vector<String>(); }
+-Vector<String> SqlSession::EnumSequences(String database)                { return Vector<String>(); }
+-Vector<String> SqlSession::EnumPrimaryKey(String database, String table) { return Vector<String>(); }
++Vector<String> SqlSession::EnumTables(String /*database*/)                   { return Vector<String>(); }
++Vector<String> SqlSession::EnumViews(String /*database*/)                    { return Vector<String>(); }
++Vector<String> SqlSession::EnumSequences(String /*database*/)                { return Vector<String>(); }
++Vector<String> SqlSession::EnumPrimaryKey(String /*database*/, String /*table*/) { return Vector<String>(); }
+ Vector<String> SqlSession::EnumReservedWords()                           { return Vector<String>(); }
+-String         SqlSession::EnumRowID(String database, String table)      { return Null; }
++String         SqlSession::EnumRowID(String /*database*/, String /*table*/)      { return Null; }
+ 
+ Vector<SqlColumnInfo> SqlSession::EnumColumns(String database, String table)
+ {
+diff -ru a/uppsrc/Sql/Sql.cpp b/uppsrc/Sql/Sql.cpp
+--- a/uppsrc/Sql/Sql.cpp	2026-10-20 13:03:35.797463766 -0700
++++ b/uppsrc/Sql/Sql.cpp	2026-10-20 13:03:35.797463766 -0700
+@@ -20,13 +20,13 @@
+ 	return b ? T : F;
+ }
+ 
+-void FieldOperator::Field(Ref f) {}
++void FieldOperator::Field(Ref /*f*/) {}
+ 
+-void FieldOperator::Field(const char *name, Ref f) { Field(f); }
++void FieldOperator::Field(const char */*name*/, Ref f) { Field(f); }
+ 
+-void FieldOperator::Field(const char *name, Ref f, bool *b) { Field(name, f); }
++void FieldOperator::Field(const char *name, Ref f, bool */*b*/) { Field(name, f); }
+ 
+-void FieldOperator::Width(int width) {}
++void FieldOperator::Width(int /*width*/) {}
+ 
+ 
+ FieldOperator& FieldOperator::operator()(const char *name, bool& b) {
+diff -ru a/uppsrc/Sql/SqlSchema.h b/uppsrc/Sql/SqlSchema.h
+--- a/uppsrc/Sql/SqlSchema.h	2026-10-20 13:03:35.799463768 -0700
++++ b/uppsrc/Sql/SqlSchema.h	2026-10-20 13:03:35.800463768 -0700
+@@ -85,7 +85,7 @@
+ void operator*(SqlSchema& schema, const SqlInsert& insert);
+ 
+ template <class T>
+-inline void SqlSchemaInitClear(T& a) {}
++inline void SqlSchemaInitClear(T& /*a*/) {}
+ 
+ template <class T>
+ inline void SqlSchemaInitClear(T *a, int n) {
+diff -ru a/uppsrc/Sql/util_td.cpp b/uppsrc/Sql/util_td.cpp
+--- a/uppsrc/Sql/util_td.cpp	2026-10-20 13:03:35.802463770 -0700
++++ b/uppsrc/Sql/util_td.cpp	2026-10-20 13:03:35.802463770 -0700
+@@ -27,7 +27,7 @@
+ struct NfEqual : FieldOperator {
+ 	ValueArray va;
+ 	
+-	virtual void Field(const char *name, Ref f) {
++	virtual void Field(const char */*name*/, Ref f) {
+ 		va.Add(f);
+ 	}
+ };

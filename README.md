@@ -15,10 +15,12 @@ fixes we need in it, kept as plain patch files, built and checked on their own.
   - `0004`-`0008`: bugs the checks found (GTK string leak, PNG shift by 32, Painter
     attributes, CoWork start-up order, Ctrl frame view); `0009`: bugs strict warnings
     found (surrogate pairs in CParser, Equalight, memory status); `0010`: indentation.
-    Each is described in `docs/findings.md`.
-- **Suppressions** (`supp/`): system-library reports (GLib/GTK under TSan, librsvg leaks)
-  and `strict-reviewed.txt`, the U++ strict-warning sites read and found harmless
-  (`docs/strict.md`).
+  - `0011`-`0016`: every strict (`-Wall -Wextra`) warning fixed in the code, by kind
+    (copy assignment, parentheses, unused parameters, fall-through, the rest); two were
+    bugs: ParseQtf reading past the end of the text, InfoCtrl::GetTabOffset (`0015`).
+    Each is described in `docs/findings.md`; how the warnings were fixed: `docs/strict.md`.
+- **Suppressions** (`supp/`): system-library reports only (GLib/GTK under TSan, librsvg
+  leaks).
 - **Checks** (`check/`): `UppBaseCheck` (console: Core, Core/SSH, Draw, plugin/png,
   plugin/sqlite3; no display, fit for valgrind and sanitizers) and `UppBaseCheckGui`
   (CtrlLib window, `--smoke` closes it). Between them they build every U++ package the
@@ -39,9 +41,14 @@ the trees, its own copy of umk with its own object cache (never shared with anot
 project), `out/` and `logs/`. Nothing outside it is changed.
 
 Or the window: `./upp_basefix.sh gui` builds UppBaseFixBuild and starts it (options,
-checks, live output, a results table; double-click a build result for its log).
+checks; column 1: the commands, each file compiled, the messages; column 2: steps and
+results; double-click a build result for its log).
 
-Status 2026-10-20: patched tree (0001-0010), gcc 15 and clang (C++26), debug and release,
-strict and clean: ours 0, U++ 0 warnings (U++ house style counted apart, docs/strict.md);
-UppBaseCheck 16/16 and the GUI smoke test pass alone and under ASan + UBSan, TSan,
-valgrind and helgrind (the GUI is not run under helgrind). The pristine tree: 13/16.
+Status 2026-10-20: patched tree (0001-0016), gcc 15 and clang (C++26), debug and release,
+strict (`-Wall -Wextra`) and clean: 0 warnings, ours and U++, plain and with every check;
+UppBaseCheck 19/19 and the GUI smoke test pass alone and under ASan + UBSan, TSan,
+valgrind and helgrind (the GUI is not run under helgrind). The pristine tree: 13/19 (the six
+checks of bugs that patches fix fail there).
+
+The window logs what it shows to `$WORK/logs/gui-latest.log` (the last run) and
+`gui-history.log` (all runs).

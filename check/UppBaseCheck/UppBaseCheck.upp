@@ -5,7 +5,8 @@ uses
 	Core/SSH,
 	Draw,
 	plugin/png,
-	plugin/sqlite3;
+	plugin/sqlite3,
+	RichText;
 
 file
 	main.cpp;

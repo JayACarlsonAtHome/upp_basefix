@@ -1,0 +1,80 @@
+diff -ru a/uppsrc/CtrlLib/StatusBar.cpp b/uppsrc/CtrlLib/StatusBar.cpp
+--- a/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 13:03:36.366464150 -0700
++++ b/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 13:03:36.366464150 -0700
+@@ -90,13 +90,13 @@
+ 	Size sz = GetSize();
+ 	Rect r = sz;
+ 	r.right = 2;
+-	for(int i = 0; i < tab.GetCount() && r.right < sz.cx; i++) {
+-		const Tab& t = tab[i];
++	for(int i = 0; i < t && i < tab.GetCount() && r.right < sz.cx; i++) {
++		const Tab& tb = tab[i];
+ 		r.left = r.right;
+-		if(t.width < 0)
+-			r.right = max(r.right, sz.cx + t.width);
++		if(tb.width < 0)
++			r.right = max(r.right, sz.cx + tb.width);
+ 		else
+-			r.right = min((dword)sz.cx, dword(r.right) + t.width);
++			r.right = min((dword)sz.cx, dword(r.right) + tb.width);
+ 	}
+ 	return r.right;
+ }
+diff -ru a/uppsrc/RichText/ParseQtf.cpp b/uppsrc/RichText/ParseQtf.cpp
+--- a/uppsrc/RichText/ParseQtf.cpp	2026-10-20 13:03:36.383464162 -0700
++++ b/uppsrc/RichText/ParseQtf.cpp	2026-10-20 13:03:36.383464162 -0700
+@@ -76,7 +76,7 @@
+ 	void   Flush();
+ 	void   SetFormat();
+ 	void   FlushStyles();
+-	void   Error(const char *s);
++	[[noreturn]] void Error(const char *s);
+ 
+ 	void   ReadObject();
+ 
+@@ -197,7 +197,9 @@
+ 
+ Color RichQtfParser::GetColor()
+ {
+-	int c = *term++;
++	int c = *term;
++	if(c) // at the end of the text, stay there
++		term++;
+ 	if(c == '(') {
+ 		byte r = GetNumber();
+ 		if(Key(')')) {
+@@ -325,11 +327,11 @@
+ 			StringBuffer data;
+ 			for(;;) {
+ 				while(*term < 32 && *term > 0) term++;
+-				if((byte)*term >= ' ' && (byte)*term <= 127 || *term == '\0') break;
++				if(((byte)*term >= ' ' && (byte)*term <= 127) || *term == '\0') break;
+ 				byte seven = *term++;
+ 				for(int i = 0; i < 7; i++) {
+ 					while((byte)*term < 32 && (byte)*term > 0) term++;
+-					if((byte)*term >= ' ' && (byte)*term <= 127 || *term == '\0') break;
++					if(((byte)*term >= ' ' && (byte)*term <= 127) || *term == '\0') break;
+ 					data.Cat((*term++ & 0x7f) | ((seven << 7) & 0x80));
+ 					seven >>= 1;
+ 				}
+@@ -765,8 +767,10 @@
+ 							format.bullet = RichPara::BULLET_NONE;
+ 						else {
+ 							int c = *term++;
+-							if(!c)
++							if(!c) {
++								term--; // Error shows the text at term
+ 								Error("Unexpected end of text");
++							}
+ 							format.bullet =
+ 							                c == '1' ? RichPara::BULLET_ROUNDWHITE :
+ 							                c == '2' ? RichPara::BULLET_BOX :
+@@ -777,7 +781,7 @@
+ 						break;
+ 					case 'p':
+ 						switch(*term++) {
+-						case 0:   Error("Unexpected end of text");
++						case 0:   term--; Error("Unexpected end of text"); // Error shows the text at term
+ 						case 'h': format.linespacing = RichPara::LSP15; break;
+ 						case 'd': format.linespacing = RichPara::LSP20; break;
+ 						case 'w': format.linespacing = RichPara::LSP115; break;

@@ -1,0 +1,435 @@
+diff -ru a/uppsrc/Core/AString.hpp b/uppsrc/Core/AString.hpp
+--- a/uppsrc/Core/AString.hpp	2026-10-20 13:03:36.404464176 -0700
++++ b/uppsrc/Core/AString.hpp	2026-10-20 13:03:36.404464176 -0700
+@@ -56,7 +56,7 @@
+ 	const tchar *e = End();
+ 	const tchar *ptr = B::Begin();
+ 	for(const tchar *s = ptr + from; s < e; s++)
+-		if(*s == chr)
++		if((int)*s == chr)
+ 			return (int)(s - ptr);
+ 	return -1;
+ }
+@@ -68,7 +68,7 @@
+ 	if(from < GetLength()) {
+ 		const tchar *ptr = B::Begin();
+ 		for(const tchar *s = ptr + from; s >= ptr; s--)
+-			if(*s == chr)
++			if((int)*s == chr)
+ 				return (int)(s - ptr);
+ 	}
+ 	return -1;
+diff -ru a/uppsrc/Core/CvFlt.cpp b/uppsrc/Core/CvFlt.cpp
+--- a/uppsrc/Core/CvFlt.cpp	2026-10-20 13:03:36.409464179 -0700
++++ b/uppsrc/Core/CvFlt.cpp	2026-10-20 13:03:36.409464179 -0700
+@@ -528,7 +528,7 @@
+ 	SkipSpaces__<CHAR, BYTE>(s);
+ 
+ 	double sign = ScanSgn__<CHAR, BYTE>(s);
+-	if(!IsDigit(*s) && *s != '.' && *s != alt_dp)
++	if(!IsDigit(*s) && *s != '.' && (int)*s != alt_dp)
+ 		return NULL;
+ 
+ 	int ignored = 0;
+@@ -578,7 +578,7 @@
+ 
+ 	ReadNumber();
+ 	int exp = ignored;
+-	if(*s == '.' || *s == alt_dp) {
++	if(*s == '.' || (int)*s == alt_dp) {
+ 		s++;
+ 		const CHAR *s0 = s;
+ 		ReadNumber();
+diff -ru a/uppsrc/Core/Diag.h b/uppsrc/Core/Diag.h
+--- a/uppsrc/Core/Diag.h	2026-10-20 13:03:36.412464181 -0700
++++ b/uppsrc/Core/Diag.h	2026-10-20 13:03:36.413464182 -0700
+@@ -74,7 +74,7 @@
+ #define NEVER()          ASSERT(0)
+ #define NEVER_(msg)      ASSERT_(0, msg)
+ #define XNEVER(d)        if(1) { LOG("NEVER failed"); LOGSRCPOS(); LOG(d); ASSERT(0); } else
+-#define CHECK(c)         if(!bool(c)) { ASSERT(0); } else
++#define CHECK(c)         (bool(c) ? (void)0 : ASSERT(0))
+ #define XCHECK(c, d)     if(!bool(c)) { LOG("XCHECK failed"); LOGSRCPOS(); LOG(d); ASSERT(0); } else
+ 
+ #define TIMING(x)        RTIMING(x)
+diff -ru a/uppsrc/Core/FileMapping.h b/uppsrc/Core/FileMapping.h
+--- a/uppsrc/Core/FileMapping.h	2026-10-20 13:03:36.415464183 -0700
++++ b/uppsrc/Core/FileMapping.h	2026-10-20 13:03:36.415464183 -0700
+@@ -15,7 +15,7 @@
+ 	Time        GetTime() const;
+ 
+ 	byte       *Map(int64 mapoffset, size_t maplen);
+-	byte       *Map()                     { ASSERT((size_t)GetFileSize() == GetFileSize()); return Map(0, (size_t)GetFileSize()); }
++	byte       *Map()                     { ASSERT((int64)(size_t)GetFileSize() == GetFileSize()); return Map(0, (size_t)GetFileSize()); }
+ 	bool        Unmap();
+ 	bool        Close();
+ 
+diff -ru a/uppsrc/Core/Fn.h b/uppsrc/Core/Fn.h
+--- a/uppsrc/Core/Fn.h	2026-10-20 13:03:36.419464186 -0700
++++ b/uppsrc/Core/Fn.h	2026-10-20 13:03:36.419464186 -0700
+@@ -36,16 +36,30 @@
+ 	return min(max(x, min_), max_);
+ }
+ 
++// a == b; integers of different signedness by value (no negative number equals an unsigned one)
++template <class T, class K>
++constexpr bool findarg_equal__(const T& a, const K& b)
++{
++	if constexpr(std::is_integral_v<T> && std::is_integral_v<K> && std::is_signed_v<T> != std::is_signed_v<K>) {
++		if constexpr(std::is_signed_v<T>)
++			return a >= 0 && (unsigned long long)a == (unsigned long long)b;
++		else
++			return b >= 0 && (unsigned long long)a == (unsigned long long)b;
++	}
++	else
++		return a == b;
++}
++
+ template <class T, class K>
+ constexpr int findarg(const T& x, const K& k)
+ {
+-	return x == k ? 0 : -1;
++	return findarg_equal__(x, k) ? 0 : -1;
+ }
+ 
+ template <class T, class K, typename... L>
+ constexpr int findarg(const T& sel, const K& k, const L& ...args)
+ {
+-	if(sel == k)
++	if(findarg_equal__(sel, k))
+ 		return 0;
+ 	int q = findarg(sel, args...);
+ 	return q >= 0 ? q + 1 : -1;
+@@ -60,7 +74,7 @@
+ template <class T, class K, typename... L>
+ constexpr const char *decode_chr_(const T& sel, const K& k, const char *v, const L& ...args)
+ {
+-	return sel == k ? v : decode_chr_(sel, args...);
++	return findarg_equal__(sel, k) ? v : decode_chr_(sel, args...);
+ }
+ 
+ template <class T, class K, typename... L>
+@@ -78,7 +92,7 @@
+ template <class T, class K, class V, typename... L>
+ constexpr V decode(const T& sel, const K& k, const V& v, const L& ...args)
+ {
+-	return sel == k ? v : (V)decode(sel, args...);
++	return findarg_equal__(sel, k) ? v : (V)decode(sel, args...);
+ }
+ 
+ template <typename A, typename... T>
+diff -ru a/uppsrc/Core/heap.cpp b/uppsrc/Core/heap.cpp
+--- a/uppsrc/Core/heap.cpp	2026-10-20 13:03:36.422464188 -0700
++++ b/uppsrc/Core/heap.cpp	2026-10-20 13:03:36.423464188 -0700
+@@ -288,9 +288,11 @@
+ 
+ void *operator new(size_t size)                                    { void *ptr = UPP::MemoryAlloc(size); return ptr; }
+ void operator  delete(void *ptr) noexcept(true)                    { UPP::MemoryFree(ptr); }
++void operator  delete(void *ptr, size_t) noexcept(true)            { UPP::MemoryFree(ptr); }
+ 
+ void *operator new[](size_t size)                                  { void *ptr = UPP::MemoryAlloc(size); return ptr; }
+ void operator  delete[](void *ptr) noexcept(true)                  { UPP::MemoryFree(ptr); }
++void operator  delete[](void *ptr, size_t) noexcept(true)          { UPP::MemoryFree(ptr); }
+ 
+ void *operator new(size_t size, const std::nothrow_t&) noexcept    { void *ptr = UPP::MemoryAlloc(size); return ptr; }
+ void operator  delete(void *ptr, const std::nothrow_t&) noexcept   { UPP::MemoryFree(ptr); }
+diff -ru a/uppsrc/Core/LangInfo.cpp b/uppsrc/Core/LangInfo.cpp
+--- a/uppsrc/Core/LangInfo.cpp	2026-10-20 13:03:36.428464192 -0700
++++ b/uppsrc/Core/LangInfo.cpp	2026-10-20 13:03:36.428464192 -0700
+@@ -93,7 +93,7 @@
+ 			middle = u1 - u2;
+ 
+ 		if(c1 != c2 && little == 0) // different case
+-			little = (u1 != c1) - (u2 != c2);
++			little = (u1 != (int)c1) - (u2 != (int)c2);
+ 	}
+ 	return a_length != b_length ? cmp(a_length, b_length) : sgn(middle ? middle : little);
+ }
+@@ -184,7 +184,7 @@
+ 				return u1 >= u2 ? 1 : -1;
+ 			}
+ 		if(c1 != c2 && little == 0) // different case
+-			little = (u1 != c1) - (u2 != c2);
++			little = (u1 != (int)c1) - (u2 != (int)c2);
+ 	}
+ 	return a_length != b_length ? cmp(a_length, b_length) : sgn(middle ? middle : little);
+ }
+diff -ru a/uppsrc/Core/Log.cpp b/uppsrc/Core/Log.cpp
+--- a/uppsrc/Core/Log.cpp	2026-10-20 13:03:36.431464194 -0700
++++ b/uppsrc/Core/Log.cpp	2026-10-20 13:03:36.432464195 -0700
+@@ -16,14 +16,14 @@
+ 	int   hfile;
+ #endif
+ 
+-	char  filepath[512];
+-	int   filesize;
++	char  filepath[512] = {};
++	int   filesize = 0;
+ 
+-	int   part;
++	int   part = 0;
+ 	
+-	bool  line_begin;
++	bool  line_begin = false;
+ 	
+-	int   prev_msecs;
++	int   prev_msecs = 0;
+ 	
+ 	void  Create(bool append);
+ 	void  Create()                                     { Create(options & LOG_APPEND); }
+diff -ru a/uppsrc/Core/SplitMerge.cpp b/uppsrc/Core/SplitMerge.cpp
+--- a/uppsrc/Core/SplitMerge.cpp	2026-10-20 13:03:36.437464198 -0700
++++ b/uppsrc/Core/SplitMerge.cpp	2026-10-20 13:03:36.438464199 -0700
+@@ -105,7 +105,7 @@
+ 
+ struct SplitDelimWChar__ {
+ 	int chr;
+-	const wchar *operator()(const wchar *s) const { return *s == chr ? s + 1 : NULL; }
++	const wchar *operator()(const wchar *s) const { return (int)*s == chr ? s + 1 : NULL; }
+ };
+ 
+ Vector<WString> Split(int maxcount, const wchar *s, int chr, bool ignoreempty)
+diff -ru a/uppsrc/Core/SSH/Malloc.cpp b/uppsrc/Core/SSH/Malloc.cpp
+--- a/uppsrc/Core/SSH/Malloc.cpp	2026-10-20 13:03:36.520464254 -0700
++++ b/uppsrc/Core/SSH/Malloc.cpp	2026-10-20 13:03:36.521464255 -0700
+@@ -6,9 +6,11 @@
+ 
+ #ifdef UPP_HEAP
+ 
++// used by Session.cpp, which includes this file (compiled alone, it uses none of them)
++
+ static std::atomic<int64> UPP_SSH_alloc;
+ 
+-static void *ssh_malloc(size_t size, void **abstract)
++[[maybe_unused]] static void *ssh_malloc(size_t size, void **/*abstract*/)
+ {
+ 	MLOG("Alloc " << size);
+ 	size_t alloc = size + sizeof(int64);
+@@ -19,7 +21,7 @@
+ 	return aptr;
+ }
+ 
+-static void ssh_free(void *ptr, void **abstract)
++[[maybe_unused]] static void ssh_free(void *ptr, void **/*abstract*/)
+ {
+ 	if(!ptr)
+ 		return;
+@@ -29,7 +31,7 @@
+ 	MemoryFree(aptr);
+ }
+ 
+-static void *ssh_realloc(void *ptr, size_t size, void** abstract)
++[[maybe_unused]] static void *ssh_realloc(void *ptr, size_t size, void** /*abstract*/)
+ {
+ 	if(!ptr)
+ 		return NULL;
+diff -ru a/uppsrc/Core/TimeDate.cpp b/uppsrc/Core/TimeDate.cpp
+--- a/uppsrc/Core/TimeDate.cpp	2026-10-20 13:03:36.442464201 -0700
++++ b/uppsrc/Core/TimeDate.cpp	2026-10-20 13:03:36.442464201 -0700
+@@ -530,7 +530,7 @@
+ bool Time::IsValid() const
+ {
+ 	return year == -32768 ||
+-	       Date::IsValid() && hour >= 0 && hour < 24 && minute >= 0 && minute < 60 && second >= 0 && second < 60;
++	       (Date::IsValid() && hour < 24 && minute < 60 && second < 60);
+ }
+ 
+ int64 operator-(Time a, Time b) {
+@@ -687,7 +687,7 @@
+ 
+ String FormatTimeZone(int n)
+ {
+-	return (n < 0 ? "-" : "+") + Format("%02.2d%02.2d", abs(n) / 60, abs(n) % 60);
++	return String(n < 0 ? '-' : '+', 1) + Format("%02.2d%02.2d", abs(n) / 60, abs(n) % 60);
+ }
+ 
+ String GetTimeZoneText()
+diff -ru a/uppsrc/Core/Topt.h b/uppsrc/Core/Topt.h
+--- a/uppsrc/Core/Topt.h	2026-10-20 13:03:36.445464204 -0700
++++ b/uppsrc/Core/Topt.h	2026-10-20 13:03:36.445464204 -0700
+@@ -464,20 +464,20 @@
+ inline hash_t GetHashValue(const T& x)                         { return x.GetHashValue(); }
+ 
+ template<> inline hash_t GetHashValue(const char& a)           { return (hash_t)a; }
+-template<> inline hash_t GetHashValue(const signed char& a)    { return (const hash_t)a; }
+-template<> inline hash_t GetHashValue(const unsigned char& a)  { return (const hash_t)a; }
+-template<> inline hash_t GetHashValue(const short& a)          { return (const hash_t)a; }
+-template<> inline hash_t GetHashValue(const unsigned short& a) { return (const hash_t)a; }
+-template<> inline hash_t GetHashValue(const int& a)            { return (const hash_t)a; }
+-template<> inline hash_t GetHashValue(const unsigned int& a)   { return (const hash_t)a; }
+-template<> inline hash_t GetHashValue(const long& a)           { return (const hash_t)a; }
+-template<> inline hash_t GetHashValue(const unsigned long& a)  { return (const hash_t)a; }
+-template<> inline hash_t GetHashValue(const bool& a)           { return (const hash_t)a; }
+-template<> inline hash_t GetHashValue(const wchar_t& a)        { return (const hash_t)a; }
++template<> inline hash_t GetHashValue(const signed char& a)    { return (hash_t)a; }
++template<> inline hash_t GetHashValue(const unsigned char& a)  { return (hash_t)a; }
++template<> inline hash_t GetHashValue(const short& a)          { return (hash_t)a; }
++template<> inline hash_t GetHashValue(const unsigned short& a) { return (hash_t)a; }
++template<> inline hash_t GetHashValue(const int& a)            { return (hash_t)a; }
++template<> inline hash_t GetHashValue(const unsigned int& a)   { return (hash_t)a; }
++template<> inline hash_t GetHashValue(const long& a)           { return (hash_t)a; }
++template<> inline hash_t GetHashValue(const unsigned long& a)  { return (hash_t)a; }
++template<> inline hash_t GetHashValue(const bool& a)           { return (hash_t)a; }
++template<> inline hash_t GetHashValue(const wchar_t& a)        { return (hash_t)a; }
+ 
+ #ifdef HASH64
+-template<> inline hash_t GetHashValue(const int64& a)          { return (const hash_t)a; }
+-template<> inline hash_t GetHashValue(const uint64& a)         { return (const hash_t)a; }
++template<> inline hash_t GetHashValue(const int64& a)          { return (hash_t)a; }
++template<> inline hash_t GetHashValue(const uint64& a)         { return (hash_t)a; }
+ #else
+ template<> inline hash_t GetHashValue(const int64& a)          { return HASH_CONST2 * (hash_t)a + (hash_t)(a >> 32); }
+ template<> inline hash_t GetHashValue(const uint64& a)         { return GetHashValue((int64)a); }
+diff -ru a/uppsrc/Core/Util.h b/uppsrc/Core/Util.h
+--- a/uppsrc/Core/Util.h	2026-10-20 13:03:36.448464205 -0700
++++ b/uppsrc/Core/Util.h	2026-10-20 13:03:36.449464206 -0700
+@@ -65,7 +65,7 @@
+ 	const char *id;
+ 	int       (*def)();
+ 	int         version;
+-	int         value;
++	int         value = 0;
+ 	int         Load();
+ 
+ // "public:"
+@@ -79,7 +79,7 @@
+ 	const char *id;
+ 	int64     (*def)();
+ 	int         version;
+-	int64       value;
++	int64       value = 0;
+ 
+ // "public:"
+ 	operator    int64();
+@@ -92,7 +92,7 @@
+ 	const char *id;
+ 	double    (*def)();
+ 	int         version;
+-	double      value;
++	double      value = 0;
+ 	double      Load();
+ 
+ // "public:"
+@@ -106,7 +106,7 @@
+ 	const char *id;
+ 	bool      (*def)();
+ 	int         version;
+-	bool        value;
++	bool        value = false;
+ 	bool        Load();
+ 
+ // "public:"
+diff -ru a/uppsrc/Core/Value.cpp b/uppsrc/Core/Value.cpp
+--- a/uppsrc/Core/Value.cpp	2026-10-20 13:03:36.451464207 -0700
++++ b/uppsrc/Core/Value.cpp	2026-10-20 13:03:36.452464208 -0700
+@@ -371,7 +371,7 @@
+ 		if(type >= 0x8000000)
+ 			s.LoadError();
+ 		Free();
+-		int st = type == VOID_V ? VOIDV : type == STRING_V ? STRING : type;
++		int st = type == VOID_V ? (int)VOIDV : type == STRING_V ? (int)STRING : (int)type;
+ 		if(st == STRING)
+ 			s % data;
+ 		else
+diff -ru a/uppsrc/Core/Value.h b/uppsrc/Core/Value.h
+--- a/uppsrc/Core/Value.h	2026-10-20 13:03:36.454464210 -0700
++++ b/uppsrc/Core/Value.h	2026-10-20 13:03:36.454464210 -0700
+@@ -114,8 +114,8 @@
+ 		bool       (*IsEqual)(const void *p1, const void *p2);
+ 		bool       (*IsPolyEqual)(const void *p, const Value& v);
+ 		String     (*AsString)(const void *p);
+-		int        (*Compare)(const void *p1, const void *p2);
+-		int        (*PolyCompare)(const void *p1, const Value& p2);
++		int        (*Compare)(const void *p1, const void *p2) = nullptr;
++		int        (*PolyCompare)(const void *p1, const Value& p2) = nullptr;
+ 	};
+ 
+ protected:
+diff -ru a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
+--- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 13:03:36.466464218 -0700
++++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 13:03:36.467464218 -0700
+@@ -754,7 +754,7 @@
+ 	case GDK_KEY_RELEASE:
+ 		kv = CurrentEvent.value[0];
+ 		hw = CurrentEvent.value[1];
+-		if(kv >= 0 && kv < K_CHAR_LIM) {
++		if(kv >= 0 && kv < (int)K_CHAR_LIM) {
+ 			LLOG("keyval " << FormatIntHex(kv) << ' ' << (char)kv);
+ 			if(kv >= 'a' && kv <= 'z')
+ 				kv = kv - 'a' + 'A';
+diff -ru a/uppsrc/CtrlLib/AKeys.h b/uppsrc/CtrlLib/AKeys.h
+--- a/uppsrc/CtrlLib/AKeys.h	2026-10-20 13:03:36.473464222 -0700
++++ b/uppsrc/CtrlLib/AKeys.h	2026-10-20 13:03:36.474464223 -0700
+@@ -1,6 +1,6 @@
+ struct KeyInfo {
+ 	const char *name;
+-	dword key[4];
++	dword key[4] = {};
+ };
+ 
+ void RegisterKeyBinding(const char *group, const char *id, KeyInfo& (*info)());
+diff -ru a/uppsrc/CtrlLib/LabelBase.cpp b/uppsrc/CtrlLib/LabelBase.cpp
+--- a/uppsrc/CtrlLib/LabelBase.cpp	2026-10-20 13:03:36.486464231 -0700
++++ b/uppsrc/CtrlLib/LabelBase.cpp	2026-10-20 13:03:36.486464231 -0700
+@@ -499,10 +499,10 @@
+ {
+ 	int i = 0;
+ 	if(ctrl) {
+-		i = !ctrl->IsEnabled() || ctrl->IsReadOnly() ? CTRL_DISABLED
+-		    : button ? push : ctrl->HasFocus() ? CTRL_PRESSED
+-		    : mousein ? CTRL_HOT
+-		    : CTRL_NORMAL;
++		i = !ctrl->IsEnabled() || ctrl->IsReadOnly() ? (int)CTRL_DISABLED
++		    : button ? push : ctrl->HasFocus() ? (int)CTRL_PRESSED
++		    : mousein ? (int)CTRL_HOT
++		    : (int)CTRL_NORMAL;
+ 	}
+ 	ChPaintEdge(w, r, edge[i]);
+ 	if(!IsNull(coloredge))
+diff -ru a/uppsrc/CtrlLib/ToolButton.cpp b/uppsrc/CtrlLib/ToolButton.cpp
+--- a/uppsrc/CtrlLib/ToolButton.cpp	2026-10-20 13:03:36.494464237 -0700
++++ b/uppsrc/CtrlLib/ToolButton.cpp	2026-10-20 13:03:36.494464237 -0700
+@@ -149,7 +149,7 @@
+ 
+ ToolButton& ToolButton::Label(const char *text)
+ {
+-	Label(text, kind == NOLABEL ? RIGHTLABEL : kind);
++	Label(text, kind == NOLABEL ? (int)RIGHTLABEL : kind);
+ 	return *this;
+ }
+ 
+diff -ru a/uppsrc/Draw/Font.cpp b/uppsrc/Draw/Font.cpp
+--- a/uppsrc/Draw/Font.cpp	2026-10-20 13:03:36.501464241 -0700
++++ b/uppsrc/Draw/Font.cpp	2026-10-20 13:03:36.502464242 -0700
+@@ -424,7 +424,7 @@
+ 	Mutex::Lock __(sFontLock);
+ 	font.RealizeStd();
+ 	CharEntry& e = fc_cache_global[GlyphHash(font, chr) & 16383];
+-	if(e.font == font.AsInt64() && e.chr == chr)
++	if(e.font == font.AsInt64() && (int)e.chr == chr)
+ 		return e.info.IsNormal();
+ 	return GetGlyphInfoSys(font, chr).IsNormal();
+ }
+@@ -491,7 +491,7 @@
+ 	font.RealizeStd();
+ 	hash_t hash = GlyphHash(font, chr);
+ 	CharEntry& e = fc_cache[hash & 511];
+-	if(e.font != font.AsInt64() || e.chr != chr)
++	if(e.font != font.AsInt64() || (int)e.chr != chr)
+ 		e = GetGlyphEntry(font, chr, hash);
+ 	return e.info;
+ }
+diff -ru a/uppsrc/RichText/RichImage.cpp b/uppsrc/RichText/RichImage.cpp
+--- a/uppsrc/RichText/RichImage.cpp	2026-10-20 13:03:36.515464251 -0700
++++ b/uppsrc/RichText/RichImage.cpp	2026-10-20 13:03:36.516464251 -0700
+@@ -116,7 +116,9 @@
+ 
+ String RichPNG::GetTypeName(const Value& v) const
+ {
+-	return IsString(v) ? "PNG" : "image";
++	if(IsString(v))
++		return "PNG";
++	return "image";
+ }
+ 
+ Value RichPNG::Read(const String& s) const
