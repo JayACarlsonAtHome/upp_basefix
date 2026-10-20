@@ -62,7 +62,9 @@ struct Step : Moveable<Step> {
 class BuildWindow : public TopWindow {
 	enum { POLL = 1 };
 
-	LabelBox  options_box, checks_box, tree_box;
+	Splitter   top_split;
+	ParentCtrl build_pane, checks_pane;
+	LabelBox  options_box, checks_box;
 	Label     compiler_label, type_label, tree_label;
 	Switch    compiler, type, tree;
 	Option    strict, clean, verbose, tests, asan, tsan, valgrind, helgrind;
@@ -117,46 +119,54 @@ BuildWindow::BuildWindow()
 	Sizeable().Zoomable();
 	SetRect(0, 0, Zx(1100), Zy(820));
 
-	// Build options
-	Add(options_box.SetLabel("Build").HSizePosZ(8, 8).TopPosZ(8, 108));
-	Add(compiler_label.SetText("Compiler:").LeftPosZ(20, 70).TopPosZ(28, 22));
-	compiler.Add("gcc", "gcc 15").Add("clang", "clang").Add("both", "both, one after the other");
-	Add(compiler.LeftPosZ(90, 500).TopPosZ(28, 22));
-	Add(type_label.SetText("Type:").LeftPosZ(20, 70).TopPosZ(52, 22));
+	// Build options (left) and checks (right), side by side
+	build_pane.Add(options_box.SetLabel("Build").SizePos());
+	build_pane.Add(compiler_label.SetText("Compiler:").LeftPosZ(12, 70).TopPosZ(20, 22));
+	compiler.Add("gcc", "gcc 15").Add("clang", "clang").Add("both", "both");
+	compiler.Tip("both: gcc, then clang");
+	build_pane.Add(compiler.HSizePosZ(84, 8).TopPosZ(20, 22));
+	build_pane.Add(type_label.SetText("Type:").LeftPosZ(12, 70).TopPosZ(44, 22));
 	type.Add("debug", "Debug").Add("release", "Release (optimized)");
-	Add(type.LeftPosZ(90, 300).TopPosZ(52, 22));
-	Add(tree_label.SetText("Tree:").LeftPosZ(410, 50).TopPosZ(52, 22));
-	tree.Add("patched", "Patched (18619 + our patches)").Add("pristine", "Pristine (18619 as released)");
-	Add(tree.LeftPosZ(460, 520).TopPosZ(52, 22));
-	strict.SetLabel("Strict warnings (-Wall -Wextra)");
+	build_pane.Add(type.HSizePosZ(84, 8).TopPosZ(44, 22));
+	build_pane.Add(tree_label.SetText("Tree:").LeftPosZ(12, 70).TopPosZ(68, 22));
+	tree.Add("patched", "Patched (18619 + patches)").Add("pristine", "Pristine (18619)");
+	build_pane.Add(tree.HSizePosZ(84, 8).TopPosZ(68, 22));
+	strict.SetLabel("Strict (-Wall -Wextra)");
 	strict.Tip("U++ house style (unused parameters, deprecated copies, && within ||, and the sites in "
 	           "supp/strict-reviewed.txt) is counted apart; any other U++ warning turns the row yellow");
-	Add(strict.LeftPosZ(20, 260).TopPosZ(80, 22));
-	clean.SetLabel("Clean build (compile everything)");
-	Add(clean.LeftPosZ(290, 260).TopPosZ(80, 22));
+	build_pane.Add(strict.LeftPosZ(12, 230).TopPosZ(92, 22));
+	clean.SetLabel("Clean build (all files)");
+	clean.Tip("Compile everything: the warning counts then cover the whole tree");
+	build_pane.Add(clean.LeftPosZ(250, 230).TopPosZ(92, 22));
 	verbose.SetLabel("Show every file compiled");
-	Add(verbose.LeftPosZ(560, 260).TopPosZ(80, 22));
+	build_pane.Add(verbose.LeftPosZ(12, 230).TopPosZ(116, 22));
 
-	// Checks
-	Add(checks_box.SetLabel("Checks").HSizePosZ(8, 8).TopPosZ(120, 132));
-	tests.SetLabel("Run the check programs after building (UppBaseCheck: the console checks; UppBaseCheckGui --smoke)");
-	Add(tests.LeftPosZ(20, 900).TopPosZ(140, 22));
-	asan.SetLabel("Also under AddressSanitizer + UBSan (each compiler; memory errors, leaks, undefined behaviour)");
-	Add(asan.LeftPosZ(44, 900).TopPosZ(164, 22));
-	tsan.SetLabel("Also under ThreadSanitizer (clang; data races between threads)");
-	Add(tsan.LeftPosZ(44, 900).TopPosZ(188, 22));
-	valgrind.SetLabel("Also under valgrind memcheck (each compiler; uninitialised reads, leaks; slow)");
-	Add(valgrind.LeftPosZ(44, 900).TopPosZ(212, 22));
-	helgrind.SetLabel("Also under valgrind helgrind (once: gcc when both; races, lock order; very slow, no GUI run)");
-	Add(helgrind.LeftPosZ(44, 900).TopPosZ(236, 22));
+	checks_pane.Add(checks_box.SetLabel("Checks").SizePos());
+	tests.SetLabel("Run the check programs after building");
+	tests.Tip("UppBaseCheck: the console checks; UppBaseCheckGui --smoke");
+	checks_pane.Add(tests.HSizePosZ(12, 8).TopPosZ(20, 22));
+	asan.SetLabel("AddressSanitizer + UBSan (each compiler)");
+	asan.Tip("Memory errors, leaks, undefined behaviour");
+	checks_pane.Add(asan.HSizePosZ(32, 8).TopPosZ(44, 22));
+	tsan.SetLabel("ThreadSanitizer (clang)");
+	tsan.Tip("Data races between threads");
+	checks_pane.Add(tsan.HSizePosZ(32, 8).TopPosZ(68, 22));
+	valgrind.SetLabel("valgrind memcheck (each compiler; slow)");
+	valgrind.Tip("Uninitialised reads, leaks");
+	checks_pane.Add(valgrind.HSizePosZ(32, 8).TopPosZ(92, 22));
+	helgrind.SetLabel("valgrind helgrind (once; very slow)");
+	helgrind.Tip("Races, lock order; gcc when both; the GUI program is not run under it");
+	checks_pane.Add(helgrind.HSizePosZ(32, 8).TopPosZ(116, 22));
 
-	// The trees
-	Add(tree_box.SetLabel("Trees (in the work folder)").HSizePosZ(8, 8).TopPosZ(256, 56));
-	Add(tree_status.HSizePosZ(20, 560).TopPosZ(278, 22));
-	Add(pristine_b.SetLabel("Copy pristine").RightPosZ(424, 120).TopPosZ(276, 26));
-	Add(patch_b.SetLabel("Apply patches").RightPosZ(298, 120).TopPosZ(276, 26));
-	Add(verify_b.SetLabel("Verify pin").RightPosZ(172, 120).TopPosZ(276, 26));
-	Add(status_b.SetLabel("Patch status").RightPosZ(20, 146).TopPosZ(276, 26));
+	top_split.Horz(build_pane, checks_pane);
+	Add(top_split.HSizePosZ(8, 8).TopPosZ(4, 146));
+
+	// The trees: a row above Start / Stop / Close
+	Add(tree_status.HSizePosZ(8, 540).BottomPosZ(42, 26));
+	Add(pristine_b.SetLabel("Copy pristine").RightPosZ(412, 120).BottomPosZ(42, 26));
+	Add(patch_b.SetLabel("Apply patches").RightPosZ(286, 120).BottomPosZ(42, 26));
+	Add(verify_b.SetLabel("Verify pin").RightPosZ(160, 120).BottomPosZ(42, 26));
+	Add(status_b.SetLabel("Patch status").RightPosZ(8, 146).BottomPosZ(42, 26));
 	pristine_b.Tip("upp_basefix.sh pristine: copies /run/media/jay/GFS/upp/uppsrc (originals put back) "
 	               "and checks it against the pin");
 	patch_b.Tip("upp_basefix.sh patch: pristine + patches/*.patch -> the patched tree");
@@ -164,7 +174,7 @@ BuildWindow::BuildWindow()
 	status_b.Tip("upp_basefix.sh status: which patches the patched tree has");
 
 	command.SetFont(Monospace());
-	Add(command.HSizePosZ(8, 8).TopPosZ(316, 96));
+	Add(command.HSizePosZ(8, 8).TopPosZ(154, 80));
 
 	// Steps, results, output
 	steps_list.AddColumn("Step", 50);
@@ -183,12 +193,12 @@ BuildWindow::BuildWindow()
 	output.SetFont(Monospace());
 	split.Vert() << steps_list << results_list << output;
 	split.SetPos(1800, 0).SetPos(4300, 1);
-	Add(split.HSizePosZ(8, 8).VSizePosZ(416, 66));
+	Add(split.HSizePosZ(8, 8).VSizePosZ(238, 74));
 
-	Add(running.HSizePosZ(8, 8).BottomPosZ(40, 22));
 	Add(start.SetLabel("Start").LeftPosZ(8, 110).BottomPosZ(8, 28));
 	Add(stop.SetLabel("Stop").LeftPosZ(124, 110).BottomPosZ(8, 28));
 	Add(close.SetLabel("Close").RightPosZ(8, 90).BottomPosZ(8, 28));
+	Add(running.HSizePosZ(244, 106).BottomPosZ(11, 22));
 
 	for(Ctrl *c : { (Ctrl *)&compiler, (Ctrl *)&type, (Ctrl *)&tree, (Ctrl *)&strict, (Ctrl *)&clean,
 	                (Ctrl *)&verbose, (Ctrl *)&tests, (Ctrl *)&asan, (Ctrl *)&tsan, (Ctrl *)&valgrind,
