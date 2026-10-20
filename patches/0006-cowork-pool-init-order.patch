@@ -1,5 +1,6 @@
---- a/uppsrc/Core/CoWork.cpp	2026-10-20 10:15:01.172698353 -0700
-+++ b/uppsrc/Core/CoWork.cpp	2026-10-20 10:15:01.177698351 -0700
+diff -ruN a/uppsrc/Core/CoWork.cpp b/uppsrc/Core/CoWork.cpp
+--- a/uppsrc/Core/CoWork.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/CoWork.cpp	2026-10-20 14:35:19.347811942 -0700
 @@ -55,13 +55,13 @@
  {
  	ASSERT(!IsWorker());

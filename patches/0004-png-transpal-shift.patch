@@ -1,6 +1,7 @@
---- a/uppsrc/plugin/png/pngupp.cpp	2026-10-20 10:15:01.133698364 -0700
-+++ b/uppsrc/plugin/png/pngupp.cpp	2026-10-20 10:15:01.139698362 -0700
-@@ -433,7 +433,7 @@
+diff -ruN a/uppsrc/plugin/png/pngupp.cpp b/uppsrc/plugin/png/pngupp.cpp
+--- a/uppsrc/plugin/png/pngupp.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/plugin/png/pngupp.cpp	2026-10-20 14:35:19.173811823 -0700
+@@ -426,7 +426,7 @@
  	if(!palette.IsEmpty())
  		png_set_PLTE(png_ptr, info_ptr, palette.Begin(), palette.GetCount());
  

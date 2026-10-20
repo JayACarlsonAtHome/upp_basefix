@@ -1,5 +1,6 @@
---- a/uppsrc/CtrlLib/ChGtk3.cpp	2026-10-20 10:15:01.113698370 -0700
-+++ b/uppsrc/CtrlLib/ChGtk3.cpp	2026-10-20 10:15:01.120698368 -0700
+diff -ruN a/uppsrc/CtrlLib/ChGtk3.cpp b/uppsrc/CtrlLib/ChGtk3.cpp
+--- a/uppsrc/CtrlLib/ChGtk3.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/ChGtk3.cpp	2026-10-20 14:35:19.084811762 -0700
 @@ -20,9 +20,11 @@
  
  String GtkSettingsString(const char *name)

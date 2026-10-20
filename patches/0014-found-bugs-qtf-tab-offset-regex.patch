@@ -1,6 +1,27 @@
-diff -ru a/uppsrc/CtrlLib/StatusBar.cpp b/uppsrc/CtrlLib/StatusBar.cpp
---- a/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 13:03:36.366464150 -0700
-+++ b/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 13:03:36.366464150 -0700
+diff -ruN a/uppsrc/Core/Regex.h b/uppsrc/Core/Regex.h
+--- a/uppsrc/Core/Regex.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Regex.h	2026-10-20 14:35:20.210812530 -0700
+@@ -50,7 +50,7 @@
+ 	bool Match(const String& text) const                            { return Match(text, text.GetCount()); }
+ 
+ 	Regex() {}
+-	Regex(dword options, const char *pattern, int len)              { Set(pattern, len); }
++	Regex(dword options, const char *pattern, int len)              { Set(options, pattern, len); }
+ 	Regex(dword options, const char *pattern)                       { Set(options, pattern, (int)strlen(pattern)); }
+ 	Regex(dword options, const String& pattern)                     { Set(options, pattern, pattern.GetCount()); }
+ 
+@@ -89,7 +89,7 @@
+ 	bool Match(const WString& text) const                            { return Match(text, text.GetCount()); }
+ 
+ 	WRegex() {}
+-	WRegex(dword options, const wchar *pattern, int len)             { Set(pattern, len); }
++	WRegex(dword options, const wchar *pattern, int len)             { Set(options, pattern, len); }
+ 	WRegex(dword options, const wchar *pattern)                      { Set(options, pattern, strlen32(pattern)); }
+ 	WRegex(dword options, const WString& pattern)                    { Set(options, pattern, pattern.GetCount()); }
+ 
+diff -ruN a/uppsrc/CtrlLib/StatusBar.cpp b/uppsrc/CtrlLib/StatusBar.cpp
+--- a/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 14:35:20.002812388 -0700
++++ b/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 14:35:20.208812529 -0700
 @@ -90,13 +90,13 @@
  	Size sz = GetSize();
  	Rect r = sz;
@@ -20,9 +41,9 @@ diff -ru a/uppsrc/CtrlLib/StatusBar.cpp b/uppsrc/CtrlLib/StatusBar.cpp
  	}
  	return r.right;
  }
-diff -ru a/uppsrc/RichText/ParseQtf.cpp b/uppsrc/RichText/ParseQtf.cpp
---- a/uppsrc/RichText/ParseQtf.cpp	2026-10-20 13:03:36.383464162 -0700
-+++ b/uppsrc/RichText/ParseQtf.cpp	2026-10-20 13:03:36.383464162 -0700
+diff -ruN a/uppsrc/RichText/ParseQtf.cpp b/uppsrc/RichText/ParseQtf.cpp
+--- a/uppsrc/RichText/ParseQtf.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/ParseQtf.cpp	2026-10-20 14:35:20.208812529 -0700
 @@ -76,7 +76,7 @@
  	void   Flush();
  	void   SetFormat();

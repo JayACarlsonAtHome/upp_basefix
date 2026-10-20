@@ -1,6 +1,6 @@
-diff -ru a/uppsrc/Core/AString.hpp b/uppsrc/Core/AString.hpp
---- a/uppsrc/Core/AString.hpp	2026-10-20 13:03:36.404464176 -0700
-+++ b/uppsrc/Core/AString.hpp	2026-10-20 13:03:36.404464176 -0700
+diff -ruN a/uppsrc/Core/AString.hpp b/uppsrc/Core/AString.hpp
+--- a/uppsrc/Core/AString.hpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/AString.hpp	2026-10-20 14:35:20.297812589 -0700
 @@ -56,7 +56,7 @@
  	const tchar *e = End();
  	const tchar *ptr = B::Begin();
@@ -19,10 +19,10 @@ diff -ru a/uppsrc/Core/AString.hpp b/uppsrc/Core/AString.hpp
  				return (int)(s - ptr);
  	}
  	return -1;
-diff -ru a/uppsrc/Core/CvFlt.cpp b/uppsrc/Core/CvFlt.cpp
---- a/uppsrc/Core/CvFlt.cpp	2026-10-20 13:03:36.409464179 -0700
-+++ b/uppsrc/Core/CvFlt.cpp	2026-10-20 13:03:36.409464179 -0700
-@@ -528,7 +528,7 @@
+diff -ruN a/uppsrc/Core/CvFlt.cpp b/uppsrc/Core/CvFlt.cpp
+--- a/uppsrc/Core/CvFlt.cpp	2026-10-20 14:35:19.814812260 -0700
++++ b/uppsrc/Core/CvFlt.cpp	2026-10-20 14:35:20.297812589 -0700
+@@ -530,7 +530,7 @@
  	SkipSpaces__<CHAR, BYTE>(s);
  
  	double sign = ScanSgn__<CHAR, BYTE>(s);
@@ -31,7 +31,7 @@ diff -ru a/uppsrc/Core/CvFlt.cpp b/uppsrc/Core/CvFlt.cpp
  		return NULL;
  
  	int ignored = 0;
-@@ -578,7 +578,7 @@
+@@ -581,7 +581,7 @@
  
  	ReadNumber();
  	int exp = ignored;
@@ -40,9 +40,9 @@ diff -ru a/uppsrc/Core/CvFlt.cpp b/uppsrc/Core/CvFlt.cpp
  		s++;
  		const CHAR *s0 = s;
  		ReadNumber();
-diff -ru a/uppsrc/Core/Diag.h b/uppsrc/Core/Diag.h
---- a/uppsrc/Core/Diag.h	2026-10-20 13:03:36.412464181 -0700
-+++ b/uppsrc/Core/Diag.h	2026-10-20 13:03:36.413464182 -0700
+diff -ruN a/uppsrc/Core/Diag.h b/uppsrc/Core/Diag.h
+--- a/uppsrc/Core/Diag.h	2026-10-20 14:35:19.949812352 -0700
++++ b/uppsrc/Core/Diag.h	2026-10-20 14:35:20.297812589 -0700
 @@ -74,7 +74,7 @@
  #define NEVER()          ASSERT(0)
  #define NEVER_(msg)      ASSERT_(0, msg)
@@ -52,9 +52,9 @@ diff -ru a/uppsrc/Core/Diag.h b/uppsrc/Core/Diag.h
  #define XCHECK(c, d)     if(!bool(c)) { LOG("XCHECK failed"); LOGSRCPOS(); LOG(d); ASSERT(0); } else
  
  #define TIMING(x)        RTIMING(x)
-diff -ru a/uppsrc/Core/FileMapping.h b/uppsrc/Core/FileMapping.h
---- a/uppsrc/Core/FileMapping.h	2026-10-20 13:03:36.415464183 -0700
-+++ b/uppsrc/Core/FileMapping.h	2026-10-20 13:03:36.415464183 -0700
+diff -ruN a/uppsrc/Core/FileMapping.h b/uppsrc/Core/FileMapping.h
+--- a/uppsrc/Core/FileMapping.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/FileMapping.h	2026-10-20 14:35:20.297812589 -0700
 @@ -15,7 +15,7 @@
  	Time        GetTime() const;
  
@@ -64,9 +64,9 @@ diff -ru a/uppsrc/Core/FileMapping.h b/uppsrc/Core/FileMapping.h
  	bool        Unmap();
  	bool        Close();
  
-diff -ru a/uppsrc/Core/Fn.h b/uppsrc/Core/Fn.h
---- a/uppsrc/Core/Fn.h	2026-10-20 13:03:36.419464186 -0700
-+++ b/uppsrc/Core/Fn.h	2026-10-20 13:03:36.419464186 -0700
+diff -ruN a/uppsrc/Core/Fn.h b/uppsrc/Core/Fn.h
+--- a/uppsrc/Core/Fn.h	2026-10-20 14:35:19.949812352 -0700
++++ b/uppsrc/Core/Fn.h	2026-10-20 14:35:20.297812589 -0700
 @@ -36,16 +36,30 @@
  	return min(max(x, min_), max_);
  }
@@ -118,9 +118,9 @@ diff -ru a/uppsrc/Core/Fn.h b/uppsrc/Core/Fn.h
  }
  
  template <typename A, typename... T>
-diff -ru a/uppsrc/Core/heap.cpp b/uppsrc/Core/heap.cpp
---- a/uppsrc/Core/heap.cpp	2026-10-20 13:03:36.422464188 -0700
-+++ b/uppsrc/Core/heap.cpp	2026-10-20 13:03:36.423464188 -0700
+diff -ruN a/uppsrc/Core/heap.cpp b/uppsrc/Core/heap.cpp
+--- a/uppsrc/Core/heap.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/heap.cpp	2026-10-20 14:35:20.297812589 -0700
 @@ -288,9 +288,11 @@
  
  void *operator new(size_t size)                                    { void *ptr = UPP::MemoryAlloc(size); return ptr; }
@@ -133,9 +133,9 @@ diff -ru a/uppsrc/Core/heap.cpp b/uppsrc/Core/heap.cpp
  
  void *operator new(size_t size, const std::nothrow_t&) noexcept    { void *ptr = UPP::MemoryAlloc(size); return ptr; }
  void operator  delete(void *ptr, const std::nothrow_t&) noexcept   { UPP::MemoryFree(ptr); }
-diff -ru a/uppsrc/Core/LangInfo.cpp b/uppsrc/Core/LangInfo.cpp
---- a/uppsrc/Core/LangInfo.cpp	2026-10-20 13:03:36.428464192 -0700
-+++ b/uppsrc/Core/LangInfo.cpp	2026-10-20 13:03:36.428464192 -0700
+diff -ruN a/uppsrc/Core/LangInfo.cpp b/uppsrc/Core/LangInfo.cpp
+--- a/uppsrc/Core/LangInfo.cpp	2026-10-20 14:35:19.963812362 -0700
++++ b/uppsrc/Core/LangInfo.cpp	2026-10-20 14:35:20.297812589 -0700
 @@ -93,7 +93,7 @@
  			middle = u1 - u2;
  
@@ -154,10 +154,10 @@ diff -ru a/uppsrc/Core/LangInfo.cpp b/uppsrc/Core/LangInfo.cpp
  	}
  	return a_length != b_length ? cmp(a_length, b_length) : sgn(middle ? middle : little);
  }
-diff -ru a/uppsrc/Core/Log.cpp b/uppsrc/Core/Log.cpp
---- a/uppsrc/Core/Log.cpp	2026-10-20 13:03:36.431464194 -0700
-+++ b/uppsrc/Core/Log.cpp	2026-10-20 13:03:36.432464195 -0700
-@@ -16,14 +16,14 @@
+diff -ruN a/uppsrc/Core/Log.cpp b/uppsrc/Core/Log.cpp
+--- a/uppsrc/Core/Log.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Log.cpp	2026-10-20 14:35:20.297812589 -0700
+@@ -20,14 +20,14 @@
  	int   hfile;
  #endif
  
@@ -177,9 +177,9 @@ diff -ru a/uppsrc/Core/Log.cpp b/uppsrc/Core/Log.cpp
  	
  	void  Create(bool append);
  	void  Create()                                     { Create(options & LOG_APPEND); }
-diff -ru a/uppsrc/Core/SplitMerge.cpp b/uppsrc/Core/SplitMerge.cpp
---- a/uppsrc/Core/SplitMerge.cpp	2026-10-20 13:03:36.437464198 -0700
-+++ b/uppsrc/Core/SplitMerge.cpp	2026-10-20 13:03:36.438464199 -0700
+diff -ruN a/uppsrc/Core/SplitMerge.cpp b/uppsrc/Core/SplitMerge.cpp
+--- a/uppsrc/Core/SplitMerge.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SplitMerge.cpp	2026-10-20 14:35:20.297812589 -0700
 @@ -105,7 +105,7 @@
  
  struct SplitDelimWChar__ {
@@ -189,9 +189,9 @@ diff -ru a/uppsrc/Core/SplitMerge.cpp b/uppsrc/Core/SplitMerge.cpp
  };
  
  Vector<WString> Split(int maxcount, const wchar *s, int chr, bool ignoreempty)
-diff -ru a/uppsrc/Core/SSH/Malloc.cpp b/uppsrc/Core/SSH/Malloc.cpp
---- a/uppsrc/Core/SSH/Malloc.cpp	2026-10-20 13:03:36.520464254 -0700
-+++ b/uppsrc/Core/SSH/Malloc.cpp	2026-10-20 13:03:36.521464255 -0700
+diff -ruN a/uppsrc/Core/SSH/Malloc.cpp b/uppsrc/Core/SSH/Malloc.cpp
+--- a/uppsrc/Core/SSH/Malloc.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/Malloc.cpp	2026-10-20 14:35:20.310812598 -0700
 @@ -6,9 +6,11 @@
  
  #ifdef UPP_HEAP
@@ -223,9 +223,9 @@ diff -ru a/uppsrc/Core/SSH/Malloc.cpp b/uppsrc/Core/SSH/Malloc.cpp
  {
  	if(!ptr)
  		return NULL;
-diff -ru a/uppsrc/Core/TimeDate.cpp b/uppsrc/Core/TimeDate.cpp
---- a/uppsrc/Core/TimeDate.cpp	2026-10-20 13:03:36.442464201 -0700
-+++ b/uppsrc/Core/TimeDate.cpp	2026-10-20 13:03:36.442464201 -0700
+diff -ruN a/uppsrc/Core/TimeDate.cpp b/uppsrc/Core/TimeDate.cpp
+--- a/uppsrc/Core/TimeDate.cpp	2026-10-20 14:35:19.830812271 -0700
++++ b/uppsrc/Core/TimeDate.cpp	2026-10-20 14:35:20.310812598 -0700
 @@ -530,7 +530,7 @@
  bool Time::IsValid() const
  {
@@ -244,9 +244,9 @@ diff -ru a/uppsrc/Core/TimeDate.cpp b/uppsrc/Core/TimeDate.cpp
  }
  
  String GetTimeZoneText()
-diff -ru a/uppsrc/Core/Topt.h b/uppsrc/Core/Topt.h
---- a/uppsrc/Core/Topt.h	2026-10-20 13:03:36.445464204 -0700
-+++ b/uppsrc/Core/Topt.h	2026-10-20 13:03:36.445464204 -0700
+diff -ruN a/uppsrc/Core/Topt.h b/uppsrc/Core/Topt.h
+--- a/uppsrc/Core/Topt.h	2026-10-20 14:35:19.968812365 -0700
++++ b/uppsrc/Core/Topt.h	2026-10-20 14:35:20.310812598 -0700
 @@ -464,20 +464,20 @@
  inline hash_t GetHashValue(const T& x)                         { return x.GetHashValue(); }
  
@@ -280,9 +280,9 @@ diff -ru a/uppsrc/Core/Topt.h b/uppsrc/Core/Topt.h
  #else
  template<> inline hash_t GetHashValue(const int64& a)          { return HASH_CONST2 * (hash_t)a + (hash_t)(a >> 32); }
  template<> inline hash_t GetHashValue(const uint64& a)         { return GetHashValue((int64)a); }
-diff -ru a/uppsrc/Core/Util.h b/uppsrc/Core/Util.h
---- a/uppsrc/Core/Util.h	2026-10-20 13:03:36.448464205 -0700
-+++ b/uppsrc/Core/Util.h	2026-10-20 13:03:36.449464206 -0700
+diff -ruN a/uppsrc/Core/Util.h b/uppsrc/Core/Util.h
+--- a/uppsrc/Core/Util.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Util.h	2026-10-20 14:35:20.310812598 -0700
 @@ -65,7 +65,7 @@
  	const char *id;
  	int       (*def)();
@@ -319,9 +319,9 @@ diff -ru a/uppsrc/Core/Util.h b/uppsrc/Core/Util.h
  	bool        Load();
  
  // "public:"
-diff -ru a/uppsrc/Core/Value.cpp b/uppsrc/Core/Value.cpp
---- a/uppsrc/Core/Value.cpp	2026-10-20 13:03:36.451464207 -0700
-+++ b/uppsrc/Core/Value.cpp	2026-10-20 13:03:36.452464208 -0700
+diff -ruN a/uppsrc/Core/Value.cpp b/uppsrc/Core/Value.cpp
+--- a/uppsrc/Core/Value.cpp	2026-10-20 14:35:19.969812366 -0700
++++ b/uppsrc/Core/Value.cpp	2026-10-20 14:35:20.310812598 -0700
 @@ -371,7 +371,7 @@
  		if(type >= 0x8000000)
  			s.LoadError();
@@ -331,9 +331,9 @@ diff -ru a/uppsrc/Core/Value.cpp b/uppsrc/Core/Value.cpp
  		if(st == STRING)
  			s % data;
  		else
-diff -ru a/uppsrc/Core/Value.h b/uppsrc/Core/Value.h
---- a/uppsrc/Core/Value.h	2026-10-20 13:03:36.454464210 -0700
-+++ b/uppsrc/Core/Value.h	2026-10-20 13:03:36.454464210 -0700
+diff -ruN a/uppsrc/Core/Value.h b/uppsrc/Core/Value.h
+--- a/uppsrc/Core/Value.h	2026-10-20 14:35:19.969812366 -0700
++++ b/uppsrc/Core/Value.h	2026-10-20 14:35:20.310812598 -0700
 @@ -114,8 +114,8 @@
  		bool       (*IsEqual)(const void *p1, const void *p2);
  		bool       (*IsPolyEqual)(const void *p, const Value& v);
@@ -345,9 +345,9 @@ diff -ru a/uppsrc/Core/Value.h b/uppsrc/Core/Value.h
  	};
  
  protected:
-diff -ru a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
---- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 13:03:36.466464218 -0700
-+++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 13:03:36.467464218 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
+--- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 14:35:20.108812460 -0700
++++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 14:35:20.311812599 -0700
 @@ -754,7 +754,7 @@
  	case GDK_KEY_RELEASE:
  		kv = CurrentEvent.value[0];
@@ -357,9 +357,9 @@ diff -ru a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
  			LLOG("keyval " << FormatIntHex(kv) << ' ' << (char)kv);
  			if(kv >= 'a' && kv <= 'z')
  				kv = kv - 'a' + 'A';
-diff -ru a/uppsrc/CtrlLib/AKeys.h b/uppsrc/CtrlLib/AKeys.h
---- a/uppsrc/CtrlLib/AKeys.h	2026-10-20 13:03:36.473464222 -0700
-+++ b/uppsrc/CtrlLib/AKeys.h	2026-10-20 13:03:36.474464223 -0700
+diff -ruN a/uppsrc/CtrlLib/AKeys.h b/uppsrc/CtrlLib/AKeys.h
+--- a/uppsrc/CtrlLib/AKeys.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/AKeys.h	2026-10-20 14:35:20.311812599 -0700
 @@ -1,6 +1,6 @@
  struct KeyInfo {
  	const char *name;
@@ -368,9 +368,9 @@ diff -ru a/uppsrc/CtrlLib/AKeys.h b/uppsrc/CtrlLib/AKeys.h
  };
  
  void RegisterKeyBinding(const char *group, const char *id, KeyInfo& (*info)());
-diff -ru a/uppsrc/CtrlLib/LabelBase.cpp b/uppsrc/CtrlLib/LabelBase.cpp
---- a/uppsrc/CtrlLib/LabelBase.cpp	2026-10-20 13:03:36.486464231 -0700
-+++ b/uppsrc/CtrlLib/LabelBase.cpp	2026-10-20 13:03:36.486464231 -0700
+diff -ruN a/uppsrc/CtrlLib/LabelBase.cpp b/uppsrc/CtrlLib/LabelBase.cpp
+--- a/uppsrc/CtrlLib/LabelBase.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/LabelBase.cpp	2026-10-20 14:35:20.311812599 -0700
 @@ -499,10 +499,10 @@
  {
  	int i = 0;
@@ -386,9 +386,9 @@ diff -ru a/uppsrc/CtrlLib/LabelBase.cpp b/uppsrc/CtrlLib/LabelBase.cpp
  	}
  	ChPaintEdge(w, r, edge[i]);
  	if(!IsNull(coloredge))
-diff -ru a/uppsrc/CtrlLib/ToolButton.cpp b/uppsrc/CtrlLib/ToolButton.cpp
---- a/uppsrc/CtrlLib/ToolButton.cpp	2026-10-20 13:03:36.494464237 -0700
-+++ b/uppsrc/CtrlLib/ToolButton.cpp	2026-10-20 13:03:36.494464237 -0700
+diff -ruN a/uppsrc/CtrlLib/ToolButton.cpp b/uppsrc/CtrlLib/ToolButton.cpp
+--- a/uppsrc/CtrlLib/ToolButton.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/ToolButton.cpp	2026-10-20 14:35:20.311812599 -0700
 @@ -149,7 +149,7 @@
  
  ToolButton& ToolButton::Label(const char *text)
@@ -398,10 +398,10 @@ diff -ru a/uppsrc/CtrlLib/ToolButton.cpp b/uppsrc/CtrlLib/ToolButton.cpp
  	return *this;
  }
  
-diff -ru a/uppsrc/Draw/Font.cpp b/uppsrc/Draw/Font.cpp
---- a/uppsrc/Draw/Font.cpp	2026-10-20 13:03:36.501464241 -0700
-+++ b/uppsrc/Draw/Font.cpp	2026-10-20 13:03:36.502464242 -0700
-@@ -424,7 +424,7 @@
+diff -ruN a/uppsrc/Draw/Font.cpp b/uppsrc/Draw/Font.cpp
+--- a/uppsrc/Draw/Font.cpp	2026-10-20 14:35:20.006812391 -0700
++++ b/uppsrc/Draw/Font.cpp	2026-10-20 14:35:20.315812601 -0700
+@@ -428,7 +428,7 @@
  	Mutex::Lock __(sFontLock);
  	font.RealizeStd();
  	CharEntry& e = fc_cache_global[GlyphHash(font, chr) & 16383];
@@ -410,7 +410,7 @@ diff -ru a/uppsrc/Draw/Font.cpp b/uppsrc/Draw/Font.cpp
  		return e.info.IsNormal();
  	return GetGlyphInfoSys(font, chr).IsNormal();
  }
-@@ -491,7 +491,7 @@
+@@ -495,7 +495,7 @@
  	font.RealizeStd();
  	hash_t hash = GlyphHash(font, chr);
  	CharEntry& e = fc_cache[hash & 511];
@@ -419,9 +419,9 @@ diff -ru a/uppsrc/Draw/Font.cpp b/uppsrc/Draw/Font.cpp
  		e = GetGlyphEntry(font, chr, hash);
  	return e.info;
  }
-diff -ru a/uppsrc/RichText/RichImage.cpp b/uppsrc/RichText/RichImage.cpp
---- a/uppsrc/RichText/RichImage.cpp	2026-10-20 13:03:36.515464251 -0700
-+++ b/uppsrc/RichText/RichImage.cpp	2026-10-20 13:03:36.516464251 -0700
+diff -ruN a/uppsrc/RichText/RichImage.cpp b/uppsrc/RichText/RichImage.cpp
+--- a/uppsrc/RichText/RichImage.cpp	2026-10-20 14:35:20.016812397 -0700
++++ b/uppsrc/RichText/RichImage.cpp	2026-10-20 14:35:20.315812601 -0700
 @@ -116,7 +116,9 @@
  
  String RichPNG::GetTypeName(const Value& v) const

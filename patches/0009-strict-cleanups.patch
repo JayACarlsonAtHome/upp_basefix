@@ -1,0 +1,36 @@
+diff -ruN a/uppsrc/Core/Heap.h b/uppsrc/Core/Heap.h
+--- a/uppsrc/Core/Heap.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Heap.h	2026-10-20 14:35:19.614812123 -0700
+@@ -155,7 +155,7 @@
+ inline bool   MemoryTryRealloc(void *ptr, size_t& newsize) { return false; }
+ 
+ struct MemoryProfile {
+-	int empty__;
++	int empty__ = 0; // AsString(MemoryProfile) prints it
+ };
+ 
+ inline MemoryProfile *PeakMemoryProfile() { return NULL; }
+diff -ruN a/uppsrc/PdfDraw/PdfDraw.cpp b/uppsrc/PdfDraw/PdfDraw.cpp
+--- a/uppsrc/PdfDraw/PdfDraw.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/PdfDraw/PdfDraw.cpp	2026-10-20 14:35:19.614812123 -0700
+@@ -1114,7 +1114,7 @@
+ 	for(;;) { // in case that signature_len grows...
+ 		int signature = -1;
+ 		int signature_widget = -1;
+-		int p7s_start, p7s_end, pdf_length_pos = 0;
++		int p7s_start = 0, p7s_end = 0, pdf_length_pos = 0;
+ 	
+ 		int  sign_page = Null;
+ 		Rect sign_rect(0, 0, 0, 0);
+diff -ruN a/uppsrc/RichText/DiagramShape.cpp b/uppsrc/RichText/DiagramShape.cpp
+--- a/uppsrc/RichText/DiagramShape.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/DiagramShape.cpp	2026-10-20 14:35:19.614812123 -0700
+@@ -227,7 +227,7 @@
+ 		double w2 = w1 / 2;
+ 		double w4 = w1 / 4;
+ 		Pointf m(w2, h2);
+-		double hc, thc, bhc; // cylinder
++		double hc = 0, thc = 0, bhc = 0; // cylinder
+ 
+ 		w.Begin();
+ 		w.Translate(r.left, r.top);

@@ -1,6 +1,6 @@
-diff -ru a/uppsrc/Core/Gtypes.h b/uppsrc/Core/Gtypes.h
---- a/uppsrc/Core/Gtypes.h	2026-10-20 13:03:35.488463558 -0700
-+++ b/uppsrc/Core/Gtypes.h	2026-10-20 13:03:35.489463559 -0700
+diff -ruN a/uppsrc/Core/Gtypes.h b/uppsrc/Core/Gtypes.h
+--- a/uppsrc/Core/Gtypes.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Gtypes.h	2026-10-20 14:35:19.715812192 -0700
 @@ -67,6 +67,7 @@
  	Size_(const Size_<int16>& sz)  : cx((T)sz.cx), cy((T)sz.cy) {}
  	Size_(const Size_<double>& sz)  : cx((T)sz.cx), cy((T)sz.cy) {}

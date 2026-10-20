@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# upp_basefix.sh: one pinned U++ (build 18619) plus our patches, built and checked.
+# upp_basefix.sh: one pinned U++ (build 18761, github.com/ultimatepp/ultimatepp commit
+# af8e133a7697) plus our patches, built and checked.
 #
-#   ./upp_basefix.sh pristine [--from DIR]   clean 18619 tree in $WORK/pristine (from DIR's
-#                                             uppsrc; *.orig files put back), checked vs pin/
-#   ./upp_basefix.sh verify [DIR]             DIR/uppsrc against pin/uppsrc-18619.sha256
+#   ./upp_basefix.sh pristine [--from DIR]   clean pinned tree in $WORK/pristine: the commit's
+#                                             uppsrc from GitHub (downloaded once), or DIR's
+#                                             uppsrc (*.orig files put back); checked vs pin/
+#   ./upp_basefix.sh verify [DIR]             DIR/uppsrc against pin/uppsrc-$PIN.sha256
 #   ./upp_basefix.sh patch                    $WORK/patched = pristine + patches/*.patch
 #   ./upp_basefix.sh status [DIR]             which patches DIR/uppsrc has (default: patched)
 #   ./upp_basefix.sh build [options]          build the check programs, count warnings
@@ -25,8 +27,9 @@
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WORK="${UPP_BASEFIX_WORK:-/home/jay/upp_basefix_work}"
-PIN=18619
-SOURCE_DEFAULT=/run/media/jay/GFS/upp
+PIN=18761                                          # U++ build number: git commit count + 2270
+PIN_COMMIT=af8e133a7697615f18693b071dac39992f9f7ace  # ultimatepp/ultimatepp master, 2026-10-19
+PIN_URL="https://codeload.github.com/ultimatepp/ultimatepp/tar.gz/$PIN_COMMIT"
 UMK_SOURCE="${UPP_BASEFIX_UMK:-/home/jay/u++/umk}"
 step() { echo "step: $*"; }
 die() { echo "error: $*" >&2; exit 2; }
@@ -47,18 +50,31 @@ cmd_verify() {
 }
 
 cmd_pristine() {
-  local from="$SOURCE_DEFAULT"
+  local from=""
   [ "${1:-}" = --from ] && from="${2:?--from DIR}"
-  tree_ok "$from" || die "no U++ tree at $from"
-  step "copy $from/uppsrc -> $WORK/pristine/uppsrc (without *.orig)"
   mkdir -p "$WORK/pristine"
-  rsync -a --delete --exclude='*.orig' "$from/uppsrc/" "$WORK/pristine/uppsrc/" || die "rsync failed"
-  local o rel
-  while IFS= read -r o; do   # a patched source keeps its originals as *.orig: put them back
-    rel=${o#$from/}
-    step "original back: ${rel%.orig}"
-    cp -p "$o" "$WORK/pristine/${rel%.orig}"
-  done < <(find "$from/uppsrc" -name '*.orig')
+  if [ -z "$from" ]; then
+    local tgz="$WORK/download/ultimatepp-$PIN_COMMIT.tar.gz"
+    if [ ! -s "$tgz" ]; then
+      step "download U++ $PIN (commit ${PIN_COMMIT:0:12}) from GitHub"
+      mkdir -p "$WORK/download"
+      curl -fsSL -o "$tgz.part" "$PIN_URL" && mv "$tgz.part" "$tgz" || die "download failed: $PIN_URL"
+    fi
+    step "unpack uppsrc -> $WORK/pristine/uppsrc"
+    rm -rf "$WORK/pristine/uppsrc" "$WORK/pristine/ultimatepp-$PIN_COMMIT"
+    tar -xzf "$tgz" -C "$WORK/pristine" "ultimatepp-$PIN_COMMIT/uppsrc" || die "unpack failed"
+    mv "$WORK/pristine/ultimatepp-$PIN_COMMIT/uppsrc" "$WORK/pristine/uppsrc" && rmdir "$WORK/pristine/ultimatepp-$PIN_COMMIT"
+  else
+    tree_ok "$from" || die "no U++ tree at $from"
+    step "copy $from/uppsrc -> $WORK/pristine/uppsrc (without *.orig)"
+    rsync -a --delete --exclude='*.orig' "$from/uppsrc/" "$WORK/pristine/uppsrc/" || die "rsync failed"
+    local o rel
+    while IFS= read -r o; do   # a patched source keeps its originals as *.orig: put them back
+      rel=${o#$from/}
+      step "original back: ${rel%.orig}"
+      cp -p "$o" "$WORK/pristine/${rel%.orig}"
+    done < <(find "$from/uppsrc" -name '*.orig')
+  fi
   cmd_verify "$WORK/pristine"
 }
 
@@ -103,9 +119,10 @@ setup_umk() {
 make_bm() {
   local c=$1 strict=$2 extra=${3:-} link=${4:-} src name
   case $c in gcc) src="$HERE/bm/GCC15.bm" ;; clang) src="$HERE/bm/CLANG26.bm" ;; *) die "compiler $c" ;; esac
-  # the tree in the name: umk keeps objects per build method, and the check programs'
-  # sources are the same files for both trees
-  name="$TREE-$c$([ "$strict" = 1 ] && echo -strict)$([ -n "$extra" ] && echo "-$(echo "$extra" | md5sum | cut -c1-6)")"
+  # tree and pin in the name: umk keeps objects per build method; the check programs'
+  # sources are the same files for both trees, and a new pin's files can be older than
+  # the objects of the last one
+  name="$TREE-$PIN-$c$([ "$strict" = 1 ] && echo -strict)$([ -n "$extra" ] && echo "-$(echo "$extra" | md5sum | cut -c1-6)")"
   mkdir -p "$WORK/bm"
   local add=""
   [ "$strict" = 1 ] && add=" -Wall -Wextra"
@@ -151,7 +168,7 @@ parse_build_opts() {
 
 # warning_lines DIAG_DIR -> every unique warning and error of a build, one per message
 # (from the compiler's own message files: umk's log interleaves parallel compiles)
-warning_lines() { cat "$1"/* 2> /dev/null | grep -E ': (warning|error): ' | sort -u; }
+warning_lines() { cat "$1"/* 2> /dev/null | grep -E ': (warning|error|fatal error): |undefined reference' | sort -u; }
 
 # count_warnings DIAG_DIR -> "ours upp": warnings in upp_basefix's code, and all others
 count_warnings() {
@@ -282,7 +299,7 @@ cmd_gui() {
     || { grep -E 'error' "$log" | head -20; die "build failed: $log"; }
   echo "result: build UppBaseFixBuild gcc release: ok  warnings: $(grep -c 'warning:' "$log")  log: $log"
   [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] || die "no display to start it on"
-  UPP_BASEFIX_HOME="$HERE" setsid -f "$WORK/out/gui/UppBaseFixBuild" > /dev/null 2>&1 < /dev/null
+  UPP_BASEFIX_HOME="$HERE" UPP_BASEFIX_WORK="$WORK" setsid -f "$WORK/out/gui/UppBaseFixBuild" > /dev/null 2>&1 < /dev/null
   step "started $WORK/out/gui/UppBaseFixBuild"
 }
 

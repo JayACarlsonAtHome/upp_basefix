@@ -110,12 +110,12 @@ static void CheckPatchedBugs()
 			return -2;
 		}
 	};
-	// 0009: \uD83D\uDE00 is U+1F600; \uD840\uDC00 is U+20000 (bit 16: the + / | slip);
+	// 0008: \uD83D\uDE00 is U+1F600; \uD840\uDC00 is U+20000 (bit 16: the + / | slip);
 	// \uDBFF\uDFFF is U+10FFFF (0xDBFF is a high surrogate too)
 	Expect(decode("\"\\uD83D\\uDE00\"") == 0x1F600, "CParser: surrogate pair U+1F600");
 	Expect(decode("\"\\uD840\\uDC00\"") == 0x20000, "CParser: surrogate pair U+20000");
 	Expect(decode("\"\\uDBFF\\uDFFF\"") == 0x10FFFF, "CParser: surrogate pair U+10FFFF");
-	// 0009: Equalight stretches a low-contrast image (it returned it unchanged)
+	// 0008: Equalight stretches a low-contrast image (it returned it unchanged)
 	ImageBuffer ib(16, 16);
 	for(int y = 0; y < 16; y++)
 		for(int x = 0; x < 16; x++) {
@@ -126,19 +126,22 @@ static void CheckPatchedBugs()
 	Image flat = ib;
 	Image eq = Equalight(flat, 10);
 	Expect(eq[0][0].r < flat[0][0].r && eq[0][15].r > flat[0][15].r, "Equalight: stretches contrast");
-	// 0009: memory status: sysconf's -1 is not taken as a huge unsigned count
+	// 0008: memory status: sysconf's -1 is not taken as a huge unsigned count
 	uint64 total = 0, avail = 0;
 	GetSystemMemoryStatus(total, avail);
 	Expect(total > 0 && avail <= total && total < ((uint64)1 << 50), "GetSystemMemoryStatus");
-	// 0015: QTF that ends too soon: the parser stops at the NUL (it read on past it; the
+	// 0014: QTF that ends too soon: the parser stops at the NUL (it read on past it; the
 	// bytes after the NUL here are ours, so the old reads are visible, not undefined)
 	static const char cut_p[] = "[p\0XYZ";
 	String e = ParseQTF(cut_p).GetPlainText().ToString();
 	Expect(e.Find("Unexpected end of text") >= 0 && e.Find("XYZ") < 0, "QTF: end of text in a paragraph format");
 	static const char cut_color[] = "[@\0 abc";
 	Expect(ParseQTF(cut_color).GetPlainText().ToString().Find("abc") < 0, "QTF: end of text in a color");
-	// 0016: findarg compares integers by value: -1 is not 0xFFFFFFFF
+	// 0015: findarg compares integers by value: -1 is not 0xFFFFFFFF
 	Expect(findarg(0xFFFFFFFFu, -1) < 0 && findarg(3u, 1, 2, 3) == 2 && findarg('b', 'a', 'b') == 1, "findarg: signed and unsigned");
+	// 0014: Regex(options, pattern, len) used to drop the options
+	Expect(Regex(PCRE2_UTF | PCRE2_CASELESS, "abc", 3).Match("ABC"), "Regex: options with a length");
+	Expect(WRegex(PCRE2_UTF | PCRE2_CASELESS, WString("abc").Begin(), 3).Match(WString("ABC")), "WRegex: options with a length");
 }
 
 static void CheckSsh()

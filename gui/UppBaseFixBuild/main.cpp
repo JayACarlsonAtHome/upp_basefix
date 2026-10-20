@@ -136,7 +136,7 @@ public:
 BuildWindow::BuildWindow()
 {
 	script = ScriptPath();
-	Title("UppBaseFixBuild - U++ 18619 + patches");
+	Title("UppBaseFixBuild - U++ 18761 + patches");
 	Sizeable().Zoomable();
 	SetRect(0, 0, Zx(1100), Zy(820));
 
@@ -150,7 +150,7 @@ BuildWindow::BuildWindow()
 	type.Add("debug", "Debug").Add("release", "Release (optimized)");
 	build_pane.Add(type.HSizePosZ(84, 8).TopPosZ(44, 22));
 	build_pane.Add(tree_label.SetText("Tree:").LeftPosZ(12, 70).TopPosZ(68, 22));
-	tree.Add("patched", "Patched (18619 + patches)").Add("pristine", "Pristine (18619)");
+	tree.Add("patched", "Patched (18761 + patches)").Add("pristine", "Pristine (18761)");
 	build_pane.Add(tree.HSizePosZ(84, 8).TopPosZ(68, 22));
 	strict.SetLabel("Strict (-Wall -Wextra)");
 	strict.Tip("Every warning counts: any warning turns the build row yellow");
@@ -184,14 +184,14 @@ BuildWindow::BuildWindow()
 
 	// Text above, every button on the bottom row: Start, Stop, the trees ... Close
 	Add(tree_status.SetAlign(ALIGN_RIGHT).RightPosZ(8, 540).BottomPosZ(40, 22));
-	Add(pristine_b.SetLabel("Copy pristine").RightPosZ(478, 120).BottomPosZ(8, 28));
+	Add(pristine_b.SetLabel("Get pristine").RightPosZ(478, 120).BottomPosZ(8, 28));
 	Add(patch_b.SetLabel("Apply patches").RightPosZ(352, 120).BottomPosZ(8, 28));
 	Add(verify_b.SetLabel("Verify pin").RightPosZ(226, 120).BottomPosZ(8, 28));
 	Add(status_b.SetLabel("Patch status").RightPosZ(104, 116).BottomPosZ(8, 28));
-	pristine_b.Tip("upp_basefix.sh pristine: copies /run/media/jay/GFS/upp/uppsrc (originals put back) "
-	               "and checks it against the pin");
+	pristine_b.Tip("upp_basefix.sh pristine: the pinned commit's uppsrc from github.com/ultimatepp/ultimatepp "
+	               "(downloaded once), checked against the pin");
 	patch_b.Tip("upp_basefix.sh patch: pristine + patches/*.patch -> the patched tree");
-	verify_b.Tip("upp_basefix.sh verify: the pristine tree against pin/uppsrc-18619.sha256 (3031 files)");
+	verify_b.Tip("upp_basefix.sh verify: the pristine tree against pin/uppsrc-18761.sha256 (2782 files)");
 	status_b.Tip("upp_basefix.sh status: which patches the patched tree has");
 
 

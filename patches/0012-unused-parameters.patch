@@ -1,6 +1,6 @@
-diff -ru a/uppsrc/Core/App.cpp b/uppsrc/Core/App.cpp
---- a/uppsrc/Core/App.cpp	2026-10-20 13:03:35.804463771 -0700
-+++ b/uppsrc/Core/App.cpp	2026-10-20 13:03:35.805463772 -0700
+diff -ruN a/uppsrc/Core/App.cpp b/uppsrc/Core/App.cpp
+--- a/uppsrc/Core/App.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/App.cpp	2026-10-20 14:35:19.948812351 -0700
 @@ -273,7 +273,7 @@
  
  #ifdef PLATFORM_POSIX
@@ -10,9 +10,9 @@ diff -ru a/uppsrc/Core/App.cpp b/uppsrc/Core/App.cpp
  {
  	String cfgdir;
  	String h = GetExeFolder();
-diff -ru a/uppsrc/Core/BlockStream.cpp b/uppsrc/Core/BlockStream.cpp
---- a/uppsrc/Core/BlockStream.cpp	2026-10-20 13:03:35.807463773 -0700
-+++ b/uppsrc/Core/BlockStream.cpp	2026-10-20 13:03:35.808463774 -0700
+diff -ruN a/uppsrc/Core/BlockStream.cpp b/uppsrc/Core/BlockStream.cpp
+--- a/uppsrc/Core/BlockStream.cpp	2026-10-20 14:35:19.814812260 -0700
++++ b/uppsrc/Core/BlockStream.cpp	2026-10-20 14:35:19.948812351 -0700
 @@ -234,16 +234,16 @@
  	Seek(pos < size ? pos : size);
  }
@@ -33,9 +33,9 @@ diff -ru a/uppsrc/Core/BlockStream.cpp b/uppsrc/Core/BlockStream.cpp
  	NEVER();
  }
  
-diff -ru a/uppsrc/Core/Complex.h b/uppsrc/Core/Complex.h
---- a/uppsrc/Core/Complex.h	2026-10-20 13:03:35.810463775 -0700
-+++ b/uppsrc/Core/Complex.h	2026-10-20 13:03:35.811463776 -0700
+diff -ruN a/uppsrc/Core/Complex.h b/uppsrc/Core/Complex.h
+--- a/uppsrc/Core/Complex.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Complex.h	2026-10-20 14:35:19.948812351 -0700
 @@ -20,7 +20,7 @@
  	bool operator==(double x) const         { return (const C&)(*this) == x; }
  	bool operator!=(double x) const         { return (const C&)(*this) != x; }
@@ -54,9 +54,9 @@ diff -ru a/uppsrc/Core/Complex.h b/uppsrc/Core/Complex.h
  {
  	NEVER(); return 0;
  }
-diff -ru a/uppsrc/Core/Convert.cpp b/uppsrc/Core/Convert.cpp
---- a/uppsrc/Core/Convert.cpp	2026-10-20 13:03:35.813463777 -0700
-+++ b/uppsrc/Core/Convert.cpp	2026-10-20 13:03:35.814463778 -0700
+diff -ruN a/uppsrc/Core/Convert.cpp b/uppsrc/Core/Convert.cpp
+--- a/uppsrc/Core/Convert.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Convert.cpp	2026-10-20 14:35:19.948812351 -0700
 @@ -542,7 +542,7 @@
  	return Single<NoConvertClass>();
  }
@@ -66,9 +66,9 @@ diff -ru a/uppsrc/Core/Convert.cpp b/uppsrc/Core/Convert.cpp
  {
  	return ErrorValue();
  }
-diff -ru a/uppsrc/Core/CoWork.cpp b/uppsrc/Core/CoWork.cpp
---- a/uppsrc/Core/CoWork.cpp	2026-10-20 13:03:35.816463779 -0700
-+++ b/uppsrc/Core/CoWork.cpp	2026-10-20 13:03:35.816463779 -0700
+diff -ruN a/uppsrc/Core/CoWork.cpp b/uppsrc/Core/CoWork.cpp
+--- a/uppsrc/Core/CoWork.cpp	2026-10-20 14:35:19.347811942 -0700
++++ b/uppsrc/Core/CoWork.cpp	2026-10-20 14:35:19.948812351 -0700
 @@ -138,7 +138,7 @@
  	LLOG("Finished, remaining todo " << work->todo);
  }
@@ -78,9 +78,9 @@ diff -ru a/uppsrc/Core/CoWork.cpp b/uppsrc/Core/CoWork.cpp
  {
  	LLOG("CoWork thread #" << tno << " started");
  	Pool& p = GetPool();
-diff -ru a/uppsrc/Core/Debug.cpp b/uppsrc/Core/Debug.cpp
---- a/uppsrc/Core/Debug.cpp	2026-10-20 13:03:35.820463782 -0700
-+++ b/uppsrc/Core/Debug.cpp	2026-10-20 13:03:35.820463782 -0700
+diff -ruN a/uppsrc/Core/Debug.cpp b/uppsrc/Core/Debug.cpp
+--- a/uppsrc/Core/Debug.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Debug.cpp	2026-10-20 14:35:19.948812351 -0700
 @@ -30,7 +30,7 @@
  	return s;
  }
@@ -90,10 +90,10 @@ diff -ru a/uppsrc/Core/Debug.cpp b/uppsrc/Core/Debug.cpp
  {
  #ifdef _DEBUG
  	auto LoadLog = [](const String& path) {
-diff -ru a/uppsrc/Core/Defs.h b/uppsrc/Core/Defs.h
---- a/uppsrc/Core/Defs.h	2026-10-20 13:03:35.822463783 -0700
-+++ b/uppsrc/Core/Defs.h	2026-10-20 13:03:35.823463784 -0700
-@@ -290,7 +290,7 @@
+diff -ruN a/uppsrc/Core/Defs.h b/uppsrc/Core/Defs.h
+--- a/uppsrc/Core/Defs.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Defs.h	2026-10-20 14:35:19.948812351 -0700
+@@ -295,7 +295,7 @@
  template<> inline bool  IsNull(const int64& i)   { return i == INT64_NULL; }
  template<> inline bool  IsNull(const double& r)  { return !(std::abs(r) < std::numeric_limits<double>::infinity()); }
  template<> inline bool  IsNull(const float& r)   { return !(std::abs(r) < std::numeric_limits<float>::infinity()); }
@@ -102,9 +102,9 @@ diff -ru a/uppsrc/Core/Defs.h b/uppsrc/Core/Defs.h
  
  #include "Heap.h"
  #ifdef CPU_X86
-diff -ru a/uppsrc/Core/Diag.h b/uppsrc/Core/Diag.h
---- a/uppsrc/Core/Diag.h	2026-10-20 13:03:35.825463785 -0700
-+++ b/uppsrc/Core/Diag.h	2026-10-20 13:03:35.826463786 -0700
+diff -ruN a/uppsrc/Core/Diag.h b/uppsrc/Core/Diag.h
+--- a/uppsrc/Core/Diag.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Diag.h	2026-10-20 14:35:19.949812352 -0700
 @@ -85,7 +85,7 @@
  
  #else
@@ -114,9 +114,9 @@ diff -ru a/uppsrc/Core/Diag.h b/uppsrc/Core/Diag.h
  
  #define LOG(a)           LOG_NOP
  #define LOGBEGIN()       LOG_NOP
-diff -ru a/uppsrc/Core/FilterStream.h b/uppsrc/Core/FilterStream.h
---- a/uppsrc/Core/FilterStream.h	2026-10-20 13:03:35.828463787 -0700
-+++ b/uppsrc/Core/FilterStream.h	2026-10-20 13:03:35.829463788 -0700
+diff -ruN a/uppsrc/Core/FilterStream.h b/uppsrc/Core/FilterStream.h
+--- a/uppsrc/Core/FilterStream.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/FilterStream.h	2026-10-20 14:35:19.949812352 -0700
 @@ -19,7 +19,7 @@
  	void   SetRd();
  
@@ -126,9 +126,9 @@ diff -ru a/uppsrc/Core/FilterStream.h b/uppsrc/Core/FilterStream.h
  	int64  GetSize() const      { NEVER(); return 0; }
  
  public:
-diff -ru a/uppsrc/Core/Fn.h b/uppsrc/Core/Fn.h
---- a/uppsrc/Core/Fn.h	2026-10-20 13:03:35.832463790 -0700
-+++ b/uppsrc/Core/Fn.h	2026-10-20 13:03:35.832463790 -0700
+diff -ruN a/uppsrc/Core/Fn.h b/uppsrc/Core/Fn.h
+--- a/uppsrc/Core/Fn.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Fn.h	2026-10-20 14:35:19.949812352 -0700
 @@ -52,7 +52,7 @@
  }
  
@@ -147,9 +147,9 @@ diff -ru a/uppsrc/Core/Fn.h b/uppsrc/Core/Fn.h
  {
  	return def;
  }
-diff -ru a/uppsrc/Core/Format.cpp b/uppsrc/Core/Format.cpp
---- a/uppsrc/Core/Format.cpp	2026-10-20 13:03:35.835463792 -0700
-+++ b/uppsrc/Core/Format.cpp	2026-10-20 13:03:35.835463792 -0700
+diff -ruN a/uppsrc/Core/Format.cpp b/uppsrc/Core/Format.cpp
+--- a/uppsrc/Core/Format.cpp	2026-10-20 14:35:19.821812265 -0700
++++ b/uppsrc/Core/Format.cpp	2026-10-20 14:35:19.949812352 -0700
 @@ -291,7 +291,7 @@
  	return FormatTime(ToTime(date), format, language);
  }
@@ -159,9 +159,9 @@ diff -ru a/uppsrc/Core/Format.cpp b/uppsrc/Core/Format.cpp
  {
  	if(IsNull(t))
  		return Null;
-diff -ru a/uppsrc/Core/Heap.h b/uppsrc/Core/Heap.h
---- a/uppsrc/Core/Heap.h	2026-10-20 13:03:35.839463795 -0700
-+++ b/uppsrc/Core/Heap.h	2026-10-20 13:03:35.840463795 -0700
+diff -ruN a/uppsrc/Core/Heap.h b/uppsrc/Core/Heap.h
+--- a/uppsrc/Core/Heap.h	2026-10-20 14:35:19.614812123 -0700
++++ b/uppsrc/Core/Heap.h	2026-10-20 14:35:19.949812352 -0700
 @@ -150,9 +150,9 @@
  inline void   MemoryIgnoreLeaksBegin() {}
  inline void   MemoryIgnoreLeaksEnd() {}
@@ -174,9 +174,9 @@ diff -ru a/uppsrc/Core/Heap.h b/uppsrc/Core/Heap.h
  
  struct MemoryProfile {
  	int empty__ = 0; // AsString(MemoryProfile) prints it
-diff -ru a/uppsrc/Core/HeapImp.h b/uppsrc/Core/HeapImp.h
---- a/uppsrc/Core/HeapImp.h	2026-10-20 13:03:35.842463797 -0700
-+++ b/uppsrc/Core/HeapImp.h	2026-10-20 13:03:35.843463797 -0700
+diff -ruN a/uppsrc/Core/HeapImp.h b/uppsrc/Core/HeapImp.h
+--- a/uppsrc/Core/HeapImp.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/HeapImp.h	2026-10-20 14:35:19.962812361 -0700
 @@ -66,10 +66,10 @@
  	static void  FillFree(BlkHeader *h);
  	static void  CheckFree(BlkHeader *h);
@@ -219,9 +219,9 @@ diff -ru a/uppsrc/Core/HeapImp.h b/uppsrc/Core/HeapImp.h
  #endif
  
  	void  Init();
-diff -ru a/uppsrc/Core/Index.h b/uppsrc/Core/Index.h
---- a/uppsrc/Core/Index.h	2026-10-20 13:03:35.845463799 -0700
-+++ b/uppsrc/Core/Index.h	2026-10-20 13:03:35.846463799 -0700
+diff -ruN a/uppsrc/Core/Index.h b/uppsrc/Core/Index.h
+--- a/uppsrc/Core/Index.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Index.h	2026-10-20 14:35:19.962812361 -0700
 @@ -114,7 +114,7 @@
  	void        Clear()                      { key.Clear(); IndexCommon::Clear(); }
  
@@ -240,9 +240,9 @@ diff -ru a/uppsrc/Core/Index.h b/uppsrc/Core/Index.h
  	void     Reindex()                       {}
  
  	typedef T             value_type;
-diff -ru a/uppsrc/Core/Index.hpp b/uppsrc/Core/Index.hpp
---- a/uppsrc/Core/Index.hpp	2026-10-20 13:03:35.848463801 -0700
-+++ b/uppsrc/Core/Index.hpp	2026-10-20 13:03:35.848463801 -0700
+diff -ruN a/uppsrc/Core/Index.hpp b/uppsrc/Core/Index.hpp
+--- a/uppsrc/Core/Index.hpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Index.hpp	2026-10-20 14:35:19.962812361 -0700
 @@ -70,7 +70,7 @@
  template <typename T>
  template <typename U>
@@ -270,9 +270,9 @@ diff -ru a/uppsrc/Core/Index.hpp b/uppsrc/Core/Index.hpp
  {
  	do {
  		const Hash& ih = hash[i];
-diff -ru a/uppsrc/Core/LangInfo.cpp b/uppsrc/Core/LangInfo.cpp
---- a/uppsrc/Core/LangInfo.cpp	2026-10-20 13:03:35.851463803 -0700
-+++ b/uppsrc/Core/LangInfo.cpp	2026-10-20 13:03:35.851463803 -0700
+diff -ruN a/uppsrc/Core/LangInfo.cpp b/uppsrc/Core/LangInfo.cpp
+--- a/uppsrc/Core/LangInfo.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/LangInfo.cpp	2026-10-20 14:35:19.963812362 -0700
 @@ -438,7 +438,7 @@
  	return dest;
  }
@@ -282,9 +282,9 @@ diff -ru a/uppsrc/Core/LangInfo.cpp b/uppsrc/Core/LangInfo.cpp
  {
  	if(IsNull(value))
  		return Null;
-diff -ru a/uppsrc/Core/LocalProcess.h b/uppsrc/Core/LocalProcess.h
---- a/uppsrc/Core/LocalProcess.h	2026-10-20 13:03:35.853463804 -0700
-+++ b/uppsrc/Core/LocalProcess.h	2026-10-20 13:03:35.854463805 -0700
+diff -ruN a/uppsrc/Core/LocalProcess.h b/uppsrc/Core/LocalProcess.h
+--- a/uppsrc/Core/LocalProcess.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/LocalProcess.h	2026-10-20 14:35:19.963812362 -0700
 @@ -4,7 +4,7 @@
  	virtual bool IsRunning() = 0;
  	virtual void Write(String s) = 0;
@@ -294,9 +294,9 @@ diff -ru a/uppsrc/Core/LocalProcess.h b/uppsrc/Core/LocalProcess.h
  	virtual int  GetExitCode() = 0;
  	virtual String GetExitMessage() { return String(); };
  	virtual void CloseRead()        {}
-diff -ru a/uppsrc/Core/Mt.cpp b/uppsrc/Core/Mt.cpp
---- a/uppsrc/Core/Mt.cpp	2026-10-20 13:03:35.856463806 -0700
-+++ b/uppsrc/Core/Mt.cpp	2026-10-20 13:03:35.857463807 -0700
+diff -ruN a/uppsrc/Core/Mt.cpp b/uppsrc/Core/Mt.cpp
+--- a/uppsrc/Core/Mt.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Mt.cpp	2026-10-20 14:35:19.963812362 -0700
 @@ -460,14 +460,14 @@
  #endif
  }
@@ -323,9 +323,9 @@ diff -ru a/uppsrc/Core/Mt.cpp b/uppsrc/Core/Mt.cpp
  {
  	Thread t;
  	t.Run(cb);
-diff -ru a/uppsrc/Core/Path.cpp b/uppsrc/Core/Path.cpp
---- a/uppsrc/Core/Path.cpp	2026-10-20 13:03:35.859463808 -0700
-+++ b/uppsrc/Core/Path.cpp	2026-10-20 13:03:35.860463809 -0700
+diff -ruN a/uppsrc/Core/Path.cpp b/uppsrc/Core/Path.cpp
+--- a/uppsrc/Core/Path.cpp	2026-10-20 14:35:19.827812269 -0700
++++ b/uppsrc/Core/Path.cpp	2026-10-20 14:35:19.963812362 -0700
 @@ -969,7 +969,7 @@
  #endif
  }
@@ -335,9 +335,9 @@ diff -ru a/uppsrc/Core/Path.cpp b/uppsrc/Core/Path.cpp
  {
  	Array<FileInfo> fi;
  	if(IsNull(mask))
-diff -ru a/uppsrc/Core/Range.h b/uppsrc/Core/Range.h
---- a/uppsrc/Core/Range.h	2026-10-20 13:03:35.862463810 -0700
-+++ b/uppsrc/Core/Range.h	2026-10-20 13:03:35.863463811 -0700
+diff -ruN a/uppsrc/Core/Range.h b/uppsrc/Core/Range.h
+--- a/uppsrc/Core/Range.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Range.h	2026-10-20 14:35:19.963812362 -0700
 @@ -77,7 +77,7 @@
  	typedef T value_type;
  	typedef value_type ValueType;
@@ -347,9 +347,27 @@ diff -ru a/uppsrc/Core/Range.h b/uppsrc/Core/Range.h
  	int GetCount() const                      { return count; }
  
  	typedef ConstIIterator<ConstRangeClass> Iterator;
-diff -ru a/uppsrc/Core/sheap.cpp b/uppsrc/Core/sheap.cpp
---- a/uppsrc/Core/sheap.cpp	2026-10-20 13:03:35.865463812 -0700
-+++ b/uppsrc/Core/sheap.cpp	2026-10-20 13:03:35.866463813 -0700
+diff -ruN a/uppsrc/Core/Regex.cpp b/uppsrc/Core/Regex.cpp
+--- a/uppsrc/Core/Regex.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Regex.cpp	2026-10-20 14:35:20.019812400 -0700
+@@ -4,12 +4,12 @@
+ 
+ std::atomic<int64> RegexMatch::serial;
+ 
+-static void* Pcre2Alloc(size_t size, void* memory_data)
++static void* Pcre2Alloc(size_t size, void* /*memory_data*/)
+ {
+     return MemoryAlloc(size);
+ }
+ 
+-static void Pcre2Free(void* ptr, void* memory_data)
++static void Pcre2Free(void* ptr, void* /*memory_data*/)
+ {
+     MemoryFree(ptr);
+ }
+diff -ruN a/uppsrc/Core/sheap.cpp b/uppsrc/Core/sheap.cpp
+--- a/uppsrc/Core/sheap.cpp	2026-10-20 14:35:18.893811632 -0700
++++ b/uppsrc/Core/sheap.cpp	2026-10-20 14:35:19.963812362 -0700
 @@ -505,9 +505,9 @@
  
  #else
@@ -362,9 +380,9 @@ diff -ru a/uppsrc/Core/sheap.cpp b/uppsrc/Core/sheap.cpp
  
  #endif
  
-diff -ru a/uppsrc/Core/SSH/Channels.h b/uppsrc/Core/SSH/Channels.h
---- a/uppsrc/Core/SSH/Channels.h	2026-10-20 13:03:36.164464014 -0700
-+++ b/uppsrc/Core/SSH/Channels.h	2026-10-20 13:03:36.165464015 -0700
+diff -ruN a/uppsrc/Core/SSH/Channels.h b/uppsrc/Core/SSH/Channels.h
+--- a/uppsrc/Core/SSH/Channels.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/Channels.h	2026-10-20 14:35:19.963812362 -0700
 @@ -60,7 +60,7 @@
  
      dword               EventWait(int fd, dword events, int tv = 10);
@@ -374,9 +392,9 @@ diff -ru a/uppsrc/Core/SSH/Channels.h b/uppsrc/Core/SSH/Channels.h
  
      bool                Shut(const String& msg, bool nowait = true);
      
-diff -ru a/uppsrc/Core/SSH/Session.cpp b/uppsrc/Core/SSH/Session.cpp
---- a/uppsrc/Core/SSH/Session.cpp	2026-10-20 13:03:36.167464016 -0700
-+++ b/uppsrc/Core/SSH/Session.cpp	2026-10-20 13:03:36.168464017 -0700
+diff -ruN a/uppsrc/Core/SSH/Session.cpp b/uppsrc/Core/SSH/Session.cpp
+--- a/uppsrc/Core/SSH/Session.cpp	2026-10-20 14:35:18.984811694 -0700
++++ b/uppsrc/Core/SSH/Session.cpp	2026-10-20 14:35:19.963812362 -0700
 @@ -34,7 +34,7 @@
  
  // sChangePasswordCallback: Requests that the client's password be changed.
@@ -395,9 +413,9 @@ diff -ru a/uppsrc/Core/SSH/Session.cpp b/uppsrc/Core/SSH/Session.cpp
  {
  	reinterpret_cast<SshSession*>(*abstract)->WhenX11((SshX11Handle) channel);
  }
-diff -ru a/uppsrc/Core/SSH/SFtp.cpp b/uppsrc/Core/SSH/SFtp.cpp
---- a/uppsrc/Core/SSH/SFtp.cpp	2026-10-20 13:03:36.170464018 -0700
-+++ b/uppsrc/Core/SSH/SFtp.cpp	2026-10-20 13:03:36.171464018 -0700
+diff -ruN a/uppsrc/Core/SSH/SFtp.cpp b/uppsrc/Core/SSH/SFtp.cpp
+--- a/uppsrc/Core/SSH/SFtp.cpp	2026-10-20 14:35:18.984811694 -0700
++++ b/uppsrc/Core/SSH/SFtp.cpp	2026-10-20 14:35:19.963812362 -0700
 @@ -189,7 +189,7 @@
  	return GetDone();
  }
@@ -416,9 +434,9 @@ diff -ru a/uppsrc/Core/SSH/SFtp.cpp b/uppsrc/Core/SSH/SFtp.cpp
  {
  	ASSERT(browser);
  	Array<FileInfo> fi;
-diff -ru a/uppsrc/Core/SSH/SFtpStream.cpp b/uppsrc/Core/SSH/SFtpStream.cpp
---- a/uppsrc/Core/SSH/SFtpStream.cpp	2026-10-20 13:03:36.173464020 -0700
-+++ b/uppsrc/Core/SSH/SFtpStream.cpp	2026-10-20 13:03:36.174464021 -0700
+diff -ruN a/uppsrc/Core/SSH/SFtpStream.cpp b/uppsrc/Core/SSH/SFtpStream.cpp
+--- a/uppsrc/Core/SSH/SFtpStream.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/SFtpStream.cpp	2026-10-20 14:35:19.963812362 -0700
 @@ -7,7 +7,7 @@
  	sftp->Seek(handle, pos);
  }
@@ -428,9 +446,9 @@ diff -ru a/uppsrc/Core/SSH/SFtpStream.cpp b/uppsrc/Core/SSH/SFtpStream.cpp
  {
  	// TODO
  }
-diff -ru a/uppsrc/Core/SSH/Shell.cpp b/uppsrc/Core/SSH/Shell.cpp
---- a/uppsrc/Core/SSH/Shell.cpp	2026-10-20 13:03:36.176464022 -0700
-+++ b/uppsrc/Core/SSH/Shell.cpp	2026-10-20 13:03:36.177464023 -0700
+diff -ruN a/uppsrc/Core/SSH/Shell.cpp b/uppsrc/Core/SSH/Shell.cpp
+--- a/uppsrc/Core/SSH/Shell.cpp	2026-10-20 14:35:18.995811702 -0700
++++ b/uppsrc/Core/SSH/Shell.cpp	2026-10-20 14:35:19.968812365 -0700
 @@ -15,7 +15,7 @@
  	return Shut(IsError() ? GetErrorDesc() : Null);
  }
@@ -440,9 +458,9 @@ diff -ru a/uppsrc/Core/SSH/Shell.cpp b/uppsrc/Core/SSH/Shell.cpp
  {
  	switch(mode) {
  		case GENERIC: {
-diff -ru a/uppsrc/Core/Stream.cpp b/uppsrc/Core/Stream.cpp
---- a/uppsrc/Core/Stream.cpp	2026-10-20 13:03:35.869463815 -0700
-+++ b/uppsrc/Core/Stream.cpp	2026-10-20 13:03:35.869463815 -0700
+diff -ruN a/uppsrc/Core/Stream.cpp b/uppsrc/Core/Stream.cpp
+--- a/uppsrc/Core/Stream.cpp	2026-10-20 14:35:19.830812271 -0700
++++ b/uppsrc/Core/Stream.cpp	2026-10-20 14:35:19.968812365 -0700
 @@ -26,7 +26,7 @@
  	return sz;
  }
@@ -470,9 +488,9 @@ diff -ru a/uppsrc/Core/Stream.cpp b/uppsrc/Core/Stream.cpp
  	virtual bool    IsOpen() const { return true; }
  	virtual   int   _Term()        { return -1; }
  	virtual   int   _Get()         { return -1; }
-diff -ru a/uppsrc/Core/Topt.h b/uppsrc/Core/Topt.h
---- a/uppsrc/Core/Topt.h	2026-10-20 13:03:35.873463817 -0700
-+++ b/uppsrc/Core/Topt.h	2026-10-20 13:03:35.873463817 -0700
+diff -ruN a/uppsrc/Core/Topt.h b/uppsrc/Core/Topt.h
+--- a/uppsrc/Core/Topt.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Topt.h	2026-10-20 14:35:19.968812365 -0700
 @@ -406,7 +406,7 @@
  	operator bool() const     { return ii < 0; }
  
@@ -491,9 +509,9 @@ diff -ru a/uppsrc/Core/Topt.h b/uppsrc/Core/Topt.h
  	IIterator(V& _cont, int ii) : cont(&_cont), ii(ii) {}
  
  	STL_ITERATOR_COMPATIBILITY
-diff -ru a/uppsrc/Core/Tuple.h b/uppsrc/Core/Tuple.h
---- a/uppsrc/Core/Tuple.h	2026-10-20 13:03:35.876463819 -0700
-+++ b/uppsrc/Core/Tuple.h	2026-10-20 13:03:35.876463819 -0700
+diff -ruN a/uppsrc/Core/Tuple.h b/uppsrc/Core/Tuple.h
+--- a/uppsrc/Core/Tuple.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Tuple.h	2026-10-20 14:35:19.968812365 -0700
 @@ -27,8 +27,8 @@
  	
  	int   GetCount() const                    { return 1; }
@@ -505,9 +523,9 @@ diff -ru a/uppsrc/Core/Tuple.h b/uppsrc/Core/Tuple.h
  
  	TupleN(const A& a) : a(a) {}
  	TupleN() {}
-diff -ru a/uppsrc/Core/Utf.cpp b/uppsrc/Core/Utf.cpp
---- a/uppsrc/Core/Utf.cpp	2026-10-20 13:03:35.879463822 -0700
-+++ b/uppsrc/Core/Utf.cpp	2026-10-20 13:03:35.879463822 -0700
+diff -ruN a/uppsrc/Core/Utf.cpp b/uppsrc/Core/Utf.cpp
+--- a/uppsrc/Core/Utf.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Utf.cpp	2026-10-20 14:35:19.968812365 -0700
 @@ -32,7 +32,7 @@
  int Utf8Len(const char16 *s, int len)
  {
@@ -517,9 +535,9 @@ diff -ru a/uppsrc/Core/Utf.cpp b/uppsrc/Core/Utf.cpp
  	return rlen;
  }
  
-diff -ru a/uppsrc/Core/ValueCache.h b/uppsrc/Core/ValueCache.h
---- a/uppsrc/Core/ValueCache.h	2026-10-20 13:03:35.882463824 -0700
-+++ b/uppsrc/Core/ValueCache.h	2026-10-20 13:03:35.883463824 -0700
+diff -ruN a/uppsrc/Core/ValueCache.h b/uppsrc/Core/ValueCache.h
+--- a/uppsrc/Core/ValueCache.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/ValueCache.h	2026-10-20 14:35:19.968812365 -0700
 @@ -60,7 +60,7 @@
  }
  
@@ -529,9 +547,9 @@ diff -ru a/uppsrc/Core/ValueCache.h b/uppsrc/Core/ValueCache.h
  {
  	StringBuffer key;
  	RawCat(key, StaticTypeNo<K>());
-diff -ru a/uppsrc/Core/Value.cpp b/uppsrc/Core/Value.cpp
---- a/uppsrc/Core/Value.cpp	2026-10-20 13:03:35.885463826 -0700
-+++ b/uppsrc/Core/Value.cpp	2026-10-20 13:03:35.886463826 -0700
+diff -ruN a/uppsrc/Core/Value.cpp b/uppsrc/Core/Value.cpp
+--- a/uppsrc/Core/Value.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Value.cpp	2026-10-20 14:35:19.969812366 -0700
 @@ -284,14 +284,14 @@
  SVO_FN(s_time, Time);
  
@@ -564,9 +582,9 @@ diff -ru a/uppsrc/Core/Value.cpp b/uppsrc/Core/Value.cpp
  	virtual String     AsString() const            { return "<error: \'" + v + "\'>"; }
  
  	ValueErrorCls(const String& s) : RichValueRep<String>(s)  {}
-diff -ru a/uppsrc/Core/Value.h b/uppsrc/Core/Value.h
---- a/uppsrc/Core/Value.h	2026-10-20 13:03:35.888463828 -0700
-+++ b/uppsrc/Core/Value.h	2026-10-20 13:03:35.889463828 -0700
+diff -ruN a/uppsrc/Core/Value.h b/uppsrc/Core/Value.h
+--- a/uppsrc/Core/Value.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Value.h	2026-10-20 14:35:19.969812366 -0700
 @@ -59,9 +59,9 @@
  	friend dword ValueTypeNo(const T*)              { return T::ValueTypeNo(); }
  
@@ -603,7 +621,7 @@ diff -ru a/uppsrc/Core/Value.h b/uppsrc/Core/Value.h
  
  		Void()                                         { refcount = 1; }
  		virtual ~Void()                                {}
-@@ -330,7 +330,7 @@
+@@ -331,7 +331,7 @@
  const Value& ErrorValue();
  
  template <class T>
@@ -612,9 +630,9 @@ diff -ru a/uppsrc/Core/Value.h b/uppsrc/Core/Value.h
  	return false;
  }
  
-diff -ru a/uppsrc/Core/ValueUtil.cpp b/uppsrc/Core/ValueUtil.cpp
---- a/uppsrc/Core/ValueUtil.cpp	2026-10-20 13:03:35.891463830 -0700
-+++ b/uppsrc/Core/ValueUtil.cpp	2026-10-20 13:03:35.892463830 -0700
+diff -ruN a/uppsrc/Core/ValueUtil.cpp b/uppsrc/Core/ValueUtil.cpp
+--- a/uppsrc/Core/ValueUtil.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/ValueUtil.cpp	2026-10-20 14:35:19.969812366 -0700
 @@ -131,7 +131,7 @@
  	Create() = pick(v);
  }
@@ -641,9 +659,9 @@ diff -ru a/uppsrc/Core/ValueUtil.cpp b/uppsrc/Core/ValueUtil.cpp
  {
  	Data& d = Create();
  	d.key = clone(m.GetKeys());
-diff -ru a/uppsrc/Core/ValueUtil.h b/uppsrc/Core/ValueUtil.h
---- a/uppsrc/Core/ValueUtil.h	2026-10-20 13:03:35.894463832 -0700
-+++ b/uppsrc/Core/ValueUtil.h	2026-10-20 13:03:35.894463832 -0700
+diff -ruN a/uppsrc/Core/ValueUtil.h b/uppsrc/Core/ValueUtil.h
+--- a/uppsrc/Core/ValueUtil.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/ValueUtil.h	2026-10-20 14:35:19.969812366 -0700
 @@ -99,7 +99,7 @@
  	virtual int   GetType() = 0;
  	virtual Value GetValue(const void *)            { return Null; }
@@ -662,9 +680,9 @@ diff -ru a/uppsrc/Core/ValueUtil.h b/uppsrc/Core/ValueUtil.h
  	ASSERT(GetValueTypeNo<T>() == r.GetType());
  	return *(T *) r.GetVoidPtr();
  }
-diff -ru a/uppsrc/Core/Vcont.h b/uppsrc/Core/Vcont.h
---- a/uppsrc/Core/Vcont.h	2026-10-20 13:03:35.897463834 -0700
-+++ b/uppsrc/Core/Vcont.h	2026-10-20 13:03:35.897463834 -0700
+diff -ruN a/uppsrc/Core/Vcont.h b/uppsrc/Core/Vcont.h
+--- a/uppsrc/Core/Vcont.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Vcont.h	2026-10-20 14:35:19.969812366 -0700
 @@ -460,7 +460,7 @@
  		operator bool() const                   { return ptr; }
  
@@ -674,9 +692,9 @@ diff -ru a/uppsrc/Core/Vcont.h b/uppsrc/Core/Vcont.h
  		
  		STL_ITERATOR_COMPATIBILITY
  	};
-diff -ru a/uppsrc/Core/z.cpp b/uppsrc/Core/z.cpp
---- a/uppsrc/Core/z.cpp	2026-10-20 13:03:35.900463836 -0700
-+++ b/uppsrc/Core/z.cpp	2026-10-20 13:03:35.901463836 -0700
+diff -ruN a/uppsrc/Core/z.cpp b/uppsrc/Core/z.cpp
+--- a/uppsrc/Core/z.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/z.cpp	2026-10-20 14:35:19.969812366 -0700
 @@ -15,12 +15,12 @@
  
  //////////////////////////////////////////////////////////////////////
@@ -692,9 +710,9 @@ diff -ru a/uppsrc/Core/z.cpp b/uppsrc/Core/z.cpp
  {
  	MemoryFree(address);
  }
-diff -ru a/uppsrc/Core/z.h b/uppsrc/Core/z.h
---- a/uppsrc/Core/z.h	2026-10-20 13:03:35.903463838 -0700
-+++ b/uppsrc/Core/z.h	2026-10-20 13:03:35.903463838 -0700
+diff -ruN a/uppsrc/Core/z.h b/uppsrc/Core/z.h
+--- a/uppsrc/Core/z.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/z.h	2026-10-20 14:35:19.969812366 -0700
 @@ -84,10 +84,10 @@
  
  	dword  GetCRC() const                  { return z.GetCRC(); }
@@ -723,9 +741,9 @@ diff -ru a/uppsrc/Core/z.h b/uppsrc/Core/z.h
  	Zlib& NoCRC()                          { return CRC(false); }
  	Zlib& ChunkSize(int n)                 { return z.ChunkSize(n); }
  	Zlib& Level(int compression_lvl)       { return z.Level(compression_lvl); }
-diff -ru a/uppsrc/CtrlCore/CtrlClip.cpp b/uppsrc/CtrlCore/CtrlClip.cpp
---- a/uppsrc/CtrlCore/CtrlClip.cpp	2026-10-20 13:03:35.905463839 -0700
-+++ b/uppsrc/CtrlCore/CtrlClip.cpp	2026-10-20 13:03:35.906463840 -0700
+diff -ruN a/uppsrc/CtrlCore/CtrlClip.cpp b/uppsrc/CtrlCore/CtrlClip.cpp
+--- a/uppsrc/CtrlCore/CtrlClip.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/CtrlClip.cpp	2026-10-20 14:35:19.974812369 -0700
 @@ -19,10 +19,10 @@
  :	render(sRawClipData)
  {}
@@ -749,9 +767,9 @@ diff -ru a/uppsrc/CtrlCore/CtrlClip.cpp b/uppsrc/CtrlCore/CtrlClip.cpp
  {
  	return Null;
  }
-diff -ru a/uppsrc/CtrlCore/CtrlCore.h b/uppsrc/CtrlCore/CtrlCore.h
---- a/uppsrc/CtrlCore/CtrlCore.h	2026-10-20 13:03:35.908463841 -0700
-+++ b/uppsrc/CtrlCore/CtrlCore.h	2026-10-20 13:03:35.908463841 -0700
+diff -ruN a/uppsrc/CtrlCore/CtrlCore.h b/uppsrc/CtrlCore/CtrlCore.h
+--- a/uppsrc/CtrlCore/CtrlCore.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/CtrlCore.h	2026-10-20 14:35:19.974812369 -0700
 @@ -383,7 +383,7 @@
  }
  
@@ -779,9 +797,9 @@ diff -ru a/uppsrc/CtrlCore/CtrlCore.h b/uppsrc/CtrlCore/CtrlCore.h
  	Ctrl&   BackPaintHint()         { return BackPaint(); }
  
  	void    ScrollView(const Rect& r, int dx, int dy);
-diff -ru a/uppsrc/CtrlCore/Ctrl.cpp b/uppsrc/CtrlCore/Ctrl.cpp
---- a/uppsrc/CtrlCore/Ctrl.cpp	2026-10-20 13:03:35.910463843 -0700
-+++ b/uppsrc/CtrlCore/Ctrl.cpp	2026-10-20 13:03:35.911463843 -0700
+diff -ruN a/uppsrc/CtrlCore/Ctrl.cpp b/uppsrc/CtrlCore/Ctrl.cpp
+--- a/uppsrc/CtrlCore/Ctrl.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/Ctrl.cpp	2026-10-20 14:35:19.974812369 -0700
 @@ -43,7 +43,7 @@
  void   Ctrl::SetData(const Value&) {}
  Value  Ctrl::GetData() const       { return Value(); }
@@ -849,9 +867,9 @@ diff -ru a/uppsrc/CtrlCore/Ctrl.cpp b/uppsrc/CtrlCore/Ctrl.cpp
  {
  	return false;
  }
-diff -ru a/uppsrc/CtrlCore/CtrlDraw.cpp b/uppsrc/CtrlCore/CtrlDraw.cpp
---- a/uppsrc/CtrlCore/CtrlDraw.cpp	2026-10-20 13:03:35.913463844 -0700
-+++ b/uppsrc/CtrlCore/CtrlDraw.cpp	2026-10-20 13:03:35.913463844 -0700
+diff -ruN a/uppsrc/CtrlCore/CtrlDraw.cpp b/uppsrc/CtrlCore/CtrlDraw.cpp
+--- a/uppsrc/CtrlCore/CtrlDraw.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/CtrlDraw.cpp	2026-10-20 14:35:19.974812369 -0700
 @@ -90,7 +90,7 @@
  	return view - GetScreenRect().TopLeft();
  }
@@ -870,9 +888,9 @@ diff -ru a/uppsrc/CtrlCore/CtrlDraw.cpp b/uppsrc/CtrlCore/CtrlDraw.cpp
  {
  	GuiLock __;
  	LTIMING("UpdateArea");
-diff -ru a/uppsrc/CtrlCore/CtrlKbd.cpp b/uppsrc/CtrlCore/CtrlKbd.cpp
---- a/uppsrc/CtrlCore/CtrlKbd.cpp	2026-10-20 13:03:35.916463846 -0700
-+++ b/uppsrc/CtrlCore/CtrlKbd.cpp	2026-10-20 13:03:35.916463846 -0700
+diff -ruN a/uppsrc/CtrlCore/CtrlKbd.cpp b/uppsrc/CtrlCore/CtrlKbd.cpp
+--- a/uppsrc/CtrlCore/CtrlKbd.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/CtrlKbd.cpp	2026-10-20 14:35:19.974812369 -0700
 @@ -162,7 +162,7 @@
  	}
  }
@@ -882,9 +900,9 @@ diff -ru a/uppsrc/CtrlCore/CtrlKbd.cpp b/uppsrc/CtrlCore/CtrlKbd.cpp
  {
  	GuiLock __;
  	if(pfocusCtrl && !pfocusCtrl->destroying) {
-diff -ru a/uppsrc/CtrlCore/CtrlMouse.cpp b/uppsrc/CtrlCore/CtrlMouse.cpp
---- a/uppsrc/CtrlCore/CtrlMouse.cpp	2026-10-20 13:03:35.918463848 -0700
-+++ b/uppsrc/CtrlCore/CtrlMouse.cpp	2026-10-20 13:03:35.919463849 -0700
+diff -ruN a/uppsrc/CtrlCore/CtrlMouse.cpp b/uppsrc/CtrlCore/CtrlMouse.cpp
+--- a/uppsrc/CtrlCore/CtrlMouse.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/CtrlMouse.cpp	2026-10-20 14:35:19.974812369 -0700
 @@ -34,7 +34,7 @@
  	return style;
  }
@@ -912,9 +930,9 @@ diff -ru a/uppsrc/CtrlCore/CtrlMouse.cpp b/uppsrc/CtrlCore/CtrlMouse.cpp
  {
  	return Image::Arrow();
  }
-diff -ru a/uppsrc/CtrlCore/EncodeRTF.cpp b/uppsrc/CtrlCore/EncodeRTF.cpp
---- a/uppsrc/CtrlCore/EncodeRTF.cpp	2026-10-20 13:03:35.921463850 -0700
-+++ b/uppsrc/CtrlCore/EncodeRTF.cpp	2026-10-20 13:03:35.921463850 -0700
+diff -ruN a/uppsrc/CtrlCore/EncodeRTF.cpp b/uppsrc/CtrlCore/EncodeRTF.cpp
+--- a/uppsrc/CtrlCore/EncodeRTF.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/EncodeRTF.cpp	2026-10-20 14:35:19.975812370 -0700
 @@ -123,7 +123,7 @@
  }
  
@@ -924,9 +942,9 @@ diff -ru a/uppsrc/CtrlCore/EncodeRTF.cpp b/uppsrc/CtrlCore/EncodeRTF.cpp
  : stream(stream_)
  , richtext(richtext_)
  , charset(charset_)
-diff -ru a/uppsrc/CtrlCore/Frame.cpp b/uppsrc/CtrlCore/Frame.cpp
---- a/uppsrc/CtrlCore/Frame.cpp	2026-10-20 13:03:35.923463851 -0700
-+++ b/uppsrc/CtrlCore/Frame.cpp	2026-10-20 13:03:35.924463852 -0700
+diff -ruN a/uppsrc/CtrlCore/Frame.cpp b/uppsrc/CtrlCore/Frame.cpp
+--- a/uppsrc/CtrlCore/Frame.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/Frame.cpp	2026-10-20 14:35:19.975812370 -0700
 @@ -2,14 +2,14 @@
  
  namespace Upp {
@@ -947,9 +965,9 @@ diff -ru a/uppsrc/CtrlCore/Frame.cpp b/uppsrc/CtrlCore/Frame.cpp
  
  CtrlFrame& NullFrame() { return Single<NullFrameClass>(); }
  
-diff -ru a/uppsrc/CtrlCore/GtkApp.cpp b/uppsrc/CtrlCore/GtkApp.cpp
---- a/uppsrc/CtrlCore/GtkApp.cpp	2026-10-20 13:03:35.926463853 -0700
-+++ b/uppsrc/CtrlCore/GtkApp.cpp	2026-10-20 13:03:35.926463853 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkApp.cpp b/uppsrc/CtrlCore/GtkApp.cpp
+--- a/uppsrc/CtrlCore/GtkApp.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkApp.cpp	2026-10-20 14:35:19.975812370 -0700
 @@ -18,10 +18,10 @@
  #define LLOG(x) // DLOG(x)
  
@@ -973,9 +991,9 @@ diff -ru a/uppsrc/CtrlCore/GtkApp.cpp b/uppsrc/CtrlCore/GtkApp.cpp
  {
  	LLOG(rmsecs() << " InitGtkApp");
  
-diff -ru a/uppsrc/CtrlCore/GtkClip.cpp b/uppsrc/CtrlCore/GtkClip.cpp
---- a/uppsrc/CtrlCore/GtkClip.cpp	2026-10-20 13:03:35.928463855 -0700
-+++ b/uppsrc/CtrlCore/GtkClip.cpp	2026-10-20 13:03:35.929463855 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkClip.cpp b/uppsrc/CtrlCore/GtkClip.cpp
+--- a/uppsrc/CtrlCore/GtkClip.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkClip.cpp	2026-10-20 14:35:19.975812370 -0700
 @@ -38,7 +38,7 @@
  		gtk_selection_data_set(selection_data, GAtom(fmt), 8, (const guchar*)~data, data.GetCount());
  }
@@ -1003,9 +1021,9 @@ diff -ru a/uppsrc/CtrlCore/GtkClip.cpp b/uppsrc/CtrlCore/GtkClip.cpp
  {
  	GuiLock __;
  	return Null;
-diff -ru a/uppsrc/CtrlCore/GtkCreate.cpp b/uppsrc/CtrlCore/GtkCreate.cpp
---- a/uppsrc/CtrlCore/GtkCreate.cpp	2026-10-20 13:03:35.931463857 -0700
-+++ b/uppsrc/CtrlCore/GtkCreate.cpp	2026-10-20 13:03:35.931463857 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkCreate.cpp b/uppsrc/CtrlCore/GtkCreate.cpp
+--- a/uppsrc/CtrlCore/GtkCreate.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkCreate.cpp	2026-10-20 14:35:19.975812370 -0700
 @@ -261,7 +261,7 @@
  			i++;
  }
@@ -1015,9 +1033,9 @@ diff -ru a/uppsrc/CtrlCore/GtkCreate.cpp b/uppsrc/CtrlCore/GtkCreate.cpp
  {
  	GuiLock __;
  	LLOG("POPUP " << Name() << ", " << GetRect() << ", activate " << activate);
-diff -ru a/uppsrc/CtrlCore/GtkCtrl.cpp b/uppsrc/CtrlCore/GtkCtrl.cpp
---- a/uppsrc/CtrlCore/GtkCtrl.cpp	2026-10-20 13:03:35.933463858 -0700
-+++ b/uppsrc/CtrlCore/GtkCtrl.cpp	2026-10-20 13:03:35.934463859 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkCtrl.cpp b/uppsrc/CtrlCore/GtkCtrl.cpp
+--- a/uppsrc/CtrlCore/GtkCtrl.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkCtrl.cpp	2026-10-20 14:35:19.975812370 -0700
 @@ -18,11 +18,11 @@
  {
  }
@@ -1041,9 +1059,9 @@ diff -ru a/uppsrc/CtrlCore/GtkCtrl.cpp b/uppsrc/CtrlCore/GtkCtrl.cpp
  {
  	return Black;
  }
-diff -ru a/uppsrc/CtrlCore/GtkCustomBar.cpp b/uppsrc/CtrlCore/GtkCustomBar.cpp
---- a/uppsrc/CtrlCore/GtkCustomBar.cpp	2026-10-20 13:03:35.936463860 -0700
-+++ b/uppsrc/CtrlCore/GtkCustomBar.cpp	2026-10-20 13:03:35.937463861 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkCustomBar.cpp b/uppsrc/CtrlCore/GtkCustomBar.cpp
+--- a/uppsrc/CtrlCore/GtkCustomBar.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkCustomBar.cpp	2026-10-20 14:35:19.975812370 -0700
 @@ -14,17 +14,17 @@
  	w.DrawImage(0, 0, img);
  }
@@ -1074,9 +1092,9 @@ diff -ru a/uppsrc/CtrlCore/GtkCustomBar.cpp b/uppsrc/CtrlCore/GtkCustomBar.cpp
  {
  	WhenAction();
  }
-diff -ru a/uppsrc/CtrlCore/GtkDnD.cpp b/uppsrc/CtrlCore/GtkDnD.cpp
---- a/uppsrc/CtrlCore/GtkDnD.cpp	2026-10-20 13:03:35.940463863 -0700
-+++ b/uppsrc/CtrlCore/GtkDnD.cpp	2026-10-20 13:03:35.940463863 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkDnD.cpp b/uppsrc/CtrlCore/GtkDnD.cpp
+--- a/uppsrc/CtrlCore/GtkDnD.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkDnD.cpp	2026-10-20 14:35:19.980812373 -0700
 @@ -21,7 +21,7 @@
  
  cairo_surface_t *CreateCairoSurface(const Image& img);
@@ -1154,9 +1172,9 @@ diff -ru a/uppsrc/CtrlCore/GtkDnD.cpp b/uppsrc/CtrlCore/GtkDnD.cpp
  {
  	LLOG("GtkDragLeave");
  	DnDLeave();
-diff -ru a/uppsrc/CtrlCore/GtkDrawImage.cpp b/uppsrc/CtrlCore/GtkDrawImage.cpp
---- a/uppsrc/CtrlCore/GtkDrawImage.cpp	2026-10-20 13:03:35.942463864 -0700
-+++ b/uppsrc/CtrlCore/GtkDrawImage.cpp	2026-10-20 13:03:35.943463865 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkDrawImage.cpp b/uppsrc/CtrlCore/GtkDrawImage.cpp
+--- a/uppsrc/CtrlCore/GtkDrawImage.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkDrawImage.cpp	2026-10-20 14:35:19.980812373 -0700
 @@ -9,7 +9,7 @@
  #define LTIMING(x) // RTIMING(x)
  #define LLOG(x)
@@ -1180,9 +1198,9 @@ diff -ru a/uppsrc/CtrlCore/GtkDrawImage.cpp b/uppsrc/CtrlCore/GtkDrawImage.cpp
  {
  }
  
-diff -ru a/uppsrc/CtrlCore/GtkDrawOp.cpp b/uppsrc/CtrlCore/GtkDrawOp.cpp
---- a/uppsrc/CtrlCore/GtkDrawOp.cpp	2026-10-20 13:03:35.945463866 -0700
-+++ b/uppsrc/CtrlCore/GtkDrawOp.cpp	2026-10-20 13:03:35.945463866 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkDrawOp.cpp b/uppsrc/CtrlCore/GtkDrawOp.cpp
+--- a/uppsrc/CtrlCore/GtkDrawOp.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkDrawOp.cpp	2026-10-20 14:35:19.980812373 -0700
 @@ -215,7 +215,7 @@
  }
  
@@ -1205,9 +1223,9 @@ diff -ru a/uppsrc/CtrlCore/GtkDrawOp.cpp b/uppsrc/CtrlCore/GtkDrawOp.cpp
  {
  	FlushText();
  	Image fill_img;
-diff -ru a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
---- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 13:03:35.947463867 -0700
-+++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 13:03:35.948463868 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
+--- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 14:35:19.980812373 -0700
 @@ -173,7 +173,7 @@
  		top->sync_rect = true;
  }
@@ -1253,9 +1271,9 @@ diff -ru a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
  {
  	GuiLock __;
  	Ctrl *w = GetTopCtrlFromId((uint32)(uintptr_t)user_data);
-diff -ru a/uppsrc/CtrlCore/GtkTop.cpp b/uppsrc/CtrlCore/GtkTop.cpp
---- a/uppsrc/CtrlCore/GtkTop.cpp	2026-10-20 13:03:35.949463869 -0700
-+++ b/uppsrc/CtrlCore/GtkTop.cpp	2026-10-20 13:03:35.950463870 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkTop.cpp b/uppsrc/CtrlCore/GtkTop.cpp
+--- a/uppsrc/CtrlCore/GtkTop.cpp	2026-10-20 14:35:19.834812273 -0700
++++ b/uppsrc/CtrlCore/GtkTop.cpp	2026-10-20 14:35:19.981812374 -0700
 @@ -111,7 +111,7 @@
  	}
  }
@@ -1298,9 +1316,9 @@ diff -ru a/uppsrc/CtrlCore/GtkTop.cpp b/uppsrc/CtrlCore/GtkTop.cpp
  {
  	SetMode(OVERLAPPED);
  }
-diff -ru a/uppsrc/CtrlCore/GtkWnd.cpp b/uppsrc/CtrlCore/GtkWnd.cpp
---- a/uppsrc/CtrlCore/GtkWnd.cpp	2026-10-20 13:03:35.952463871 -0700
-+++ b/uppsrc/CtrlCore/GtkWnd.cpp	2026-10-20 13:03:35.953463872 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkWnd.cpp b/uppsrc/CtrlCore/GtkWnd.cpp
+--- a/uppsrc/CtrlCore/GtkWnd.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkWnd.cpp	2026-10-20 14:35:19.981812374 -0700
 @@ -275,7 +275,7 @@
  	return top && top->window && gtk_widget_get_window(top->window);
  }
@@ -1319,9 +1337,9 @@ diff -ru a/uppsrc/CtrlCore/GtkWnd.cpp b/uppsrc/CtrlCore/GtkWnd.cpp
  {
  	GuiLock __;
  	LLOG("WndUpdate0r " << r);
-diff -ru a/uppsrc/CtrlCore/GtkX11Util.cpp b/uppsrc/CtrlCore/GtkX11Util.cpp
---- a/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-20 13:03:35.955463873 -0700
-+++ b/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-20 13:03:35.956463873 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkX11Util.cpp b/uppsrc/CtrlCore/GtkX11Util.cpp
+--- a/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-20 14:35:19.981812374 -0700
 @@ -163,7 +163,7 @@
  	}
  }
@@ -1331,9 +1349,9 @@ diff -ru a/uppsrc/CtrlCore/GtkX11Util.cpp b/uppsrc/CtrlCore/GtkX11Util.cpp
  {
  	if(IsWayland())
  		return GDK_FILTER_CONTINUE; // Not supported on Wayland...
-diff -ru a/uppsrc/CtrlCore/lay0.h b/uppsrc/CtrlCore/lay0.h
---- a/uppsrc/CtrlCore/lay0.h	2026-10-20 13:03:35.958463875 -0700
-+++ b/uppsrc/CtrlCore/lay0.h	2026-10-20 13:03:35.958463875 -0700
+diff -ruN a/uppsrc/CtrlCore/lay0.h b/uppsrc/CtrlCore/lay0.h
+--- a/uppsrc/CtrlCore/lay0.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/lay0.h	2026-10-20 14:35:19.981812374 -0700
 @@ -53,7 +53,7 @@
  #undef  END_LAYOUT
  
@@ -1343,9 +1361,9 @@ diff -ru a/uppsrc/CtrlCore/lay0.h b/uppsrc/CtrlCore/lay0.h
                                    parent.LayoutIdLiteral(#nm);
  #define UNTYPED(var, param)       uts.var.param; uts.var.LayoutIdLiteral(#var); parent.Add(uts.var);
  #define ITEM(clss, var, param)    layout.var.param; layout.var.LayoutIdLiteral(#var); parent.Add(layout.var);
-diff -ru a/uppsrc/CtrlCore/LocalLoop.cpp b/uppsrc/CtrlCore/LocalLoop.cpp
---- a/uppsrc/CtrlCore/LocalLoop.cpp	2026-10-20 13:03:35.961463877 -0700
-+++ b/uppsrc/CtrlCore/LocalLoop.cpp	2026-10-20 13:03:35.961463877 -0700
+diff -ruN a/uppsrc/CtrlCore/LocalLoop.cpp b/uppsrc/CtrlCore/LocalLoop.cpp
+--- a/uppsrc/CtrlCore/LocalLoop.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/LocalLoop.cpp	2026-10-20 14:35:19.981812374 -0700
 @@ -282,7 +282,7 @@
  	EndLoop();
  }
@@ -1355,9 +1373,9 @@ diff -ru a/uppsrc/CtrlCore/LocalLoop.cpp b/uppsrc/CtrlCore/LocalLoop.cpp
  {
  	return ani[int(GetTimeClick() / ani_ms % ani.GetCount())];
  }
-diff -ru a/uppsrc/CtrlCore/TopWindow.cpp b/uppsrc/CtrlCore/TopWindow.cpp
---- a/uppsrc/CtrlCore/TopWindow.cpp	2026-10-20 13:03:35.964463879 -0700
-+++ b/uppsrc/CtrlCore/TopWindow.cpp	2026-10-20 13:03:35.964463879 -0700
+diff -ruN a/uppsrc/CtrlCore/TopWindow.cpp b/uppsrc/CtrlCore/TopWindow.cpp
+--- a/uppsrc/CtrlCore/TopWindow.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/TopWindow.cpp	2026-10-20 14:35:19.981812374 -0700
 @@ -517,7 +517,7 @@
  }
  
@@ -1367,9 +1385,9 @@ diff -ru a/uppsrc/CtrlCore/TopWindow.cpp b/uppsrc/CtrlCore/TopWindow.cpp
  	{
  		w.DrawRect(r, SColorFace());
  	}
-diff -ru a/uppsrc/CtrlLib/AKeys.cpp b/uppsrc/CtrlLib/AKeys.cpp
---- a/uppsrc/CtrlLib/AKeys.cpp	2026-10-20 13:03:35.966463880 -0700
-+++ b/uppsrc/CtrlLib/AKeys.cpp	2026-10-20 13:03:35.967463881 -0700
+diff -ruN a/uppsrc/CtrlLib/AKeys.cpp b/uppsrc/CtrlLib/AKeys.cpp
+--- a/uppsrc/CtrlLib/AKeys.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/AKeys.cpp	2026-10-20 14:35:19.981812374 -0700
 @@ -44,7 +44,7 @@
  
  struct KeyDisplay : Display {
@@ -1388,9 +1406,9 @@ diff -ru a/uppsrc/CtrlLib/AKeys.cpp b/uppsrc/CtrlLib/AKeys.cpp
  
  	virtual void Paint(Draw& w) {
  		Single<KeyDisplay>().Paint(w, GetSize(), key,
-diff -ru a/uppsrc/CtrlLib/ArrayCtrl.cpp b/uppsrc/CtrlLib/ArrayCtrl.cpp
---- a/uppsrc/CtrlLib/ArrayCtrl.cpp	2026-10-20 13:03:35.970463883 -0700
-+++ b/uppsrc/CtrlLib/ArrayCtrl.cpp	2026-10-20 13:03:35.970463883 -0700
+diff -ruN a/uppsrc/CtrlLib/ArrayCtrl.cpp b/uppsrc/CtrlLib/ArrayCtrl.cpp
+--- a/uppsrc/CtrlLib/ArrayCtrl.cpp	2026-10-20 14:35:19.834812273 -0700
++++ b/uppsrc/CtrlLib/ArrayCtrl.cpp	2026-10-20 14:35:19.981812374 -0700
 @@ -2160,13 +2160,13 @@
  }
  
@@ -1443,9 +1461,9 @@ diff -ru a/uppsrc/CtrlLib/ArrayCtrl.cpp b/uppsrc/CtrlLib/ArrayCtrl.cpp
  {
  	bool gray = (array && !array->IsEnabled());
  	w.DrawRect(r, paper);
-diff -ru a/uppsrc/CtrlLib/ArrayCtrl.h b/uppsrc/CtrlLib/ArrayCtrl.h
---- a/uppsrc/CtrlLib/ArrayCtrl.h	2026-10-20 13:03:35.972463884 -0700
-+++ b/uppsrc/CtrlLib/ArrayCtrl.h	2026-10-20 13:03:35.973463885 -0700
+diff -ruN a/uppsrc/CtrlLib/ArrayCtrl.h b/uppsrc/CtrlLib/ArrayCtrl.h
+--- a/uppsrc/CtrlLib/ArrayCtrl.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/ArrayCtrl.h	2026-10-20 14:35:19.981812374 -0700
 @@ -495,7 +495,7 @@
  
  	void       Add(const Vector<Value>& v)                      { Set(array.GetCount(), v); }
@@ -1466,9 +1484,9 @@ diff -ru a/uppsrc/CtrlLib/ArrayCtrl.h b/uppsrc/CtrlLib/ArrayCtrl.h
  	ArrayCtrl& Duplicating(bool b = true)              { duplicating = b; return *this; }
  	ArrayCtrl& NoInsertAppend(bool b = true)           { noinsertappend = b; return *this; }
  	bool       IsDuplicating() const                   { return duplicating; }
-diff -ru a/uppsrc/CtrlLib/Bar.cpp b/uppsrc/CtrlLib/Bar.cpp
---- a/uppsrc/CtrlLib/Bar.cpp	2026-10-20 13:03:35.975463886 -0700
-+++ b/uppsrc/CtrlLib/Bar.cpp	2026-10-20 13:03:35.975463886 -0700
+diff -ruN a/uppsrc/CtrlLib/Bar.cpp b/uppsrc/CtrlLib/Bar.cpp
+--- a/uppsrc/CtrlLib/Bar.cpp	2026-10-20 14:35:19.834812273 -0700
++++ b/uppsrc/CtrlLib/Bar.cpp	2026-10-20 14:35:19.981812374 -0700
 @@ -4,7 +4,7 @@
  
  #define LLOG(x) // LOG(x)
@@ -1561,9 +1579,9 @@ diff -ru a/uppsrc/CtrlLib/Bar.cpp b/uppsrc/CtrlLib/Bar.cpp
  
  public:
  	virtual bool   IsMenuBar() const                 { return true; }
-diff -ru a/uppsrc/CtrlLib/Bar.h b/uppsrc/CtrlLib/Bar.h
---- a/uppsrc/CtrlLib/Bar.h	2026-10-20 13:03:35.977463888 -0700
-+++ b/uppsrc/CtrlLib/Bar.h	2026-10-20 13:03:35.978463888 -0700
+diff -ruN a/uppsrc/CtrlLib/Bar.h b/uppsrc/CtrlLib/Bar.h
+--- a/uppsrc/CtrlLib/Bar.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/Bar.h	2026-10-20 14:35:19.987812378 -0700
 @@ -157,7 +157,7 @@
  	Item&  Add(const char *text, const Callback1<Bar&>& proc);
  	Item&  Add(const String& text, const Callback1<Bar&>& proc) { return Add(~text, proc); }
@@ -1573,9 +1591,9 @@ diff -ru a/uppsrc/CtrlLib/Bar.h b/uppsrc/CtrlLib/Bar.h
  	Item&  Add(const char *text, const UPP::Image& image, const Callback1<Bar&>& proc);
  	Item&  Add(const String& text, const UPP::Image& image, const Callback1<Bar&>& proc) { return Add(~text, image, proc); }
  	Item&  Sub(bool enable, const char *text, const Function<void (Bar&)>& submenu);
-diff -ru a/uppsrc/CtrlLib/BeginnerInfo.cpp b/uppsrc/CtrlLib/BeginnerInfo.cpp
---- a/uppsrc/CtrlLib/BeginnerInfo.cpp	2026-10-20 13:03:35.980463890 -0700
-+++ b/uppsrc/CtrlLib/BeginnerInfo.cpp	2026-10-20 13:03:35.981463890 -0700
+diff -ruN a/uppsrc/CtrlLib/BeginnerInfo.cpp b/uppsrc/CtrlLib/BeginnerInfo.cpp
+--- a/uppsrc/CtrlLib/BeginnerInfo.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/BeginnerInfo.cpp	2026-10-20 14:35:19.987812378 -0700
 @@ -93,8 +93,8 @@
  			Stop();
  			return false;
@@ -1587,9 +1605,9 @@ diff -ru a/uppsrc/CtrlLib/BeginnerInfo.cpp b/uppsrc/CtrlLib/BeginnerInfo.cpp
  			if(event == Ctrl::MOUSEMOVE)
  				Stop(true);
  			else
-diff -ru a/uppsrc/CtrlLib/Button.cpp b/uppsrc/CtrlLib/Button.cpp
---- a/uppsrc/CtrlLib/Button.cpp	2026-10-20 13:03:35.983463892 -0700
-+++ b/uppsrc/CtrlLib/Button.cpp	2026-10-20 13:03:35.983463892 -0700
+diff -ruN a/uppsrc/CtrlLib/Button.cpp b/uppsrc/CtrlLib/Button.cpp
+--- a/uppsrc/CtrlLib/Button.cpp	2026-10-20 14:35:19.835812274 -0700
++++ b/uppsrc/CtrlLib/Button.cpp	2026-10-20 14:35:19.988812379 -0700
 @@ -34,7 +34,7 @@
  	SetCapture();
  }
@@ -1599,9 +1617,9 @@ diff -ru a/uppsrc/CtrlLib/Button.cpp b/uppsrc/CtrlLib/Button.cpp
  	LLOG("Mouse move !");
  	if(IsReadOnly() || !HasCapture()) return;
  	bool b = GetScreenView().Contains(GetMousePos());
-diff -ru a/uppsrc/CtrlLib/Ch.cpp b/uppsrc/CtrlLib/Ch.cpp
---- a/uppsrc/CtrlLib/Ch.cpp	2026-10-20 13:03:35.986463894 -0700
-+++ b/uppsrc/CtrlLib/Ch.cpp	2026-10-20 13:03:35.986463894 -0700
+diff -ruN a/uppsrc/CtrlLib/Ch.cpp b/uppsrc/CtrlLib/Ch.cpp
+--- a/uppsrc/CtrlLib/Ch.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/Ch.cpp	2026-10-20 14:35:19.988812379 -0700
 @@ -381,7 +381,7 @@
  	return n ? Color(r / n, g / n, b / n) : SWhite();
  }
@@ -1611,9 +1629,9 @@ diff -ru a/uppsrc/CtrlLib/Ch.cpp b/uppsrc/CtrlLib/Ch.cpp
  {
  	return AvgColor(m, Rect(m.GetSize()).Deflated(margin));
  }
-diff -ru a/uppsrc/CtrlLib/ColorPopup.cpp b/uppsrc/CtrlLib/ColorPopup.cpp
---- a/uppsrc/CtrlLib/ColorPopup.cpp	2026-10-20 13:03:35.988463895 -0700
-+++ b/uppsrc/CtrlLib/ColorPopup.cpp	2026-10-20 13:03:35.989463896 -0700
+diff -ruN a/uppsrc/CtrlLib/ColorPopup.cpp b/uppsrc/CtrlLib/ColorPopup.cpp
+--- a/uppsrc/CtrlLib/ColorPopup.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/ColorPopup.cpp	2026-10-20 14:35:19.988812379 -0700
 @@ -293,17 +293,17 @@
  		WhenCancel();
  }
@@ -1635,9 +1653,9 @@ diff -ru a/uppsrc/CtrlLib/ColorPopup.cpp b/uppsrc/CtrlLib/ColorPopup.cpp
  {
  	if(key == K_ESCAPE)	{
  		Close();
-diff -ru a/uppsrc/CtrlLib/ColorPusher.cpp b/uppsrc/CtrlLib/ColorPusher.cpp
---- a/uppsrc/CtrlLib/ColorPusher.cpp	2026-10-20 13:03:35.991463897 -0700
-+++ b/uppsrc/CtrlLib/ColorPusher.cpp	2026-10-20 13:03:35.992463898 -0700
+diff -ruN a/uppsrc/CtrlLib/ColorPusher.cpp b/uppsrc/CtrlLib/ColorPusher.cpp
+--- a/uppsrc/CtrlLib/ColorPusher.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/ColorPusher.cpp	2026-10-20 14:35:19.988812379 -0700
 @@ -38,7 +38,7 @@
  		DrawFocus(w, GetSize());
  }
@@ -1656,9 +1674,9 @@ diff -ru a/uppsrc/CtrlLib/ColorPusher.cpp b/uppsrc/CtrlLib/ColorPusher.cpp
  {
  	Refresh();
  }
-diff -ru a/uppsrc/CtrlLib/ColumnList.cpp b/uppsrc/CtrlLib/ColumnList.cpp
---- a/uppsrc/CtrlLib/ColumnList.cpp	2026-10-20 13:03:35.994463899 -0700
-+++ b/uppsrc/CtrlLib/ColumnList.cpp	2026-10-20 13:03:35.995463900 -0700
+diff -ruN a/uppsrc/CtrlLib/ColumnList.cpp b/uppsrc/CtrlLib/ColumnList.cpp
+--- a/uppsrc/CtrlLib/ColumnList.cpp	2026-10-20 14:35:19.835812274 -0700
++++ b/uppsrc/CtrlLib/ColumnList.cpp	2026-10-20 14:35:19.988812379 -0700
 @@ -2,7 +2,7 @@
  
  namespace Upp {
@@ -1693,9 +1711,9 @@ diff -ru a/uppsrc/CtrlLib/ColumnList.cpp b/uppsrc/CtrlLib/ColumnList.cpp
  	int c = cursor;
  	bool sel = (_key & K_SHIFT) && multi;
  	int key = _key & ~K_SHIFT;
-diff -ru a/uppsrc/CtrlLib/DateTimeCtrl.cpp b/uppsrc/CtrlLib/DateTimeCtrl.cpp
---- a/uppsrc/CtrlLib/DateTimeCtrl.cpp	2026-10-20 13:03:35.997463901 -0700
-+++ b/uppsrc/CtrlLib/DateTimeCtrl.cpp	2026-10-20 13:03:35.997463901 -0700
+diff -ruN a/uppsrc/CtrlLib/DateTimeCtrl.cpp b/uppsrc/CtrlLib/DateTimeCtrl.cpp
+--- a/uppsrc/CtrlLib/DateTimeCtrl.cpp	2026-10-20 14:35:19.839812277 -0700
++++ b/uppsrc/CtrlLib/DateTimeCtrl.cpp	2026-10-20 14:35:19.988812379 -0700
 @@ -200,7 +200,7 @@
  	return weeknum;
  }
@@ -1809,9 +1827,9 @@ diff -ru a/uppsrc/CtrlLib/DateTimeCtrl.cpp b/uppsrc/CtrlLib/DateTimeCtrl.cpp
  {
  	if(selected)
  		WhenAction();
-diff -ru a/uppsrc/CtrlLib/DateTimeCtrl.h b/uppsrc/CtrlLib/DateTimeCtrl.h
---- a/uppsrc/CtrlLib/DateTimeCtrl.h	2026-10-20 13:03:35.999463903 -0700
-+++ b/uppsrc/CtrlLib/DateTimeCtrl.h	2026-10-20 13:03:36.000463903 -0700
+diff -ruN a/uppsrc/CtrlLib/DateTimeCtrl.h b/uppsrc/CtrlLib/DateTimeCtrl.h
+--- a/uppsrc/CtrlLib/DateTimeCtrl.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/DateTimeCtrl.h	2026-10-20 14:35:19.988812379 -0700
 @@ -533,7 +533,7 @@
  	DateTimeCtrl& Colon(bool b = true)                             { cc.clock.Colon(b); return *this; }
  	DateTimeCtrl& NoColon()                                        { cc.clock.Colon(false); return *this; }
@@ -1821,30 +1839,9 @@ diff -ru a/uppsrc/CtrlLib/DateTimeCtrl.h b/uppsrc/CtrlLib/DateTimeCtrl.h
  	DateTimeCtrl& NoOneButton()                                    { cc.calendar.OneButton(false); return *this; }
  	DateTimeCtrl& DayEnd(bool b = true)                            { ConvertTime::DayEnd(b); return *this; }
  	DateTimeCtrl& TimeAlways(bool b = true)                        { ConvertTime::TimeAlways(b); return *this; }
-diff -ru a/uppsrc/CtrlLib/DisplayPopup.cpp b/uppsrc/CtrlLib/DisplayPopup.cpp
---- a/uppsrc/CtrlLib/DisplayPopup.cpp	2026-10-20 13:03:36.002463904 -0700
-+++ b/uppsrc/CtrlLib/DisplayPopup.cpp	2026-10-20 13:03:36.003463905 -0700
-@@ -23,7 +23,7 @@
- 	}
- }
- 
--void DisplayPopup::PaintHook(Ctrl *tw, Draw& w, const Rect& clip)
-+void DisplayPopup::PaintHook(Ctrl *tw, Draw& w, const Rect& /*clip*/)
- {
- 	if(ctrl && tw && !IsNull(screen_rect) && ctrl->HasMouseDeep() &&
- 	   (tw == ctrl->GetTopCtrl() || tw == ctrl->GetTopCtrl()->GetOwner())) {
-@@ -104,7 +104,7 @@
- }
- 
- 
--bool DisplayPopup::MouseHook(Ctrl *, bool, int event, Point, int, dword)
-+bool DisplayPopup::MouseHook(Ctrl *, bool, int /*event*/, Point, int, dword)
- {
- 	Sync();
- 	return false;
-diff -ru a/uppsrc/CtrlLib/DlgColor.cpp b/uppsrc/CtrlLib/DlgColor.cpp
---- a/uppsrc/CtrlLib/DlgColor.cpp	2026-10-20 13:03:36.005463907 -0700
-+++ b/uppsrc/CtrlLib/DlgColor.cpp	2026-10-20 13:03:36.005463907 -0700
+diff -ruN a/uppsrc/CtrlLib/DlgColor.cpp b/uppsrc/CtrlLib/DlgColor.cpp
+--- a/uppsrc/CtrlLib/DlgColor.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/DlgColor.cpp	2026-10-20 14:35:19.988812379 -0700
 @@ -300,7 +300,7 @@
  		SetColor(value, true, true);
  }
@@ -1890,9 +1887,9 @@ diff -ru a/uppsrc/CtrlLib/DlgColor.cpp b/uppsrc/CtrlLib/DlgColor.cpp
  {
  	int level = ClientToLevel16(pt.y);
  	if(pt.x <= rect[0].right)
-diff -ru a/uppsrc/CtrlLib/DocEdit.cpp b/uppsrc/CtrlLib/DocEdit.cpp
---- a/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 13:03:36.008463909 -0700
-+++ b/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 13:03:36.008463909 -0700
+diff -ruN a/uppsrc/CtrlLib/DocEdit.cpp b/uppsrc/CtrlLib/DocEdit.cpp
+--- a/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 14:35:19.839812277 -0700
++++ b/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 14:35:19.988812379 -0700
 @@ -2,7 +2,7 @@
  
  namespace Upp {
@@ -1929,9 +1926,9 @@ diff -ru a/uppsrc/CtrlLib/DocEdit.cpp b/uppsrc/CtrlLib/DocEdit.cpp
  {
  	int c = GetMousePos(p);
  	int l, h;
-diff -ru a/uppsrc/CtrlLib/DropChoice.h b/uppsrc/CtrlLib/DropChoice.h
---- a/uppsrc/CtrlLib/DropChoice.h	2026-10-20 13:03:36.011463911 -0700
-+++ b/uppsrc/CtrlLib/DropChoice.h	2026-10-20 13:03:36.011463911 -0700
+diff -ruN a/uppsrc/CtrlLib/DropChoice.h b/uppsrc/CtrlLib/DropChoice.h
+--- a/uppsrc/CtrlLib/DropChoice.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/DropChoice.h	2026-10-20 14:35:19.988812379 -0700
 @@ -398,7 +398,7 @@
  }
  
@@ -1941,9 +1938,9 @@ diff -ru a/uppsrc/CtrlLib/DropChoice.h b/uppsrc/CtrlLib/DropChoice.h
  {
  	if(withwheel)
  		select.DoWheel(zdelta);
-diff -ru a/uppsrc/CtrlLib/EditCtrl.h b/uppsrc/CtrlLib/EditCtrl.h
---- a/uppsrc/CtrlLib/EditCtrl.h	2026-10-20 13:03:36.014463913 -0700
-+++ b/uppsrc/CtrlLib/EditCtrl.h	2026-10-20 13:03:36.015463913 -0700
+diff -ruN a/uppsrc/CtrlLib/EditCtrl.h b/uppsrc/CtrlLib/EditCtrl.h
+--- a/uppsrc/CtrlLib/EditCtrl.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/EditCtrl.h	2026-10-20 14:35:19.994812383 -0700
 @@ -142,7 +142,7 @@
  	bool    FrameIsEdge();
  	void    SetEdge(int i);
@@ -1962,9 +1959,9 @@ diff -ru a/uppsrc/CtrlLib/EditCtrl.h b/uppsrc/CtrlLib/EditCtrl.h
  {
  	value += inc;
  }
-diff -ru a/uppsrc/CtrlLib/EditCtrl.hpp b/uppsrc/CtrlLib/EditCtrl.hpp
---- a/uppsrc/CtrlLib/EditCtrl.hpp	2026-10-20 13:03:36.017463915 -0700
-+++ b/uppsrc/CtrlLib/EditCtrl.hpp	2026-10-20 13:03:36.018463915 -0700
+diff -ruN a/uppsrc/CtrlLib/EditCtrl.hpp b/uppsrc/CtrlLib/EditCtrl.hpp
+--- a/uppsrc/CtrlLib/EditCtrl.hpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/EditCtrl.hpp	2026-10-20 14:35:19.994812383 -0700
 @@ -13,7 +13,7 @@
  }
  
@@ -1974,9 +1971,9 @@ diff -ru a/uppsrc/CtrlLib/EditCtrl.hpp b/uppsrc/CtrlLib/EditCtrl.hpp
  :	inc(WithSpin_DefaultIncValue<IncType>())
  {
  	Base::MinMax(min, max);
-diff -ru a/uppsrc/CtrlLib/EditField.cpp b/uppsrc/CtrlLib/EditField.cpp
---- a/uppsrc/CtrlLib/EditField.cpp	2026-10-20 13:03:36.019463916 -0700
-+++ b/uppsrc/CtrlLib/EditField.cpp	2026-10-20 13:03:36.020463917 -0700
+diff -ruN a/uppsrc/CtrlLib/EditField.cpp b/uppsrc/CtrlLib/EditField.cpp
+--- a/uppsrc/CtrlLib/EditField.cpp	2026-10-20 14:35:19.839812277 -0700
++++ b/uppsrc/CtrlLib/EditField.cpp	2026-10-20 14:35:19.994812383 -0700
 @@ -120,7 +120,7 @@
  	RefreshFrame();
  }
@@ -2056,9 +2053,9 @@ diff -ru a/uppsrc/CtrlLib/EditField.cpp b/uppsrc/CtrlLib/EditField.cpp
  {
  	keep_selection = true;
  	Ptr<EditField> self = this;
-diff -ru a/uppsrc/CtrlLib/FileList.cpp b/uppsrc/CtrlLib/FileList.cpp
---- a/uppsrc/CtrlLib/FileList.cpp	2026-10-20 13:03:36.022463918 -0700
-+++ b/uppsrc/CtrlLib/FileList.cpp	2026-10-20 13:03:36.022463918 -0700
+diff -ruN a/uppsrc/CtrlLib/FileList.cpp b/uppsrc/CtrlLib/FileList.cpp
+--- a/uppsrc/CtrlLib/FileList.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/FileList.cpp	2026-10-20 14:35:19.994812383 -0700
 @@ -33,7 +33,7 @@
  	return NULL;
  }
@@ -2077,9 +2074,9 @@ diff -ru a/uppsrc/CtrlLib/FileList.cpp b/uppsrc/CtrlLib/FileList.cpp
  {
  	const File& m = ValueTo<File>(q);
  	bool inv = ((style & Display::SELECT) || (style & Display::CURSOR)) && (style & Display::FOCUS);
-diff -ru a/uppsrc/CtrlLib/FileSel.cpp b/uppsrc/CtrlLib/FileSel.cpp
---- a/uppsrc/CtrlLib/FileSel.cpp	2026-10-20 13:03:36.024463920 -0700
-+++ b/uppsrc/CtrlLib/FileSel.cpp	2026-10-20 13:03:36.025463920 -0700
+diff -ruN a/uppsrc/CtrlLib/FileSel.cpp b/uppsrc/CtrlLib/FileSel.cpp
+--- a/uppsrc/CtrlLib/FileSel.cpp	2026-10-20 14:35:19.840812278 -0700
++++ b/uppsrc/CtrlLib/FileSel.cpp	2026-10-20 14:35:19.994812383 -0700
 @@ -503,7 +503,7 @@
  
  bool Load(FileList& list, const String& dir, const char *patterns, bool dirs,
@@ -2143,9 +2140,9 @@ diff -ru a/uppsrc/CtrlLib/FileSel.cpp b/uppsrc/CtrlLib/FileSel.cpp
  	{
  		w.DrawRect(r, paper);
  		ValueArray va = q;
-diff -ru a/uppsrc/CtrlLib/FrameSplitter.cpp b/uppsrc/CtrlLib/FrameSplitter.cpp
---- a/uppsrc/CtrlLib/FrameSplitter.cpp	2026-10-20 13:03:36.027463921 -0700
-+++ b/uppsrc/CtrlLib/FrameSplitter.cpp	2026-10-20 13:03:36.027463921 -0700
+diff -ruN a/uppsrc/CtrlLib/FrameSplitter.cpp b/uppsrc/CtrlLib/FrameSplitter.cpp
+--- a/uppsrc/CtrlLib/FrameSplitter.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/FrameSplitter.cpp	2026-10-20 14:35:19.994812383 -0700
 @@ -66,7 +66,7 @@
  		Splitter::PaintDots(draw, r, !horz);
  }
@@ -2180,9 +2177,9 @@ diff -ru a/uppsrc/CtrlLib/FrameSplitter.cpp b/uppsrc/CtrlLib/FrameSplitter.cpp
  {
  	return type == LEFT || type == RIGHT ? Image::SizeHorz() : Image::SizeVert();
  }
-diff -ru a/uppsrc/CtrlLib/HeaderCtrl.cpp b/uppsrc/CtrlLib/HeaderCtrl.cpp
---- a/uppsrc/CtrlLib/HeaderCtrl.cpp	2026-10-20 13:03:36.029463923 -0700
-+++ b/uppsrc/CtrlLib/HeaderCtrl.cpp	2026-10-20 13:03:36.030463924 -0700
+diff -ruN a/uppsrc/CtrlLib/HeaderCtrl.cpp b/uppsrc/CtrlLib/HeaderCtrl.cpp
+--- a/uppsrc/CtrlLib/HeaderCtrl.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/HeaderCtrl.cpp	2026-10-20 14:35:19.994812383 -0700
 @@ -534,7 +534,7 @@
  	                                  : CtrlImg::HorzPos();
  }
@@ -2219,9 +2216,9 @@ diff -ru a/uppsrc/CtrlLib/HeaderCtrl.cpp b/uppsrc/CtrlLib/HeaderCtrl.cpp
  {
  	if(li < 0 || !moving) return;
  	int n = 0;
-diff -ru a/uppsrc/CtrlLib/Help.cpp b/uppsrc/CtrlLib/Help.cpp
---- a/uppsrc/CtrlLib/Help.cpp	2026-10-20 13:03:36.032463925 -0700
-+++ b/uppsrc/CtrlLib/Help.cpp	2026-10-20 13:03:36.033463926 -0700
+diff -ruN a/uppsrc/CtrlLib/Help.cpp b/uppsrc/CtrlLib/Help.cpp
+--- a/uppsrc/CtrlLib/Help.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/Help.cpp	2026-10-20 14:35:19.994812383 -0700
 @@ -7,10 +7,10 @@
  	return GetTopic(topic);
  }
@@ -2235,9 +2232,9 @@ diff -ru a/uppsrc/CtrlLib/Help.cpp b/uppsrc/CtrlLib/Help.cpp
  {}
  
  bool HelpWindow::GoTo0(const String& link)
-diff -ru a/uppsrc/CtrlLib/LineEdit.cpp b/uppsrc/CtrlLib/LineEdit.cpp
---- a/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 13:03:36.036463927 -0700
-+++ b/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 13:03:36.036463927 -0700
+diff -ruN a/uppsrc/CtrlLib/LineEdit.cpp b/uppsrc/CtrlLib/LineEdit.cpp
+--- a/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 14:35:19.842812279 -0700
++++ b/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 14:35:19.995812383 -0700
 @@ -170,7 +170,7 @@
  		RemoveRectSelection();
  	int64 p = -1; // position after insertion, because of '\t' and double size chars cannot do just left+text.GetCount()
@@ -2307,9 +2304,9 @@ diff -ru a/uppsrc/CtrlLib/LineEdit.cpp b/uppsrc/CtrlLib/LineEdit.cpp
  {
  	int64 c = GetMousePos(p);
  	int64 l, h;
-diff -ru a/uppsrc/CtrlLib/MenuBar.cpp b/uppsrc/CtrlLib/MenuBar.cpp
---- a/uppsrc/CtrlLib/MenuBar.cpp	2026-10-20 13:03:36.038463929 -0700
-+++ b/uppsrc/CtrlLib/MenuBar.cpp	2026-10-20 13:03:36.039463930 -0700
+diff -ruN a/uppsrc/CtrlLib/MenuBar.cpp b/uppsrc/CtrlLib/MenuBar.cpp
+--- a/uppsrc/CtrlLib/MenuBar.cpp	2026-10-20 14:35:19.842812279 -0700
++++ b/uppsrc/CtrlLib/MenuBar.cpp	2026-10-20 14:35:19.995812383 -0700
 @@ -303,22 +303,22 @@
  
  static bool s_doaltkey;
@@ -2346,9 +2343,9 @@ diff -ru a/uppsrc/CtrlLib/MenuBar.cpp b/uppsrc/CtrlLib/MenuBar.cpp
  {
  	LLOG("KEY " << GetKeyDesc(key));
  	bool horz = IsChild();
-diff -ru a/uppsrc/CtrlLib/MenuItem.cpp b/uppsrc/CtrlLib/MenuItem.cpp
---- a/uppsrc/CtrlLib/MenuItem.cpp	2026-10-20 13:03:36.041463931 -0700
-+++ b/uppsrc/CtrlLib/MenuItem.cpp	2026-10-20 13:03:36.041463931 -0700
+diff -ruN a/uppsrc/CtrlLib/MenuItem.cpp b/uppsrc/CtrlLib/MenuItem.cpp
+--- a/uppsrc/CtrlLib/MenuItem.cpp	2026-10-20 14:35:19.842812279 -0700
++++ b/uppsrc/CtrlLib/MenuItem.cpp	2026-10-20 14:35:19.995812383 -0700
 @@ -59,7 +59,7 @@
  	return *this;
  }
@@ -2394,9 +2391,9 @@ diff -ru a/uppsrc/CtrlLib/MenuItem.cpp b/uppsrc/CtrlLib/MenuItem.cpp
  {
  	if(isenabled && key == K_ENTER) {
  		Action();
-diff -ru a/uppsrc/CtrlLib/MultiButton.cpp b/uppsrc/CtrlLib/MultiButton.cpp
---- a/uppsrc/CtrlLib/MultiButton.cpp	2026-10-20 13:03:36.043463932 -0700
-+++ b/uppsrc/CtrlLib/MultiButton.cpp	2026-10-20 13:03:36.044463933 -0700
+diff -ruN a/uppsrc/CtrlLib/MultiButton.cpp b/uppsrc/CtrlLib/MultiButton.cpp
+--- a/uppsrc/CtrlLib/MultiButton.cpp	2026-10-20 14:35:19.842812279 -0700
++++ b/uppsrc/CtrlLib/MultiButton.cpp	2026-10-20 14:35:19.995812383 -0700
 @@ -648,7 +648,7 @@
  		Button(i).WhenPush();
  }
@@ -2415,9 +2412,9 @@ diff -ru a/uppsrc/CtrlLib/MultiButton.cpp b/uppsrc/CtrlLib/MultiButton.cpp
  {
  	push = false;
  	Refresh();
-diff -ru a/uppsrc/CtrlLib/RichTextView.cpp b/uppsrc/CtrlLib/RichTextView.cpp
---- a/uppsrc/CtrlLib/RichTextView.cpp	2026-10-20 13:03:36.046463934 -0700
-+++ b/uppsrc/CtrlLib/RichTextView.cpp	2026-10-20 13:03:36.046463934 -0700
+diff -ruN a/uppsrc/CtrlLib/RichTextView.cpp b/uppsrc/CtrlLib/RichTextView.cpp
+--- a/uppsrc/CtrlLib/RichTextView.cpp	2026-10-20 14:35:19.843812280 -0700
++++ b/uppsrc/CtrlLib/RichTextView.cpp	2026-10-20 14:35:19.995812383 -0700
 @@ -79,7 +79,7 @@
  	sb.SetPage((GetSize().cy - margin.top - margin.bottom) / GetZoom());
  }
@@ -2479,9 +2476,9 @@ diff -ru a/uppsrc/CtrlLib/RichTextView.cpp b/uppsrc/CtrlLib/RichTextView.cpp
  {
  	int pos = GetPointPos(p);
  	WhenMouseMove(pos);
-diff -ru a/uppsrc/CtrlLib/ScrollBar.cpp b/uppsrc/CtrlLib/ScrollBar.cpp
---- a/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-20 13:03:36.048463936 -0700
-+++ b/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-20 13:03:36.048463936 -0700
+diff -ruN a/uppsrc/CtrlLib/ScrollBar.cpp b/uppsrc/CtrlLib/ScrollBar.cpp
+--- a/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-20 14:35:20.001812387 -0700
 @@ -95,7 +95,7 @@
  	return Null;
  }
@@ -2551,9 +2548,9 @@ diff -ru a/uppsrc/CtrlLib/ScrollBar.cpp b/uppsrc/CtrlLib/ScrollBar.cpp
  {
  	TopWindow *q = dynamic_cast<TopWindow *>(GetTopCtrl());
  	if(q && !q->IsMaximized() && q->IsSizeable())
-diff -ru a/uppsrc/CtrlLib/ScrollBar.h b/uppsrc/CtrlLib/ScrollBar.h
---- a/uppsrc/CtrlLib/ScrollBar.h	2026-10-20 13:03:36.051463938 -0700
-+++ b/uppsrc/CtrlLib/ScrollBar.h	2026-10-20 13:03:36.051463938 -0700
+diff -ruN a/uppsrc/CtrlLib/ScrollBar.h b/uppsrc/CtrlLib/ScrollBar.h
+--- a/uppsrc/CtrlLib/ScrollBar.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/ScrollBar.h	2026-10-20 14:35:20.001812387 -0700
 @@ -131,7 +131,7 @@
  	ScrollBar& Track(bool b = true)         { track = b; return *this; }
  	ScrollBar& NoTrack()                    { return Track(false); }
@@ -2572,9 +2569,9 @@ diff -ru a/uppsrc/CtrlLib/ScrollBar.h b/uppsrc/CtrlLib/ScrollBar.h
  	ScrollBars& AutoHide(bool b = true);
  	ScrollBars& NoAutoHide()                         { return AutoHide(false); }
  	ScrollBars& AutoDisable(bool b = true);
-diff -ru a/uppsrc/CtrlLib/SliderCtrl.cpp b/uppsrc/CtrlLib/SliderCtrl.cpp
---- a/uppsrc/CtrlLib/SliderCtrl.cpp	2026-10-20 13:03:36.053463939 -0700
-+++ b/uppsrc/CtrlLib/SliderCtrl.cpp	2026-10-20 13:03:36.054463940 -0700
+diff -ruN a/uppsrc/CtrlLib/SliderCtrl.cpp b/uppsrc/CtrlLib/SliderCtrl.cpp
+--- a/uppsrc/CtrlLib/SliderCtrl.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/SliderCtrl.cpp	2026-10-20 14:35:20.001812387 -0700
 @@ -108,7 +108,7 @@
  	return Ctrl::Key(key, repcnt);
  }
@@ -2611,9 +2608,9 @@ diff -ru a/uppsrc/CtrlLib/SliderCtrl.cpp b/uppsrc/CtrlLib/SliderCtrl.cpp
  {
  	Refresh();
  }
-diff -ru a/uppsrc/CtrlLib/SmartText.cpp b/uppsrc/CtrlLib/SmartText.cpp
---- a/uppsrc/CtrlLib/SmartText.cpp	2026-10-20 13:03:36.056463941 -0700
-+++ b/uppsrc/CtrlLib/SmartText.cpp	2026-10-20 13:03:36.056463941 -0700
+diff -ruN a/uppsrc/CtrlLib/SmartText.cpp b/uppsrc/CtrlLib/SmartText.cpp
+--- a/uppsrc/CtrlLib/SmartText.cpp	2026-10-20 14:35:19.843812280 -0700
++++ b/uppsrc/CtrlLib/SmartText.cpp	2026-10-20 14:35:20.001812387 -0700
 @@ -62,7 +62,7 @@
  	void OffsetOp(Point p) override;
  	bool ClipOp(const Rect& r) override;
@@ -2641,9 +2638,9 @@ diff -ru a/uppsrc/CtrlLib/SmartText.cpp b/uppsrc/CtrlLib/SmartText.cpp
  {
  	Transform(x, y, cx, cy);
  	Image m = AdjustImage(img, clockwise ? RotateClockwise : RotateAntiClockwise);
-diff -ru a/uppsrc/CtrlLib/Splitter.cpp b/uppsrc/CtrlLib/Splitter.cpp
---- a/uppsrc/CtrlLib/Splitter.cpp	2026-10-20 13:03:36.059463943 -0700
-+++ b/uppsrc/CtrlLib/Splitter.cpp	2026-10-20 13:03:36.059463943 -0700
+diff -ruN a/uppsrc/CtrlLib/Splitter.cpp b/uppsrc/CtrlLib/Splitter.cpp
+--- a/uppsrc/CtrlLib/Splitter.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/Splitter.cpp	2026-10-20 14:35:20.001812387 -0700
 @@ -136,7 +136,7 @@
  	return best;
  }
@@ -2653,9 +2650,9 @@ diff -ru a/uppsrc/CtrlLib/Splitter.cpp b/uppsrc/CtrlLib/Splitter.cpp
  	if(HasCapture())
  		WhenSplitFinish();
  	ReleaseCapture();
-diff -ru a/uppsrc/CtrlLib/StatusBar.cpp b/uppsrc/CtrlLib/StatusBar.cpp
---- a/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 13:03:36.061463944 -0700
-+++ b/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 13:03:36.062463945 -0700
+diff -ruN a/uppsrc/CtrlLib/StatusBar.cpp b/uppsrc/CtrlLib/StatusBar.cpp
+--- a/uppsrc/CtrlLib/StatusBar.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 14:35:20.002812388 -0700
 @@ -124,7 +124,7 @@
  class VCenterDisplay : public Display
  {
@@ -2674,9 +2671,9 @@ diff -ru a/uppsrc/CtrlLib/StatusBar.cpp b/uppsrc/CtrlLib/StatusBar.cpp
  {
  	Rect r = _r;
  	r.top += 1;
-diff -ru a/uppsrc/CtrlLib/Switch.cpp b/uppsrc/CtrlLib/Switch.cpp
---- a/uppsrc/CtrlLib/Switch.cpp	2026-10-20 13:03:36.064463946 -0700
-+++ b/uppsrc/CtrlLib/Switch.cpp	2026-10-20 13:03:36.065463947 -0700
+diff -ruN a/uppsrc/CtrlLib/Switch.cpp b/uppsrc/CtrlLib/Switch.cpp
+--- a/uppsrc/CtrlLib/Switch.cpp	2026-10-20 14:35:19.847812282 -0700
++++ b/uppsrc/CtrlLib/Switch.cpp	2026-10-20 14:35:20.002812388 -0700
 @@ -20,7 +20,7 @@
  	return *this;
  }
@@ -2695,10 +2692,10 @@ diff -ru a/uppsrc/CtrlLib/Switch.cpp b/uppsrc/CtrlLib/Switch.cpp
  	if(IsReadOnly()) return;
  	if(pushindex >= 0 && pushindex < cs.GetCount()) {
  		const Value& v = cs[pushindex].value;
-diff -ru a/uppsrc/CtrlLib/TabCtrl.cpp b/uppsrc/CtrlLib/TabCtrl.cpp
---- a/uppsrc/CtrlLib/TabCtrl.cpp	2026-10-20 13:03:36.067463948 -0700
-+++ b/uppsrc/CtrlLib/TabCtrl.cpp	2026-10-20 13:03:36.068463949 -0700
-@@ -248,12 +248,12 @@
+diff -ruN a/uppsrc/CtrlLib/TabCtrl.cpp b/uppsrc/CtrlLib/TabCtrl.cpp
+--- a/uppsrc/CtrlLib/TabCtrl.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/TabCtrl.cpp	2026-10-20 14:35:20.002812388 -0700
+@@ -244,12 +244,12 @@
  		hot = -1;
  }
  
@@ -2713,9 +2710,9 @@ diff -ru a/uppsrc/CtrlLib/TabCtrl.cpp b/uppsrc/CtrlLib/TabCtrl.cpp
  {
  	if(!IsEditable())
  		return;
-diff -ru a/uppsrc/CtrlLib/Text.cpp b/uppsrc/CtrlLib/Text.cpp
---- a/uppsrc/CtrlLib/Text.cpp	2026-10-20 13:03:36.070463951 -0700
-+++ b/uppsrc/CtrlLib/Text.cpp	2026-10-20 13:03:36.070463951 -0700
+diff -ruN a/uppsrc/CtrlLib/Text.cpp b/uppsrc/CtrlLib/Text.cpp
+--- a/uppsrc/CtrlLib/Text.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/Text.cpp	2026-10-20 14:35:20.002812388 -0700
 @@ -88,23 +88,23 @@
  	Refresh();
  }
@@ -2751,9 +2748,9 @@ diff -ru a/uppsrc/CtrlLib/Text.cpp b/uppsrc/CtrlLib/Text.cpp
  
  void   TextCtrl::CachePos(int64 pos)
  {
-diff -ru a/uppsrc/CtrlLib/ToolTip.cpp b/uppsrc/CtrlLib/ToolTip.cpp
---- a/uppsrc/CtrlLib/ToolTip.cpp	2026-10-20 13:03:36.072463952 -0700
-+++ b/uppsrc/CtrlLib/ToolTip.cpp	2026-10-20 13:03:36.073463953 -0700
+diff -ruN a/uppsrc/CtrlLib/ToolTip.cpp b/uppsrc/CtrlLib/ToolTip.cpp
+--- a/uppsrc/CtrlLib/ToolTip.cpp	2026-10-20 14:35:19.847812282 -0700
++++ b/uppsrc/CtrlLib/ToolTip.cpp	2026-10-20 14:35:20.002812388 -0700
 @@ -106,7 +106,7 @@
  	}
  }
@@ -2763,9 +2760,9 @@ diff -ru a/uppsrc/CtrlLib/ToolTip.cpp b/uppsrc/CtrlLib/ToolTip.cpp
  {
  	if(event == Ctrl::MOUSEMOVE && ctrl != &AppToolTip())
  	{
-diff -ru a/uppsrc/CtrlLib/TrayIconGtk.cpp b/uppsrc/CtrlLib/TrayIconGtk.cpp
---- a/uppsrc/CtrlLib/TrayIconGtk.cpp	2026-10-20 13:03:36.075463954 -0700
-+++ b/uppsrc/CtrlLib/TrayIconGtk.cpp	2026-10-20 13:03:36.075463954 -0700
+diff -ruN a/uppsrc/CtrlLib/TrayIconGtk.cpp b/uppsrc/CtrlLib/TrayIconGtk.cpp
+--- a/uppsrc/CtrlLib/TrayIconGtk.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/TrayIconGtk.cpp	2026-10-20 14:35:20.002812388 -0700
 @@ -54,7 +54,7 @@
  	((TrayIcon *)user_data)->ExecuteMenu();
  }
@@ -2775,9 +2772,9 @@ diff -ru a/uppsrc/CtrlLib/TrayIconGtk.cpp b/uppsrc/CtrlLib/TrayIconGtk.cpp
  {
  	((TrayIcon *)user_data)->LeftDown();
  	((TrayIcon *)user_data)->LeftDouble();
-diff -ru a/uppsrc/CtrlLib/TreeCtrl.cpp b/uppsrc/CtrlLib/TreeCtrl.cpp
---- a/uppsrc/CtrlLib/TreeCtrl.cpp	2026-10-20 13:03:36.077463955 -0700
-+++ b/uppsrc/CtrlLib/TreeCtrl.cpp	2026-10-20 13:03:36.078463956 -0700
+diff -ruN a/uppsrc/CtrlLib/TreeCtrl.cpp b/uppsrc/CtrlLib/TreeCtrl.cpp
+--- a/uppsrc/CtrlLib/TreeCtrl.cpp	2026-10-20 14:35:19.847812282 -0700
++++ b/uppsrc/CtrlLib/TreeCtrl.cpp	2026-10-20 14:35:20.002812388 -0700
 @@ -843,7 +843,7 @@
  	UpdateSelect();
  }
@@ -2814,9 +2811,9 @@ diff -ru a/uppsrc/CtrlLib/TreeCtrl.cpp b/uppsrc/CtrlLib/TreeCtrl.cpp
  {
  }
  
-diff -ru a/uppsrc/CtrlLib/VirtualButtons.cpp b/uppsrc/CtrlLib/VirtualButtons.cpp
---- a/uppsrc/CtrlLib/VirtualButtons.cpp	2026-10-20 13:03:36.080463957 -0700
-+++ b/uppsrc/CtrlLib/VirtualButtons.cpp	2026-10-20 13:03:36.080463957 -0700
+diff -ruN a/uppsrc/CtrlLib/VirtualButtons.cpp b/uppsrc/CtrlLib/VirtualButtons.cpp
+--- a/uppsrc/CtrlLib/VirtualButtons.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/VirtualButtons.cpp	2026-10-20 14:35:20.006812391 -0700
 @@ -3,15 +3,15 @@
  namespace Upp {
  
@@ -2841,9 +2838,9 @@ diff -ru a/uppsrc/CtrlLib/VirtualButtons.cpp b/uppsrc/CtrlLib/VirtualButtons.cpp
  
  int VirtualButtons::FindButton(Point p) const
  {
-diff -ru a/uppsrc/Draw/Display.cpp b/uppsrc/Draw/Display.cpp
---- a/uppsrc/Draw/Display.cpp	2026-10-20 13:03:36.082463958 -0700
-+++ b/uppsrc/Draw/Display.cpp	2026-10-20 13:03:36.083463959 -0700
+diff -ruN a/uppsrc/Draw/Display.cpp b/uppsrc/Draw/Display.cpp
+--- a/uppsrc/Draw/Display.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/Display.cpp	2026-10-20 14:35:20.006812391 -0700
 @@ -90,7 +90,7 @@
  };
  
@@ -2898,9 +2895,9 @@ diff -ru a/uppsrc/Draw/Display.cpp b/uppsrc/Draw/Display.cpp
  	{
  		w.DrawRect(r, paper);
  		Image m = q;
-diff -ru a/uppsrc/Draw/Draw.cpp b/uppsrc/Draw/Draw.cpp
---- a/uppsrc/Draw/Draw.cpp	2026-10-20 13:03:36.085463961 -0700
-+++ b/uppsrc/Draw/Draw.cpp	2026-10-20 13:03:36.086463961 -0700
+diff -ruN a/uppsrc/Draw/Draw.cpp b/uppsrc/Draw/Draw.cpp
+--- a/uppsrc/Draw/Draw.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/Draw.cpp	2026-10-20 14:35:20.006812391 -0700
 @@ -120,11 +120,11 @@
  
  int Draw::GetCloffLevel() const { return 0; }
@@ -2957,9 +2954,9 @@ diff -ru a/uppsrc/Draw/Draw.cpp b/uppsrc/Draw/Draw.cpp
  
  dword DrawProxy::GetInfo() const
  {
-diff -ru a/uppsrc/Draw/DrawData.cpp b/uppsrc/Draw/DrawData.cpp
---- a/uppsrc/Draw/DrawData.cpp	2026-10-20 13:03:36.088463963 -0700
-+++ b/uppsrc/Draw/DrawData.cpp	2026-10-20 13:03:36.088463963 -0700
+diff -ruN a/uppsrc/Draw/DrawData.cpp b/uppsrc/Draw/DrawData.cpp
+--- a/uppsrc/Draw/DrawData.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/DrawData.cpp	2026-10-20 14:35:20.006812391 -0700
 @@ -54,7 +54,7 @@
  }
  #endif
@@ -2969,9 +2966,9 @@ diff -ru a/uppsrc/Draw/DrawData.cpp b/uppsrc/Draw/DrawData.cpp
  { // optimizing for some old printers with limited memory which results in problems with printing e.g. full page image
  	int xi = 0;
  	int cx = m.GetWidth();
-diff -ru a/uppsrc/Draw/Drawing.cpp b/uppsrc/Draw/Drawing.cpp
---- a/uppsrc/Draw/Drawing.cpp	2026-10-20 13:03:36.091463965 -0700
-+++ b/uppsrc/Draw/Drawing.cpp	2026-10-20 13:03:36.091463965 -0700
+diff -ruN a/uppsrc/Draw/Drawing.cpp b/uppsrc/Draw/Drawing.cpp
+--- a/uppsrc/Draw/Drawing.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/Drawing.cpp	2026-10-20 14:35:20.006812391 -0700
 @@ -159,7 +159,7 @@
  	return true;
  }
@@ -2981,9 +2978,9 @@ diff -ru a/uppsrc/Draw/Drawing.cpp b/uppsrc/Draw/Drawing.cpp
  {
  	return true;
  }
-diff -ru a/uppsrc/Draw/DrawText.cpp b/uppsrc/Draw/DrawText.cpp
---- a/uppsrc/Draw/DrawText.cpp	2026-10-20 13:03:36.093463966 -0700
-+++ b/uppsrc/Draw/DrawText.cpp	2026-10-20 13:03:36.094463967 -0700
+diff -ruN a/uppsrc/Draw/DrawText.cpp b/uppsrc/Draw/DrawText.cpp
+--- a/uppsrc/Draw/DrawText.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/DrawText.cpp	2026-10-20 14:35:20.006812391 -0700
 @@ -5,7 +5,7 @@
  #define LLOG(x)    // LOG(x)
  #define LTIMING(x) // TIMING(x)
@@ -2993,9 +2990,9 @@ diff -ru a/uppsrc/Draw/DrawText.cpp b/uppsrc/Draw/DrawText.cpp
  {
  	if(n < 0)
  		n = (int)strlen(s);
-diff -ru a/uppsrc/Draw/DrawTextUtil.cpp b/uppsrc/Draw/DrawTextUtil.cpp
---- a/uppsrc/Draw/DrawTextUtil.cpp	2026-10-20 13:03:36.096463968 -0700
-+++ b/uppsrc/Draw/DrawTextUtil.cpp	2026-10-20 13:03:36.096463968 -0700
+diff -ruN a/uppsrc/Draw/DrawTextUtil.cpp b/uppsrc/Draw/DrawTextUtil.cpp
+--- a/uppsrc/Draw/DrawTextUtil.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/DrawTextUtil.cpp	2026-10-20 14:35:20.006812391 -0700
 @@ -73,7 +73,7 @@
  	return GetTLTextSize(s, font).cy;
  }
@@ -3005,10 +3002,10 @@ diff -ru a/uppsrc/Draw/DrawTextUtil.cpp b/uppsrc/Draw/DrawTextUtil.cpp
                  Font font, Color ink, int accesskey) {
  	int cy = font.GetCy();
  	const wchar *s = text;
-diff -ru a/uppsrc/Draw/Font.cpp b/uppsrc/Draw/Font.cpp
---- a/uppsrc/Draw/Font.cpp	2026-10-20 13:03:36.098463969 -0700
-+++ b/uppsrc/Draw/Font.cpp	2026-10-20 13:03:36.099463970 -0700
-@@ -472,7 +472,7 @@
+diff -ruN a/uppsrc/Draw/Font.cpp b/uppsrc/Draw/Font.cpp
+--- a/uppsrc/Draw/Font.cpp	2026-10-20 14:35:19.847812282 -0700
++++ b/uppsrc/Draw/Font.cpp	2026-10-20 14:35:20.006812391 -0700
+@@ -476,7 +476,7 @@
  	}
  };
  
@@ -3017,9 +3014,9 @@ diff -ru a/uppsrc/Draw/Font.cpp b/uppsrc/Draw/Font.cpp
  {
  	Mutex::Lock __(sFontLock);
  	GlyphInfoMaker m;
-diff -ru a/uppsrc/Draw/ImageOp.cpp b/uppsrc/Draw/ImageOp.cpp
---- a/uppsrc/Draw/ImageOp.cpp	2026-10-20 13:03:36.101463971 -0700
-+++ b/uppsrc/Draw/ImageOp.cpp	2026-10-20 13:03:36.102463972 -0700
+diff -ruN a/uppsrc/Draw/ImageOp.cpp b/uppsrc/Draw/ImageOp.cpp
+--- a/uppsrc/Draw/ImageOp.cpp	2026-10-20 14:35:19.524812062 -0700
++++ b/uppsrc/Draw/ImageOp.cpp	2026-10-20 14:35:20.006812391 -0700
 @@ -82,12 +82,12 @@
  	}
  }
@@ -3053,9 +3050,9 @@ diff -ru a/uppsrc/Draw/ImageOp.cpp b/uppsrc/Draw/ImageOp.cpp
  {
  	DstSrcOp(dest, p, src, srect, AlphaBlendStraightOpaque);
  }
-diff -ru a/uppsrc/Draw/ImageScale.cpp b/uppsrc/Draw/ImageScale.cpp
---- a/uppsrc/Draw/ImageScale.cpp	2026-10-20 13:03:36.104463973 -0700
-+++ b/uppsrc/Draw/ImageScale.cpp	2026-10-20 13:03:36.104463973 -0700
+diff -ruN a/uppsrc/Draw/ImageScale.cpp b/uppsrc/Draw/ImageScale.cpp
+--- a/uppsrc/Draw/ImageScale.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/ImageScale.cpp	2026-10-20 14:35:20.006812391 -0700
 @@ -488,7 +488,7 @@
  	return true;
  }
@@ -3065,9 +3062,9 @@ diff -ru a/uppsrc/Draw/ImageScale.cpp b/uppsrc/Draw/ImageScale.cpp
  {
  	if(src.GetSize() == sz && src_rc == sz)
  		return src;
-diff -ru a/uppsrc/Draw/Iml.cpp b/uppsrc/Draw/Iml.cpp
---- a/uppsrc/Draw/Iml.cpp	2026-10-20 13:03:36.106463975 -0700
-+++ b/uppsrc/Draw/Iml.cpp	2026-10-20 13:03:36.107463975 -0700
+diff -ruN a/uppsrc/Draw/Iml.cpp b/uppsrc/Draw/Iml.cpp
+--- a/uppsrc/Draw/Iml.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/Iml.cpp	2026-10-20 14:35:20.006812391 -0700
 @@ -86,7 +86,7 @@
  	data.Shrink();
  }
@@ -3077,9 +3074,9 @@ diff -ru a/uppsrc/Draw/Iml.cpp b/uppsrc/Draw/Iml.cpp
  {
  	map.Add(name);
  }
-diff -ru a/uppsrc/Draw/Palette.cpp b/uppsrc/Draw/Palette.cpp
---- a/uppsrc/Draw/Palette.cpp	2026-10-20 13:03:36.109463977 -0700
-+++ b/uppsrc/Draw/Palette.cpp	2026-10-20 13:03:36.109463977 -0700
+diff -ruN a/uppsrc/Draw/Palette.cpp b/uppsrc/Draw/Palette.cpp
+--- a/uppsrc/Draw/Palette.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/Palette.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -144,7 +144,7 @@
  	sPalMaker(Raster& raster, RGBA *palette, int ncolors);
  };
@@ -3089,9 +3086,9 @@ diff -ru a/uppsrc/Draw/Palette.cpp b/uppsrc/Draw/Palette.cpp
  {
  	x.colorcount = 0;
  	x.population = 0;
-diff -ru a/uppsrc/Draw/Raster.cpp b/uppsrc/Draw/Raster.cpp
---- a/uppsrc/Draw/Raster.cpp	2026-10-20 13:03:36.111463978 -0700
-+++ b/uppsrc/Draw/Raster.cpp	2026-10-20 13:03:36.112463979 -0700
+diff -ruN a/uppsrc/Draw/Raster.cpp b/uppsrc/Draw/Raster.cpp
+--- a/uppsrc/Draw/Raster.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/Raster.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -17,7 +17,7 @@
  	return NULL;
  }
@@ -3135,9 +3132,9 @@ diff -ru a/uppsrc/Draw/Raster.cpp b/uppsrc/Draw/Raster.cpp
  {
  	return Value();
  }
-diff -ru a/uppsrc/Draw/SDrawClip.cpp b/uppsrc/Draw/SDrawClip.cpp
---- a/uppsrc/Draw/SDrawClip.cpp	2026-10-20 13:03:36.114463980 -0700
-+++ b/uppsrc/Draw/SDrawClip.cpp	2026-10-20 13:03:36.115463981 -0700
+diff -ruN a/uppsrc/Draw/SDrawClip.cpp b/uppsrc/Draw/SDrawClip.cpp
+--- a/uppsrc/Draw/SDrawClip.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/SDrawClip.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -57,7 +57,7 @@
  	return c.clip.GetCount();
  }
@@ -3147,9 +3144,9 @@ diff -ru a/uppsrc/Draw/SDrawClip.cpp b/uppsrc/Draw/SDrawClip.cpp
  {
  	return true;
  }
-diff -ru a/uppsrc/Draw/SDraw.cpp b/uppsrc/Draw/SDraw.cpp
---- a/uppsrc/Draw/SDraw.cpp	2026-10-20 13:03:36.117463982 -0700
-+++ b/uppsrc/Draw/SDraw.cpp	2026-10-20 13:03:36.117463982 -0700
+diff -ruN a/uppsrc/Draw/SDraw.cpp b/uppsrc/Draw/SDraw.cpp
+--- a/uppsrc/Draw/SDraw.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/SDraw.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -7,7 +7,7 @@
  	return DRAWTEXTLINES;
  }
@@ -3168,9 +3165,9 @@ diff -ru a/uppsrc/Draw/SDraw.cpp b/uppsrc/Draw/SDraw.cpp
                                 const int *counts, int count_count, int width, Color color,
                                 Color /*doxor*/) // Last parameter ignored
  {
-diff -ru a/uppsrc/Painter/DrawOp.cpp b/uppsrc/Painter/DrawOp.cpp
---- a/uppsrc/Painter/DrawOp.cpp	2026-10-20 13:03:36.120463984 -0700
-+++ b/uppsrc/Painter/DrawOp.cpp	2026-10-20 13:03:36.120463984 -0700
+diff -ruN a/uppsrc/Painter/DrawOp.cpp b/uppsrc/Painter/DrawOp.cpp
+--- a/uppsrc/Painter/DrawOp.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/DrawOp.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -71,7 +71,7 @@
  	return true;
  }
@@ -3204,9 +3201,9 @@ diff -ru a/uppsrc/Painter/DrawOp.cpp b/uppsrc/Painter/DrawOp.cpp
  {
  	Image fill_img;
  	if(pattern && !IsNull(color)) {
-diff -ru a/uppsrc/Painter/Fillers.cpp b/uppsrc/Painter/Fillers.cpp
---- a/uppsrc/Painter/Fillers.cpp	2026-10-20 13:03:36.122463985 -0700
-+++ b/uppsrc/Painter/Fillers.cpp	2026-10-20 13:03:36.123463986 -0700
+diff -ruN a/uppsrc/Painter/Fillers.cpp b/uppsrc/Painter/Fillers.cpp
+--- a/uppsrc/Painter/Fillers.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/Fillers.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -4,7 +4,7 @@
  
  namespace Upp {
@@ -3238,9 +3235,9 @@ diff -ru a/uppsrc/Painter/Fillers.cpp b/uppsrc/Painter/Fillers.cpp
  };
  
  void MaskFillerFilter::Start(int minx, int maxx)
-diff -ru a/uppsrc/Painter/Painter.cpp b/uppsrc/Painter/Painter.cpp
---- a/uppsrc/Painter/Painter.cpp	2026-10-20 13:03:36.126463988 -0700
-+++ b/uppsrc/Painter/Painter.cpp	2026-10-20 13:03:36.126463988 -0700
+diff -ruN a/uppsrc/Painter/Painter.cpp b/uppsrc/Painter/Painter.cpp
+--- a/uppsrc/Painter/Painter.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/Painter.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -306,43 +306,43 @@
  	return Ellipse(x, y, r, r);
  }
@@ -3318,9 +3315,9 @@ diff -ru a/uppsrc/Painter/Painter.cpp b/uppsrc/Painter/Painter.cpp
  void NilPainter::BeginOp() {}
  void NilPainter::EndOp() {}
  void NilPainter::BeginMaskOp() {}
-diff -ru a/uppsrc/Painter/Render.cpp b/uppsrc/Painter/Render.cpp
---- a/uppsrc/Painter/Render.cpp	2026-10-20 13:03:36.128463990 -0700
-+++ b/uppsrc/Painter/Render.cpp	2026-10-20 13:03:36.129463990 -0700
+diff -ruN a/uppsrc/Painter/Render.cpp b/uppsrc/Painter/Render.cpp
+--- a/uppsrc/Painter/Render.cpp	2026-10-20 14:35:19.851812285 -0700
++++ b/uppsrc/Painter/Render.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -6,7 +6,7 @@
  #define LLOG(x)   // DLOG(x)
  #define LDUMP(x)  // DDUMP(x)
@@ -3330,9 +3327,9 @@ diff -ru a/uppsrc/Painter/Render.cpp b/uppsrc/Painter/Render.cpp
  
  BufferPainter::PathJob::PathJob(Rasterizer& rasterizer, double width, const PathInfo *path_info,
                                  const SimpleAttr& attr, const Rectf& preclip, bool isregular)
-diff -ru a/uppsrc/Painter/Stroker.cpp b/uppsrc/Painter/Stroker.cpp
---- a/uppsrc/Painter/Stroker.cpp	2026-10-20 13:03:36.131463992 -0700
-+++ b/uppsrc/Painter/Stroker.cpp	2026-10-20 13:03:36.131463992 -0700
+diff -ruN a/uppsrc/Painter/Stroker.cpp b/uppsrc/Painter/Stroker.cpp
+--- a/uppsrc/Painter/Stroker.cpp	2026-10-20 14:35:19.851812285 -0700
++++ b/uppsrc/Painter/Stroker.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -138,7 +138,7 @@
  	p2 = p3;
  }
@@ -3342,9 +3339,9 @@ diff -ru a/uppsrc/Painter/Stroker.cpp b/uppsrc/Painter/Stroker.cpp
                    const Pointf& a, const Pointf& b)
  {
  	PutMove(a);
-diff -ru a/uppsrc/Painter/SvgArc.cpp b/uppsrc/Painter/SvgArc.cpp
---- a/uppsrc/Painter/SvgArc.cpp	2026-10-20 13:03:36.133463993 -0700
-+++ b/uppsrc/Painter/SvgArc.cpp	2026-10-20 13:03:36.133463993 -0700
+diff -ruN a/uppsrc/Painter/SvgArc.cpp b/uppsrc/Painter/SvgArc.cpp
+--- a/uppsrc/Painter/SvgArc.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/SvgArc.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -2,7 +2,7 @@
  
  namespace Upp {
@@ -3363,9 +3360,9 @@ diff -ru a/uppsrc/Painter/SvgArc.cpp b/uppsrc/Painter/SvgArc.cpp
  {
  	Xform2D m = Xform2D::Scale(r.x, r.y);
  	m = m * Xform2D::Translation(c.x, c.y);
-diff -ru a/uppsrc/PdfDraw/PdfDraw.cpp b/uppsrc/PdfDraw/PdfDraw.cpp
---- a/uppsrc/PdfDraw/PdfDraw.cpp	2026-10-20 13:03:36.136463995 -0700
-+++ b/uppsrc/PdfDraw/PdfDraw.cpp	2026-10-20 13:03:36.136463995 -0700
+diff -ruN a/uppsrc/PdfDraw/PdfDraw.cpp b/uppsrc/PdfDraw/PdfDraw.cpp
+--- a/uppsrc/PdfDraw/PdfDraw.cpp	2026-10-20 14:35:19.614812123 -0700
++++ b/uppsrc/PdfDraw/PdfDraw.cpp	2026-10-20 14:35:20.011812394 -0700
 @@ -195,7 +195,7 @@
  	return true;
  }
@@ -3408,9 +3405,9 @@ diff -ru a/uppsrc/PdfDraw/PdfDraw.cpp b/uppsrc/PdfDraw/PdfDraw.cpp
  {
  	bool fill = !IsNull(color) && ~pattern, stroke = !IsNull(outline) && !IsNull(width);
  	if(fill)   PutrgColor(color, pattern);
-diff -ru a/uppsrc/PdfDraw/TTFReader.cpp b/uppsrc/PdfDraw/TTFReader.cpp
---- a/uppsrc/PdfDraw/TTFReader.cpp	2026-10-20 13:03:36.138463996 -0700
-+++ b/uppsrc/PdfDraw/TTFReader.cpp	2026-10-20 13:03:36.139463997 -0700
+diff -ruN a/uppsrc/PdfDraw/TTFReader.cpp b/uppsrc/PdfDraw/TTFReader.cpp
+--- a/uppsrc/PdfDraw/TTFReader.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/PdfDraw/TTFReader.cpp	2026-10-20 14:35:20.012812395 -0700
 @@ -102,7 +102,7 @@
  	return font.GetData(tab);
  }
@@ -3420,10 +3417,10 @@ diff -ru a/uppsrc/PdfDraw/TTFReader.cpp b/uppsrc/PdfDraw/TTFReader.cpp
  {
  	try {
  		int i;
-diff -ru a/uppsrc/plugin/sqlite3/Sqlite3upp.cpp b/uppsrc/plugin/sqlite3/Sqlite3upp.cpp
---- a/uppsrc/plugin/sqlite3/Sqlite3upp.cpp	2026-10-20 13:03:36.179464024 -0700
-+++ b/uppsrc/plugin/sqlite3/Sqlite3upp.cpp	2026-10-20 13:03:36.180464025 -0700
-@@ -563,7 +563,7 @@
+diff -ruN a/uppsrc/plugin/sqlite3/Sqlite3upp.cpp b/uppsrc/plugin/sqlite3/Sqlite3upp.cpp
+--- a/uppsrc/plugin/sqlite3/Sqlite3upp.cpp	2026-10-20 14:35:19.851812285 -0700
++++ b/uppsrc/plugin/sqlite3/Sqlite3upp.cpp	2026-10-20 14:35:20.012812395 -0700
+@@ -586,7 +586,7 @@
  
  //////////////////////////////////////////////////////////////////////////
  
@@ -3432,9 +3429,9 @@ diff -ru a/uppsrc/plugin/sqlite3/Sqlite3upp.cpp b/uppsrc/plugin/sqlite3/Sqlite3u
  	Vector<SqlColumnInfo> out;
  	SqlColumnInfo info;
  	String ColType;
-diff -ru a/uppsrc/RichText/Diagram.cpp b/uppsrc/RichText/Diagram.cpp
---- a/uppsrc/RichText/Diagram.cpp	2026-10-20 13:03:36.141463998 -0700
-+++ b/uppsrc/RichText/Diagram.cpp	2026-10-20 13:03:36.141463998 -0700
+diff -ruN a/uppsrc/RichText/Diagram.cpp b/uppsrc/RichText/Diagram.cpp
+--- a/uppsrc/RichText/Diagram.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/Diagram.cpp	2026-10-20 14:35:20.012812395 -0700
 @@ -205,7 +205,7 @@
  	r << ";";
  }
@@ -3444,9 +3441,9 @@ diff -ru a/uppsrc/RichText/Diagram.cpp b/uppsrc/RichText/Diagram.cpp
  {
  	Reset();
  	int q = Shape.Find(p.ReadId());
-diff -ru a/uppsrc/RichText/Object.cpp b/uppsrc/RichText/Object.cpp
---- a/uppsrc/RichText/Object.cpp	2026-10-20 13:03:36.144464000 -0700
-+++ b/uppsrc/RichText/Object.cpp	2026-10-20 13:03:36.144464000 -0700
+diff -ruN a/uppsrc/RichText/Object.cpp b/uppsrc/RichText/Object.cpp
+--- a/uppsrc/RichText/Object.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/Object.cpp	2026-10-20 14:35:20.016812397 -0700
 @@ -27,7 +27,7 @@
  	return sz;
  }
@@ -3546,9 +3543,9 @@ diff -ru a/uppsrc/RichText/Object.cpp b/uppsrc/RichText/Object.cpp
  {
  	RichObject obj(RichObjectTypePNG(), PNGEncoder().SaveString(img));
  	if(!IsNull(out_size))
-diff -ru a/uppsrc/RichText/Para.h b/uppsrc/RichText/Para.h
---- a/uppsrc/RichText/Para.h	2026-10-20 13:03:36.146464002 -0700
-+++ b/uppsrc/RichText/Para.h	2026-10-20 13:03:36.147464002 -0700
+diff -ruN a/uppsrc/RichText/Para.h b/uppsrc/RichText/Para.h
+--- a/uppsrc/RichText/Para.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/Para.h	2026-10-20 14:35:20.016812397 -0700
 @@ -171,8 +171,8 @@
  	struct FieldType {
  		virtual Array<Part> Evaluate(const String& param, VectorMap<String, Value>& vars,
@@ -3560,10 +3557,10 @@ diff -ru a/uppsrc/RichText/Para.h b/uppsrc/RichText/Para.h
  		virtual ~FieldType() {}
  	};
  
-diff -ru a/uppsrc/RichText/ParaPaint.cpp b/uppsrc/RichText/ParaPaint.cpp
---- a/uppsrc/RichText/ParaPaint.cpp	2026-10-20 13:03:36.149464004 -0700
-+++ b/uppsrc/RichText/ParaPaint.cpp	2026-10-20 13:03:36.150464005 -0700
-@@ -204,7 +204,7 @@
+diff -ruN a/uppsrc/RichText/ParaPaint.cpp b/uppsrc/RichText/ParaPaint.cpp
+--- a/uppsrc/RichText/ParaPaint.cpp	2026-10-20 14:35:19.853812286 -0700
++++ b/uppsrc/RichText/ParaPaint.cpp	2026-10-20 14:35:20.016812397 -0700
+@@ -206,7 +206,7 @@
  }
  
  void RichPara::Paint(PageDraw& pw, RichContext rc, const PaintInfo& pi,
@@ -3572,9 +3569,9 @@ diff -ru a/uppsrc/RichText/ParaPaint.cpp b/uppsrc/RichText/ParaPaint.cpp
  {
  	Zoom z = pi.zoom;
  	PageY opy = rc.py;
-diff -ru a/uppsrc/RichText/RichDiagram.cpp b/uppsrc/RichText/RichDiagram.cpp
---- a/uppsrc/RichText/RichDiagram.cpp	2026-10-20 13:03:36.152464006 -0700
-+++ b/uppsrc/RichText/RichDiagram.cpp	2026-10-20 13:03:36.153464007 -0700
+diff -ruN a/uppsrc/RichText/RichDiagram.cpp b/uppsrc/RichText/RichDiagram.cpp
+--- a/uppsrc/RichText/RichDiagram.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/RichDiagram.cpp	2026-10-20 14:35:20.016812397 -0700
 @@ -16,7 +16,7 @@
  	static bool  Load(Diagram& m, const Value& zqdf);
  };
@@ -3584,9 +3581,9 @@ diff -ru a/uppsrc/RichText/RichDiagram.cpp b/uppsrc/RichText/RichDiagram.cpp
  {
  	return "qdf";
  }
-diff -ru a/uppsrc/RichText/RichImage.cpp b/uppsrc/RichText/RichImage.cpp
---- a/uppsrc/RichText/RichImage.cpp	2026-10-20 13:03:36.155464008 -0700
-+++ b/uppsrc/RichText/RichImage.cpp	2026-10-20 13:03:36.155464008 -0700
+diff -ruN a/uppsrc/RichText/RichImage.cpp b/uppsrc/RichText/RichImage.cpp
+--- a/uppsrc/RichText/RichImage.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/RichImage.cpp	2026-10-20 14:35:20.016812397 -0700
 @@ -20,7 +20,7 @@
  	typedef RichImage CLASSNAME;
  };
@@ -3614,9 +3611,9 @@ diff -ru a/uppsrc/RichText/RichImage.cpp b/uppsrc/RichText/RichImage.cpp
  {
  	return "iml";
  }
-diff -ru a/uppsrc/RichText/RichText.h b/uppsrc/RichText/RichText.h
---- a/uppsrc/RichText/RichText.h	2026-10-20 13:03:36.157464009 -0700
-+++ b/uppsrc/RichText/RichText.h	2026-10-20 13:03:36.158464010 -0700
+diff -ruN a/uppsrc/RichText/RichText.h b/uppsrc/RichText/RichText.h
+--- a/uppsrc/RichText/RichText.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/RichText.h	2026-10-20 14:35:20.016812397 -0700
 @@ -503,8 +503,8 @@
  public:
  	virtual ~HtmlObjectSaver() {}
@@ -3628,9 +3625,9 @@ diff -ru a/uppsrc/RichText/RichText.h b/uppsrc/RichText/RichText.h
  };
  
  String EncodeHtml(const RichText& text, Index<String>& css,
-diff -ru a/uppsrc/RichText/TextData.cpp b/uppsrc/RichText/TextData.cpp
---- a/uppsrc/RichText/TextData.cpp	2026-10-20 13:03:36.160464011 -0700
-+++ b/uppsrc/RichText/TextData.cpp	2026-10-20 13:03:36.161464012 -0700
+diff -ruN a/uppsrc/RichText/TextData.cpp b/uppsrc/RichText/TextData.cpp
+--- a/uppsrc/RichText/TextData.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/TextData.cpp	2026-10-20 14:35:20.016812397 -0700
 @@ -362,13 +362,13 @@
  	nolinks = false;
  }
@@ -3653,9 +3650,9 @@ diff -ru a/uppsrc/RichText/TextData.cpp b/uppsrc/RichText/TextData.cpp
 +void RichTextLayoutTracer::EndTableCell(PageY /*y*/) {}
  
  }
-diff -ru a/uppsrc/Sql/Script.cpp b/uppsrc/Sql/Script.cpp
---- a/uppsrc/Sql/Script.cpp	2026-10-20 13:03:35.791463762 -0700
-+++ b/uppsrc/Sql/Script.cpp	2026-10-20 13:03:35.792463763 -0700
+diff -ruN a/uppsrc/Sql/Script.cpp b/uppsrc/Sql/Script.cpp
+--- a/uppsrc/Sql/Script.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Sql/Script.cpp	2026-10-20 14:35:20.016812397 -0700
 @@ -19,7 +19,7 @@
  #endif
  
@@ -3665,9 +3662,9 @@ diff -ru a/uppsrc/Sql/Script.cpp b/uppsrc/Sql/Script.cpp
  {
  	String stmt;
  	int level = 0;
-diff -ru a/uppsrc/Sql/Session.cpp b/uppsrc/Sql/Session.cpp
---- a/uppsrc/Sql/Session.cpp	2026-10-20 13:03:35.794463764 -0700
-+++ b/uppsrc/Sql/Session.cpp	2026-10-20 13:03:35.795463765 -0700
+diff -ruN a/uppsrc/Sql/Session.cpp b/uppsrc/Sql/Session.cpp
+--- a/uppsrc/Sql/Session.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Sql/Session.cpp	2026-10-20 14:35:20.016812397 -0700
 @@ -36,12 +36,12 @@
  SqlConnection *SqlSession::CreateConnection()                            { return NULL; }
  Vector<String> SqlSession::EnumUsers()                                   { return Vector<String>(); }
@@ -3686,9 +3683,9 @@ diff -ru a/uppsrc/Sql/Session.cpp b/uppsrc/Sql/Session.cpp
  
  Vector<SqlColumnInfo> SqlSession::EnumColumns(String database, String table)
  {
-diff -ru a/uppsrc/Sql/Sql.cpp b/uppsrc/Sql/Sql.cpp
---- a/uppsrc/Sql/Sql.cpp	2026-10-20 13:03:35.797463766 -0700
-+++ b/uppsrc/Sql/Sql.cpp	2026-10-20 13:03:35.797463766 -0700
+diff -ruN a/uppsrc/Sql/Sql.cpp b/uppsrc/Sql/Sql.cpp
+--- a/uppsrc/Sql/Sql.cpp	2026-10-20 14:35:19.856812289 -0700
++++ b/uppsrc/Sql/Sql.cpp	2026-10-20 14:35:20.016812397 -0700
 @@ -20,13 +20,13 @@
  	return b ? T : F;
  }
@@ -3707,9 +3704,9 @@ diff -ru a/uppsrc/Sql/Sql.cpp b/uppsrc/Sql/Sql.cpp
  
  
  FieldOperator& FieldOperator::operator()(const char *name, bool& b) {
-diff -ru a/uppsrc/Sql/SqlSchema.h b/uppsrc/Sql/SqlSchema.h
---- a/uppsrc/Sql/SqlSchema.h	2026-10-20 13:03:35.799463768 -0700
-+++ b/uppsrc/Sql/SqlSchema.h	2026-10-20 13:03:35.800463768 -0700
+diff -ruN a/uppsrc/Sql/SqlSchema.h b/uppsrc/Sql/SqlSchema.h
+--- a/uppsrc/Sql/SqlSchema.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Sql/SqlSchema.h	2026-10-20 14:35:20.016812397 -0700
 @@ -85,7 +85,7 @@
  void operator*(SqlSchema& schema, const SqlInsert& insert);
  
@@ -3719,9 +3716,9 @@ diff -ru a/uppsrc/Sql/SqlSchema.h b/uppsrc/Sql/SqlSchema.h
  
  template <class T>
  inline void SqlSchemaInitClear(T *a, int n) {
-diff -ru a/uppsrc/Sql/util_td.cpp b/uppsrc/Sql/util_td.cpp
---- a/uppsrc/Sql/util_td.cpp	2026-10-20 13:03:35.802463770 -0700
-+++ b/uppsrc/Sql/util_td.cpp	2026-10-20 13:03:35.802463770 -0700
+diff -ruN a/uppsrc/Sql/util_td.cpp b/uppsrc/Sql/util_td.cpp
+--- a/uppsrc/Sql/util_td.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Sql/util_td.cpp	2026-10-20 14:35:20.016812397 -0700
 @@ -27,7 +27,7 @@
  struct NfEqual : FieldOperator {
  	ValueArray va;

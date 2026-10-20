@@ -1,6 +1,6 @@
-diff -ru a/uppsrc/Core/Color.cpp b/uppsrc/Core/Color.cpp
---- a/uppsrc/Core/Color.cpp	2026-10-20 13:03:36.236464062 -0700
-+++ b/uppsrc/Core/Color.cpp	2026-10-20 13:03:36.236464062 -0700
+diff -ruN a/uppsrc/Core/Color.cpp b/uppsrc/Core/Color.cpp
+--- a/uppsrc/Core/Color.cpp	2026-10-20 14:35:19.814812260 -0700
++++ b/uppsrc/Core/Color.cpp	2026-10-20 14:35:20.108812460 -0700
 @@ -34,7 +34,7 @@
  	double t = v * (1 - s * (1 - rem));
  	switch(ffloor(h))
@@ -10,9 +10,9 @@ diff -ru a/uppsrc/Core/Color.cpp b/uppsrc/Core/Color.cpp
  	case 6:
  	case 0: r = v; g = t; b = p; break;
  	case 1: r = q; g = v; b = p; break;
-diff -ru a/uppsrc/Core/Http.cpp b/uppsrc/Core/Http.cpp
---- a/uppsrc/Core/Http.cpp	2026-10-20 13:03:36.244464068 -0700
-+++ b/uppsrc/Core/Http.cpp	2026-10-20 13:03:36.244464068 -0700
+diff -ruN a/uppsrc/Core/Http.cpp b/uppsrc/Core/Http.cpp
+--- a/uppsrc/Core/Http.cpp	2026-10-20 14:35:19.827812269 -0700
++++ b/uppsrc/Core/Http.cpp	2026-10-20 14:35:20.108812460 -0700
 @@ -342,6 +342,7 @@
  		redirect_count = 0;
  		start_time = msecs();
@@ -21,9 +21,9 @@ diff -ru a/uppsrc/Core/Http.cpp b/uppsrc/Core/Http.cpp
  	case START:
  		Start();
  		break;
-diff -ru a/uppsrc/CtrlCore/EncodeRTF.cpp b/uppsrc/CtrlCore/EncodeRTF.cpp
---- a/uppsrc/CtrlCore/EncodeRTF.cpp	2026-10-20 13:03:36.258464077 -0700
-+++ b/uppsrc/CtrlCore/EncodeRTF.cpp	2026-10-20 13:03:36.259464078 -0700
+diff -ruN a/uppsrc/CtrlCore/EncodeRTF.cpp b/uppsrc/CtrlCore/EncodeRTF.cpp
+--- a/uppsrc/CtrlCore/EncodeRTF.cpp	2026-10-20 14:35:19.975812370 -0700
++++ b/uppsrc/CtrlCore/EncodeRTF.cpp	2026-10-20 14:35:20.108812460 -0700
 @@ -697,6 +697,7 @@
  				switch(para.format.bullet) {
  				default:
@@ -32,9 +32,9 @@ diff -ru a/uppsrc/CtrlCore/EncodeRTF.cpp b/uppsrc/CtrlCore/EncodeRTF.cpp
  
  				case RichPara::BULLET_ROUND:      sym_face = SYMBOL_INDEX;    sym_char = 0xB7; break;
  				case RichPara::BULLET_ROUNDWHITE: sym_face = WINGDINGS_INDEX; sym_char = 0xA1; break;
-diff -ru a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
---- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 13:03:36.264464081 -0700
-+++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 13:03:36.264464081 -0700
+diff -ruN a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
+--- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 14:35:19.980812373 -0700
++++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-20 14:35:20.108812460 -0700
 @@ -283,6 +283,7 @@
  	}
  	case GDK_KEY_PRESS:
@@ -75,9 +75,9 @@ diff -ru a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
  	case GDK_KEY_RELEASE:
  		kv = CurrentEvent.value[0];
  		hw = CurrentEvent.value[1];
-diff -ru a/uppsrc/CtrlLib/DlgColor.cpp b/uppsrc/CtrlLib/DlgColor.cpp
---- a/uppsrc/CtrlLib/DlgColor.cpp	2026-10-20 13:03:36.274464088 -0700
-+++ b/uppsrc/CtrlLib/DlgColor.cpp	2026-10-20 13:03:36.274464088 -0700
+diff -ruN a/uppsrc/CtrlLib/DlgColor.cpp b/uppsrc/CtrlLib/DlgColor.cpp
+--- a/uppsrc/CtrlLib/DlgColor.cpp	2026-10-20 14:35:19.988812379 -0700
++++ b/uppsrc/CtrlLib/DlgColor.cpp	2026-10-20 14:35:20.108812460 -0700
 @@ -165,7 +165,7 @@
  	int t = degamma[iscale(v16, 0xFFFF - iscale(s16, 0xFFFFu - rem, 65536), 65536)] >> 8;
  	switch(h16 >> 16)
@@ -87,9 +87,9 @@ diff -ru a/uppsrc/CtrlLib/DlgColor.cpp b/uppsrc/CtrlLib/DlgColor.cpp
  	case 0: return Color(v, t, p);
  	case 1: return Color(q, v, p);
  	case 2: return Color(p, v, t);
-diff -ru a/uppsrc/CtrlLib/DocEdit.cpp b/uppsrc/CtrlLib/DocEdit.cpp
---- a/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 13:03:36.277464090 -0700
-+++ b/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 13:03:36.277464090 -0700
+diff -ruN a/uppsrc/CtrlLib/DocEdit.cpp b/uppsrc/CtrlLib/DocEdit.cpp
+--- a/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 14:35:19.988812379 -0700
++++ b/uppsrc/CtrlLib/DocEdit.cpp	2026-10-20 14:35:20.108812460 -0700
 @@ -442,6 +442,7 @@
  			if(!processenter)
  				return true;
@@ -98,9 +98,9 @@ diff -ru a/uppsrc/CtrlLib/DocEdit.cpp b/uppsrc/CtrlLib/DocEdit.cpp
  		default:
  			if(filter && key >= 32 && key < 65535)
  				key = (*filter)(key);
-diff -ru a/uppsrc/CtrlLib/LineEdit.cpp b/uppsrc/CtrlLib/LineEdit.cpp
---- a/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 13:03:36.283464094 -0700
-+++ b/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 13:03:36.283464094 -0700
+diff -ruN a/uppsrc/CtrlLib/LineEdit.cpp b/uppsrc/CtrlLib/LineEdit.cpp
+--- a/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 14:35:19.995812383 -0700
++++ b/uppsrc/CtrlLib/LineEdit.cpp	2026-10-20 14:35:20.109812461 -0700
 @@ -1395,6 +1395,7 @@
  				RectSelectionBackspace();
  				break;
@@ -117,9 +117,9 @@ diff -ru a/uppsrc/CtrlLib/LineEdit.cpp b/uppsrc/CtrlLib/LineEdit.cpp
  		default:
  			if(InsertChar(key, count, true))
  				return true;
-diff -ru a/uppsrc/CtrlLib/ScrollBar.cpp b/uppsrc/CtrlLib/ScrollBar.cpp
---- a/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-20 13:03:36.286464096 -0700
-+++ b/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-20 13:03:36.287464097 -0700
+diff -ruN a/uppsrc/CtrlLib/ScrollBar.cpp b/uppsrc/CtrlLib/ScrollBar.cpp
+--- a/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-20 14:35:20.001812387 -0700
++++ b/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-20 14:35:20.109812461 -0700
 @@ -518,12 +518,14 @@
  		break;
  	case K_HOME:
@@ -135,9 +135,9 @@ diff -ru a/uppsrc/CtrlLib/ScrollBar.cpp b/uppsrc/CtrlLib/ScrollBar.cpp
  	case K_CTRL_END:
  	case K_CTRL_PAGEDOWN:
  		End();
-diff -ru a/uppsrc/RichText/DiagramShape.cpp b/uppsrc/RichText/DiagramShape.cpp
---- a/uppsrc/RichText/DiagramShape.cpp	2026-10-20 13:03:36.305464109 -0700
-+++ b/uppsrc/RichText/DiagramShape.cpp	2026-10-20 13:03:36.305464109 -0700
+diff -ruN a/uppsrc/RichText/DiagramShape.cpp b/uppsrc/RichText/DiagramShape.cpp
+--- a/uppsrc/RichText/DiagramShape.cpp	2026-10-20 14:35:19.614812123 -0700
++++ b/uppsrc/RichText/DiagramShape.cpp	2026-10-20 14:35:20.109812461 -0700
 @@ -160,6 +160,7 @@
  				break;
  			case CAP_DIM:
@@ -162,9 +162,9 @@ diff -ru a/uppsrc/RichText/DiagramShape.cpp b/uppsrc/RichText/DiagramShape.cpp
  		case SHAPE_ELLIPSE:
  			w.Ellipse(m.x, m.y, w2, h2);
  			break;
-diff -ru a/uppsrc/RichText/TxtData.cpp b/uppsrc/RichText/TxtData.cpp
---- a/uppsrc/RichText/TxtData.cpp	2026-10-20 13:03:36.311464113 -0700
-+++ b/uppsrc/RichText/TxtData.cpp	2026-10-20 13:03:36.312464114 -0700
+diff -ruN a/uppsrc/RichText/TxtData.cpp b/uppsrc/RichText/TxtData.cpp
+--- a/uppsrc/RichText/TxtData.cpp	2026-10-20 14:35:19.854812287 -0700
++++ b/uppsrc/RichText/TxtData.cpp	2026-10-20 14:35:20.109812461 -0700
 @@ -94,6 +94,7 @@
  		break;
  	case PARA:
@@ -173,9 +173,9 @@ diff -ru a/uppsrc/RichText/TxtData.cpp b/uppsrc/RichText/TxtData.cpp
  	case FROM:
  		r_parti = min(parti, r_parti);
  		r_type = FROM;
-diff -ru a/uppsrc/Sql/SqlCode.cpp b/uppsrc/Sql/SqlCode.cpp
---- a/uppsrc/Sql/SqlCode.cpp	2026-10-20 13:03:36.231464059 -0700
-+++ b/uppsrc/Sql/SqlCode.cpp	2026-10-20 13:03:36.231464059 -0700
+diff -ruN a/uppsrc/Sql/SqlCode.cpp b/uppsrc/Sql/SqlCode.cpp
+--- a/uppsrc/Sql/SqlCode.cpp	2026-10-20 14:35:19.856812289 -0700
++++ b/uppsrc/Sql/SqlCode.cpp	2026-10-20 14:35:20.109812461 -0700
 @@ -163,6 +163,7 @@
  			case PGSQL:
  				if(x.year < 1) x.year = 1; // Date::Low()

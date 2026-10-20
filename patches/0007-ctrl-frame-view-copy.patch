@@ -1,5 +1,6 @@
---- a/uppsrc/CtrlCore/CtrlFrame.cpp	2026-10-20 10:19:24.105622568 -0700
-+++ b/uppsrc/CtrlCore/CtrlFrame.cpp	2026-10-20 10:19:24.112622566 -0700
+diff -ruN a/uppsrc/CtrlCore/CtrlFrame.cpp b/uppsrc/CtrlCore/CtrlFrame.cpp
+--- a/uppsrc/CtrlCore/CtrlFrame.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/CtrlFrame.cpp	2026-10-20 14:35:19.435812002 -0700
 @@ -28,6 +28,7 @@
  		if(!multi_frame) {
  			Frame h = AllocFrames(2);
