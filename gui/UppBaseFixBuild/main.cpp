@@ -161,12 +161,12 @@ BuildWindow::BuildWindow()
 	top_split.Horz(build_pane, checks_pane);
 	Add(top_split.HSizePosZ(8, 8).TopPosZ(4, 146));
 
-	// The trees: a row above Start / Stop / Close
-	Add(tree_status.HSizePosZ(8, 540).BottomPosZ(42, 26));
-	Add(pristine_b.SetLabel("Copy pristine").RightPosZ(412, 120).BottomPosZ(42, 26));
-	Add(patch_b.SetLabel("Apply patches").RightPosZ(286, 120).BottomPosZ(42, 26));
-	Add(verify_b.SetLabel("Verify pin").RightPosZ(160, 120).BottomPosZ(42, 26));
-	Add(status_b.SetLabel("Patch status").RightPosZ(8, 146).BottomPosZ(42, 26));
+	// Text above, every button on the bottom row: Start, Stop, the trees ... Close
+	Add(tree_status.SetAlign(ALIGN_RIGHT).RightPosZ(8, 540).BottomPosZ(40, 22));
+	Add(pristine_b.SetLabel("Copy pristine").RightPosZ(478, 120).BottomPosZ(8, 28));
+	Add(patch_b.SetLabel("Apply patches").RightPosZ(352, 120).BottomPosZ(8, 28));
+	Add(verify_b.SetLabel("Verify pin").RightPosZ(226, 120).BottomPosZ(8, 28));
+	Add(status_b.SetLabel("Patch status").RightPosZ(104, 116).BottomPosZ(8, 28));
 	pristine_b.Tip("upp_basefix.sh pristine: copies /run/media/jay/GFS/upp/uppsrc (originals put back) "
 	               "and checks it against the pin");
 	patch_b.Tip("upp_basefix.sh patch: pristine + patches/*.patch -> the patched tree");
@@ -193,12 +193,12 @@ BuildWindow::BuildWindow()
 	output.SetFont(Monospace());
 	split.Vert() << steps_list << results_list << output;
 	split.SetPos(1800, 0).SetPos(4300, 1);
-	Add(split.HSizePosZ(8, 8).VSizePosZ(238, 74));
+	Add(split.HSizePosZ(8, 8).VSizePosZ(238, 66));
 
 	Add(start.SetLabel("Start").LeftPosZ(8, 110).BottomPosZ(8, 28));
 	Add(stop.SetLabel("Stop").LeftPosZ(124, 110).BottomPosZ(8, 28));
 	Add(close.SetLabel("Close").RightPosZ(8, 90).BottomPosZ(8, 28));
-	Add(running.HSizePosZ(244, 106).BottomPosZ(11, 22));
+	Add(running.HSizePosZ(8, 556).BottomPosZ(40, 22));
 
 	for(Ctrl *c : { (Ctrl *)&compiler, (Ctrl *)&type, (Ctrl *)&tree, (Ctrl *)&strict, (Ctrl *)&clean,
 	                (Ctrl *)&verbose, (Ctrl *)&tests, (Ctrl *)&asan, (Ctrl *)&tsan, (Ctrl *)&valgrind,
