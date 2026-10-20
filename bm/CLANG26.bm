@@ -1,7 +1,7 @@
 BUILDER = "CLANG";
 COMPILER = "/usr/bin/clang++";
 COMMON_OPTIONS = "-mpopcnt";
-COMMON_CPP_OPTIONS = "-std=c++26 -Wno-logical-op-parentheses";
+COMMON_CPP_OPTIONS = "-std=c++26";
 COMMON_C_OPTIONS = "";
 COMMON_LINK = "";
 COMMON_FLAGS = "";
