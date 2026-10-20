@@ -1,0 +1,19 @@
+--- a/uppsrc/Painter/Context.cpp	2026-10-20 10:15:01.153698358 -0700
++++ b/uppsrc/Painter/Context.cpp	2026-10-20 10:15:01.159698356 -0700
+@@ -84,7 +84,7 @@
+ {
+ 	pathattr.filter = filter;
+ 	if(IsNull(current))
+-		attr.invert = filter;
++		attr.filter = filter;
+ }
+ 
+ Vector<double> StringToDash(const String& dash, double& start);
+@@ -199,6 +199,7 @@
+ 	attr.opacity = 1;
+ 	attr.dash = NULL;
+ 	attr.mask = false;
++	attr.onpath = false;
+ 	attr.invert = false;
+ 	attr.mtx_serial = 0;
+ 

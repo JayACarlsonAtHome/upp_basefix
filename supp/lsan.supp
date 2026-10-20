@@ -1,0 +1,3 @@
+# LeakSanitizer: leaks inside system libraries, not U++ (see docs/findings.md).
+# librsvg (Rust) keeps a boxed slice for the process lifetime when GTK loads SVG icons.
+leak:librsvg-2.so

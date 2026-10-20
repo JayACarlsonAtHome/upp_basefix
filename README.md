@@ -12,11 +12,18 @@ fixes we need in it, kept as plain patch files, built and checked on their own.
     (`docs/sqlite3mc_stringop_overread.md`).
   - `0003-explicit-this-capture.patch`: 71 lambdas `[=` -> `[=, this` (C++20 deprecates
     the implicit capture); made from clang's own fix-its.
+  - `0004`-`0008`: bugs the checks found (GTK string leak, PNG shift by 32, Painter
+    attributes, CoWork start-up order, Ctrl frame view); `0009`: bugs strict warnings
+    found (surrogate pairs in CParser, Equalight, memory status); `0010`: indentation.
+    Each is described in `docs/findings.md`.
+- **Suppressions** (`supp/`): system-library reports (GLib/GTK under TSan, librsvg leaks)
+  and `strict-reviewed.txt`, the U++ strict-warning sites read and found harmless
+  (`docs/strict.md`).
 - **Checks** (`check/`): `UppBaseCheck` (console: Core, Core/SSH, Draw, plugin/png,
   plugin/sqlite3; no display, fit for valgrind and sanitizers) and `UppBaseCheckGui`
   (CtrlLib window, `--smoke` closes it). Between them they build every U++ package the
   projects use.
-- **Findings** still open: `docs/findings.md`.
+- **Findings:** `docs/findings.md`.
 
 ## Use
 
@@ -31,7 +38,10 @@ Everything runs in the work area (`UPP_BASEFIX_WORK`, default `/home/jay/upp_bas
 the trees, its own copy of umk with its own object cache (never shared with another
 project), `out/` and `logs/`. Nothing outside it is changed.
 
-Status 2026-10-20: patched tree, gcc 15 and clang (C++26), debug and release: 0 warnings
-(the unpatched tree: 71), checks 11/11 and the GUI smoke test pass.
+Or the window: `./upp_basefix.sh gui` builds UppBaseFixBuild and starts it (options,
+checks, live output, a results table; double-click a build result for its log).
 
-Next: a build GUI (watch the compile, set options, run the checks).
+Status 2026-10-20: patched tree (0001-0010), gcc 15 and clang (C++26), debug and release,
+strict and clean: ours 0, U++ 0 warnings (U++ house style counted apart, docs/strict.md);
+UppBaseCheck 16/16 and the GUI smoke test pass alone and under ASan + UBSan, TSan,
+valgrind and helgrind (the GUI is not run under helgrind). The pristine tree: 13/16.

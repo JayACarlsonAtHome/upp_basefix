@@ -1,10 +1,11 @@
 --- a/uppsrc/plugin/sqlite3/lib.c	2026-10-20 07:54:40.256184718 -0700
 +++ b/uppsrc/plugin/sqlite3/lib.c	2026-10-20 07:54:40.257184718 -0700
-@@ -5,4 +5,7 @@
+@@ -5,4 +5,8 @@
  #define SQLITE_ENABLE_JSON1 1
  #define SQLITE_ENABLE_RBU 1
  
 +#if defined(__GNUC__) && !defined(__clang__)
 +#pragma GCC diagnostic ignored "-Wstringop-overread"   // false alarms (upp_basefix docs/sqlite3mc_stringop_overread.md)
++#pragma GCC diagnostic ignored "-Wstringop-overflow"   // same kind, gcc -O3 with ASan (same doc)
 +#endif
  #include "lib/sqlite3mc_amalgamation.c"

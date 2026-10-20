@@ -1,0 +1,10 @@
+--- a/uppsrc/CtrlCore/CtrlFrame.cpp	2026-10-20 10:19:24.105622568 -0700
++++ b/uppsrc/CtrlCore/CtrlFrame.cpp	2026-10-20 10:19:24.112622566 -0700
+@@ -28,6 +28,7 @@
+ 		if(!multi_frame) {
+ 			Frame h = AllocFrames(2);
+ 			h.frames[0].frame = frame.frame;
++			h.frames[0].view = frame.view; // the single frame's view moves with it
+ 			h.multi.count = 1;
+ 			frame = h;
+ 			multi_frame = true;

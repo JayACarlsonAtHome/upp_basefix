@@ -1,0 +1,52 @@
+diff -ru a/uppsrc/Core/Cpu.cpp b/uppsrc/Core/Cpu.cpp
+--- a/uppsrc/Core/Cpu.cpp	2026-10-20 10:25:47.757521535 -0700
++++ b/uppsrc/Core/Cpu.cpp	2026-10-20 10:25:47.758521536 -0700
+@@ -127,11 +127,11 @@
+ #endif
+ #ifdef PLATFORM_LINUX
+ 	int pgsz = getpagesize();
+-	total = sysconf(_SC_PHYS_PAGES);
+-	available = sysconf(_SC_AVPHYS_PAGES);
+-	if(total >= 0 && available >= 0) {
+-		total *= pgsz;
+-		available *= pgsz;
++	long pages = sysconf(_SC_PHYS_PAGES); // -1 on error: check before going unsigned
++	long avail = sysconf(_SC_AVPHYS_PAGES);
++	if(pages >= 0 && avail >= 0) {
++		total = (uint64)pages * pgsz;
++		available = (uint64)avail * pgsz;
+ 		return;
+ 	}
+ #endif
+diff -ru a/uppsrc/Core/parser.cpp b/uppsrc/Core/parser.cpp
+--- a/uppsrc/Core/parser.cpp	2026-10-20 10:25:47.763521540 -0700
++++ b/uppsrc/Core/parser.cpp	2026-10-20 10:25:47.770521545 -0700
+@@ -447,14 +447,14 @@
+ 					dword hex;
+ 					if(!ReadHex(hex, 4))
+ 						ThrowError("Incomplete universal character");
+-					if(hex >= 0xD800 && hex < 0xDBFF) {
++					if(hex >= 0xD800 && hex <= 0xDBFF) {
+ 						if(term[0] == '\\' && term[1] == 'u') {
+ 							term++;
+ 							dword hex2;
+ 							if(!ReadHex(hex2, 4))
+ 								ThrowError("Incomplete universal character");
+ 							if(hex2 >= 0xDC00 && hex2 <= 0xDFFF) {
+-								result.Cat(ToUtf8(((hex & 0x3ff) << 10) | (hex2 & 0x3ff) + 0x10000));
++								result.Cat(ToUtf8((((hex & 0x3ff) << 10) | (hex2 & 0x3ff)) + 0x10000));
+ 								break;
+ 							}
+ 						}
+diff -ru a/uppsrc/Draw/ImageOp.cpp b/uppsrc/Draw/ImageOp.cpp
+--- a/uppsrc/Draw/ImageOp.cpp	2026-10-20 10:25:47.760521538 -0700
++++ b/uppsrc/Draw/ImageOp.cpp	2026-10-20 10:25:47.761521538 -0700
+@@ -331,7 +331,7 @@
+ 		histogram[Grayscale(*s)]++;
+ 		s++;
+ 	}
+-	size_t n = (thold * img.GetLength()) >> 8;
++	int64 n = ((int64)thold * img.GetLength()) >> 8; // signed: the loop below stops when n < 0
+ 	int h = 255;
+ 	int l = 0;
+ 	while(l < h) {

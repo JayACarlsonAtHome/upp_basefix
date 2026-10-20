@@ -1,0 +1,11 @@
+--- a/uppsrc/plugin/png/pngupp.cpp	2026-10-20 10:15:01.133698364 -0700
++++ b/uppsrc/plugin/png/pngupp.cpp	2026-10-20 10:15:01.139698362 -0700
+@@ -433,7 +433,7 @@
+ 	if(!palette.IsEmpty())
+ 		png_set_PLTE(png_ptr, info_ptr, palette.Begin(), palette.GetCount());
+ 
+-	byte transpal = (1 << bpp) - 1;
++	byte transpal = bpp >= 8 ? 255 : (1 << bpp) - 1; // bpp can be 32: no 1 << 32
+ 	if(do_mask && do_palette) {
+ 		png_color_16 transrgb = { 0, 0, 0 };
+ 		png_set_tRNS(png_ptr, info_ptr, &transpal, 1, &transrgb);

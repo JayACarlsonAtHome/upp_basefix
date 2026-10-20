@@ -1,0 +1,9 @@
+# valgrind memcheck / helgrind: system libraries, not U++ (see docs/findings.md).
+{
+   librsvg-icon-cache-leak
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:*alloc
+   ...
+   obj:*/librsvg-2.so*
+}

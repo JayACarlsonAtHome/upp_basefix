@@ -1,0 +1,99 @@
+# upp_basefix: U++ warnings reviewed by hand in strict builds (-Wall -Wextra) of the
+# pinned 18619 tree with patches 0001-0010. Each site was read: none hides a bug (the
+# ones that did became patch 0009). upp_basefix.sh counts these as U++ house style,
+# not as U++ warnings; a warning at any other site (or a new kind) still counts.
+# Format: path under uppsrc:line [-Wflag]  (gcc and clang share a line when both warn)
+
+# [-Wimplicit-fallthrough=] switch cases that fall through on purpose (key press -> release handling, Home -> Ctrl+Home, date -> its literal, NEVER() -> a safe default in HSVtoRGB and RTF bullets, ...); each read, none missing a break
+Core/Defs.h:35 [-Wimplicit-fallthrough=]
+Core/Http.cpp:344 [-Wimplicit-fallthrough=]
+CtrlCore/GtkEvent.cpp:285 [-Wimplicit-fallthrough=]
+CtrlCore/GtkEvent.cpp:418 [-Wimplicit-fallthrough=]
+CtrlCore/GtkEvent.cpp:437 [-Wimplicit-fallthrough=]
+CtrlCore/GtkEvent.cpp:471 [-Wimplicit-fallthrough=]
+CtrlCore/GtkEvent.cpp:748 [-Wimplicit-fallthrough=]
+CtrlLib/DocEdit.cpp:444 [-Wimplicit-fallthrough=]
+CtrlLib/LineEdit.cpp:1394 [-Wimplicit-fallthrough=]
+CtrlLib/LineEdit.cpp:1406 [-Wimplicit-fallthrough=]
+CtrlLib/ScrollBar.cpp:520 [-Wimplicit-fallthrough=]
+CtrlLib/ScrollBar.cpp:526 [-Wimplicit-fallthrough=]
+RichText/DiagramShape.cpp:162 [-Wimplicit-fallthrough=]
+RichText/DiagramShape.cpp:176 [-Wimplicit-fallthrough=]
+RichText/DiagramShape.cpp:274 [-Wimplicit-fallthrough=]
+RichText/ParseQtf.cpp:780 [-Wimplicit-fallthrough=]
+RichText/TxtData.cpp:96 [-Wimplicit-fallthrough=]
+Sql/SqlCode.cpp:165 [-Wimplicit-fallthrough=]
+Sql/SqlCode.cpp:194 [-Wimplicit-fallthrough=]
+Sql/SqlCode.cpp:232 [-Wimplicit-fallthrough=]
+
+# [-Wsign-compare] unsigned against signed: character codes (wchar vs int), key codes vs enum, Fn.h's template keys, a file size in an ASSERT; no value compared is negative
+Core/AString.hpp:59 [-Wsign-compare]
+Core/AString.hpp:71 [-Wsign-compare]
+Core/CvFlt.cpp:531 [-Wsign-compare]
+Core/CvFlt.cpp:581 [-Wsign-compare]
+Core/FileMapping.h:18 [-Wsign-compare]
+Core/Fn.h:42 [-Wsign-compare]
+Core/Fn.h:48 [-Wsign-compare]
+Core/Fn.h:81 [-Wsign-compare]
+Core/LangInfo.cpp:187 [-Wsign-compare]
+Core/LangInfo.cpp:96 [-Wsign-compare]
+Core/SplitMerge.cpp:108 [-Wsign-compare]
+CtrlCore/GtkEvent.cpp:752 [-Wsign-compare]
+Draw/Font.cpp:427 [-Wsign-compare]
+Draw/Font.cpp:494 [-Wsign-compare]
+
+# [-Wignored-qualifiers] Core/Topt.h GetHashValue: "(const hash_t)a" casts; const on a cast result has no effect
+Core/Topt.h:467 [-Wignored-qualifiers]
+Core/Topt.h:468 [-Wignored-qualifiers]
+Core/Topt.h:469 [-Wignored-qualifiers]
+Core/Topt.h:470 [-Wignored-qualifiers]
+Core/Topt.h:471 [-Wignored-qualifiers]
+Core/Topt.h:472 [-Wignored-qualifiers]
+Core/Topt.h:473 [-Wignored-qualifiers]
+Core/Topt.h:474 [-Wignored-qualifiers]
+Core/Topt.h:475 [-Wignored-qualifiers]
+Core/Topt.h:476 [-Wignored-qualifiers]
+Core/Topt.h:479 [-Wignored-qualifiers]
+Core/Topt.h:480 [-Wignored-qualifiers]
+
+# [-Wmissing-field-initializers] aggregate tables (Http, Log, Value, AKeys, IniBool) that leave trailing fields to zero on purpose
+Core/Http.cpp:6 [-Wmissing-field-initializers]
+Core/Http.cpp:7 [-Wmissing-field-initializers]
+Core/Http.cpp:8 [-Wmissing-field-initializers]
+Core/Log.cpp:239 [-Wmissing-field-initializers]
+Core/Log.cpp:452 [-Wmissing-field-initializers]
+Core/Util.h:134 [-Wmissing-field-initializers]
+Core/Value.cpp:301 [-Wmissing-field-initializers]
+CtrlLib/AKeys.cpp:29 [-Wmissing-field-initializers]
+
+# [-Wempty-body] CHECK(x) in release builds expands to "if(x); else ;" by design
+Core/CoWork.cpp:31 [-Wempty-body]
+Core/Mt.cpp:43 [-Wempty-body]
+Core/Value.cpp:594 [-Wempty-body]
+CtrlLib/ArrayCtrl.cpp:2631 [-Wempty-body]
+
+# [-Wunused-function] Core/SSH/Malloc.cpp: static libssh2 allocator hooks that Session.cpp uses; the warning is from a translation unit that does not
+Core/SSH/Malloc.cpp:11 [-Wunused-function]
+Core/SSH/Malloc.cpp:22 [-Wunused-function]
+Core/SSH/Malloc.cpp:32 [-Wunused-function]
+
+# [-Wextra] enum and int mixed in ?: (Value.cpp, LabelBase.cpp, ToolButton.cpp); the values are flags, the int result is wanted
+Core/Value.cpp:374 [-Wextra]
+CtrlLib/LabelBase.cpp:503 [-Wextra]
+CtrlLib/ToolButton.cpp:152 [-Wextra]
+
+# [-Wsized-deallocation] Core/heap.cpp: U++ replaces operator delete; the unsized form serves both
+Core/heap.cpp:290 [-Wsized-deallocation]
+Core/heap.cpp:293 [-Wsized-deallocation]
+
+# [-Wparentheses] Socket.cpp:459 "family == AF_INET == !pass" and RadialGradient.cpp:50 "2047 - h & 2047" both mean what they say
+Core/Socket.cpp:459 [-Wparentheses]
+Painter/RadialGradient.cpp:50 [-Wparentheses]
+
+# [-Wtype-limits] Core/TimeDate.cpp:533: hour/minute/second are byte, so ">= 0" is always true; harmless
+Core/TimeDate.cpp:533 [-Wtype-limits]
+# release / optimizer-only warnings (gcc -O3, some only with ASan)
+# NEVER() in release builds: same deliberate fall-throughs as Defs.h:35 above
+Core/Defs.h:42 [-Wimplicit-fallthrough=]
+# memcpy8's 9..16-byte path reasoned about for a 5-byte literal it never takes (count <= 8 goes first)
+Core/Mem.h:32 [-Warray-bounds=]

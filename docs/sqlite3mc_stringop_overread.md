@@ -30,3 +30,12 @@ warns as above in `sha1_update`. A change that keeps the code as is but quiets g
 the block through a local `uint8_t block[64]` (memcpy) or mark the loop with
 `__attribute__((access(read_only, 2, 3)))` on a length-taking helper. The `strlen` one is in
 SQLite's own code (sqlite.org), a known class of gcc false positive.
+
+## -Wstringop-overflow (gcc -O3 with ASan)
+
+gcc 15 release builds with `-fsanitize=address` also warn in `sqlite3Fts5MallocZero`:
+"'memset' specified size between 18446744071562067984 and 18446744073709551615 exceeds
+maximum object size". gcc sees `nByte` as possibly negative (an int64 converted to
+size_t), but `sqlite3_malloc64` returns NULL for such a size and the `memset` is only
+reached when the allocation succeeded. Same kind of false alarm: patch 0002 silences
+`-Wstringop-overflow` in lib.c too (gcc only).

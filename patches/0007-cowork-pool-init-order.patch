@@ -1,0 +1,18 @@
+--- a/uppsrc/Core/CoWork.cpp	2026-10-20 10:15:01.172698353 -0700
++++ b/uppsrc/Core/CoWork.cpp	2026-10-20 10:15:01.177698351 -0700
+@@ -55,13 +55,13 @@
+ {
+ 	ASSERT(!IsWorker());
+ 
+-	InitThreads(CPU_Cores() + 2);
+-
+ 	free = NULL;
+ 	for(int i = 0; i < SCHEDULED_MAX; i++)
+ 		Free(slot[i]);
+ 	
+ 	quit = false;
++
++	InitThreads(CPU_Cores() + 2); // last: the threads read quit and the job lists
+ }
+ 
+ CoWork::Pool::~Pool()

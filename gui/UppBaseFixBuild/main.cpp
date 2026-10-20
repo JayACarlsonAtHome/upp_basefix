@@ -129,6 +129,8 @@ BuildWindow::BuildWindow()
 	tree.Add("patched", "Patched (18619 + our patches)").Add("pristine", "Pristine (18619 as released)");
 	Add(tree.LeftPosZ(460, 520).TopPosZ(52, 22));
 	strict.SetLabel("Strict warnings (-Wall -Wextra)");
+	strict.Tip("U++ house style (unused parameters, deprecated copies, && within ||, and the sites in "
+	           "supp/strict-reviewed.txt) is counted apart; any other U++ warning turns the row yellow");
 	Add(strict.LeftPosZ(20, 260).TopPosZ(80, 22));
 	clean.SetLabel("Clean build (compile everything)");
 	Add(clean.LeftPosZ(290, 260).TopPosZ(80, 22));
@@ -137,7 +139,7 @@ BuildWindow::BuildWindow()
 
 	// Checks
 	Add(checks_box.SetLabel("Checks").HSizePosZ(8, 8).TopPosZ(120, 132));
-	tests.SetLabel("Run the check programs after building (UppBaseCheck: 11 checks; UppBaseCheckGui --smoke)");
+	tests.SetLabel("Run the check programs after building (UppBaseCheck: the console checks; UppBaseCheckGui --smoke)");
 	Add(tests.LeftPosZ(20, 900).TopPosZ(140, 22));
 	asan.SetLabel("Also under AddressSanitizer + UBSan (each compiler; memory errors, leaks, undefined behaviour)");
 	Add(asan.LeftPosZ(44, 900).TopPosZ(164, 22));
@@ -473,7 +475,8 @@ void BuildWindow::Line(const String& line)
 			state = TrimBoth(rest.Left(rest.Find(")") + 1));
 		results_list.Add(what, state, secs, detail, log);
 		int row = results_list.GetCount() - 1;
-		bool warned = detail.StartsWith("warnings: ") && detail != "warnings: ours 0, U++ 0 (unique)";
+		bool warned = detail.StartsWith("warnings: ") && !detail.StartsWith("warnings: ours 0, U++ 0 (") &&
+		              !detail.StartsWith("warnings: ours 0, U++ 0, ");
 		if(state.StartsWith("FAILED"))
 			results_list.SetLineColor(row, Color(255, 215, 215));
 		else if(warned)

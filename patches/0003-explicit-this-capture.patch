@@ -254,7 +254,7 @@ diff -ru a/uppsrc/Core/SSH/Session.cpp b/uppsrc/Core/SSH/Session.cpp
  		})) goto Bailout;
  
 -		if(!Run([=, &ipinfo] () mutable {
-+		if(!Run([=, this, &ipinfo] () mutable {
++		if(!Run([=, this] () mutable {
  			if(!session->socket.WaitConnect())
  				return false;
  			LLOG("Successfully connected to " << host <<":" << port);

@@ -97,6 +97,40 @@ static void CheckPng()
 	Expect(png.GetCount() > 0 && same, "PNG: encode and read back");
 }
 
+// Bugs the patches fix, one check each: these fail on the pristine tree.
+static void CheckPatchedBugs()
+{
+	auto decode = [](const char *text) -> int {   // first character of a C string literal
+		try {
+			WString w = CParser(text).ReadString().ToWString();
+			return w.GetCount() ? (int)w[0] : -1;
+		}
+		catch(CParser::Error) {
+			return -2;
+		}
+	};
+	// 0009: \uD83D\uDE00 is U+1F600; \uD840\uDC00 is U+20000 (bit 16: the + / | slip);
+	// \uDBFF\uDFFF is U+10FFFF (0xDBFF is a high surrogate too)
+	Expect(decode("\"\\uD83D\\uDE00\"") == 0x1F600, "CParser: surrogate pair U+1F600");
+	Expect(decode("\"\\uD840\\uDC00\"") == 0x20000, "CParser: surrogate pair U+20000");
+	Expect(decode("\"\\uDBFF\\uDFFF\"") == 0x10FFFF, "CParser: surrogate pair U+10FFFF");
+	// 0009: Equalight stretches a low-contrast image (it returned it unchanged)
+	ImageBuffer ib(16, 16);
+	for(int y = 0; y < 16; y++)
+		for(int x = 0; x < 16; x++) {
+			RGBA& c = ib[y][x];
+			c.r = c.g = c.b = (byte)(100 + 2 * x + y % 2);
+			c.a = 255;
+		}
+	Image flat = ib;
+	Image eq = Equalight(flat, 10);
+	Expect(eq[0][0].r < flat[0][0].r && eq[0][15].r > flat[0][15].r, "Equalight: stretches contrast");
+	// 0009: memory status: sysconf's -1 is not taken as a huge unsigned count
+	uint64 total = 0, avail = 0;
+	GetSystemMemoryStatus(total, avail);
+	Expect(total > 0 && avail <= total && total < ((uint64)1 << 50), "GetSystemMemoryStatus");
+}
+
 static void CheckSsh()
 {
 	SshSession ssh;   // no connection: the package links and its objects come and go
@@ -110,6 +144,7 @@ CONSOLE_APP_MAIN
 	CheckThreadsAndHeap();
 	CheckSqlite();
 	CheckPng();
+	CheckPatchedBugs();
 	CheckSsh();
 	Cout() << (failed ? "FAILED: " : "passed: ") << checks - failed << "/" << checks << " checks\n";
 	SetExitCode(failed);

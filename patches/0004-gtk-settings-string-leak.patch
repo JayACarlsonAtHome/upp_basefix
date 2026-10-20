@@ -1,0 +1,16 @@
+--- a/uppsrc/CtrlLib/ChGtk3.cpp	2026-10-20 10:15:01.113698370 -0700
++++ b/uppsrc/CtrlLib/ChGtk3.cpp	2026-10-20 10:15:01.120698368 -0700
+@@ -20,9 +20,11 @@
+ 
+ String GtkSettingsString(const char *name)
+ {
+-	const char *h = "";
++	gchar *h = NULL; // g_object_get gives a copy: ours to free
+ 	g_object_get(gtk_settings_get_default(), name, &h, NULL);
+-	return h;
++	String s = h ? h : "";
++	g_free(h);
++	return s;
+ }
+ 
+ void SetupFont()

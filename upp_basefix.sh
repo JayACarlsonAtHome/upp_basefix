@@ -107,7 +107,23 @@ make_bm() {
   local add=""
   [ "$strict" = 1 ] && add=" -Wall -Wextra"
   [ -n "$extra" ] && add="$add $extra"
-  sed -e "s|^COMMON_CPP_OPTIONS = \"\\(.*\\)\";|COMMON_CPP_OPTIONS = \"\\1$add\";|" \
+  # the compiler through a wrapper: each compile's messages also go to a file of its own
+  # in $UPP_BASEFIX_DIAG, so warnings are counted whole (umk's log interleaves the
+  # parallel compiles' lines)
+  local real; real=$(sed -n 's/^COMPILER = "\(.*\)";/\1/p' "$src")
+  mkdir -p "$WORK/bin"
+  cat > "$WORK/bin/$c-cc" <<EOW
+#!/bin/bash
+# upp_basefix: runs $real; with UPP_BASEFIX_DIAG set, keeps this compile's messages there
+[ -n "\${UPP_BASEFIX_DIAG:-}" ] || exec "$real" "\$@"
+f=\$(mktemp "\$UPP_BASEFIX_DIAG/XXXXXXXX")
+"$real" "\$@" 2> "\$f"; rc=\$?
+cat "\$f" >&2
+exit \$rc
+EOW
+  chmod +x "$WORK/bin/$c-cc"
+  sed -e "s|^COMPILER = \".*\";|COMPILER = \"$WORK/bin/$c-cc\";|" \
+      -e "s|^COMMON_CPP_OPTIONS = \"\\(.*\\)\";|COMMON_CPP_OPTIONS = \"\\1$add\";|" \
       -e "s|^COMMON_C_OPTIONS = \"\\(.*\\)\";|COMMON_C_OPTIONS = \"\\1${extra:+ $extra}\";|" \
       -e "s|^COMMON_LINK = \"\\(.*\\)\";|COMMON_LINK = \"\\1${link:+ $link}\";|" "$src" > "$WORK/bm/$name.bm"
   echo "$WORK/bm/$name.bm"
@@ -128,6 +144,25 @@ parse_build_opts() {
       *) die "unknown option $1" ;;
     esac
   done
+}
+
+# U++ house style, never counted as U++ warnings: these kinds anywhere (the U++ authors
+# write so on purpose, see docs/strict.md), and the sites in supp/strict-reviewed.txt
+# (each checked by hand). Any other U++ warning counts.
+STYLE_RE="\[-W(unused-parameter|deprecated-copy|deprecated-copy-with-user-provided-copy|logical-op-parentheses)\]|(‘|')&&(’|') within (‘|')\|\|(’|')"
+
+# count_warnings DIAG_DIR -> "ours upp style" (unique warnings)
+count_warnings() {
+  local all u style upp ours
+  all=$(cat "$1"/* 2> /dev/null | grep -E ': warning: ' | sort -u)
+  ours=$(grep -cE "^$HERE/" <<< "$all")
+  u=$(grep -E "^$WORK/$TREE/uppsrc/" <<< "$all")
+  style=$( { grep -E "$STYLE_RE" <<< "$u"
+             grep -vE "$STYLE_RE" <<< "$u" \
+               | sed -E "s|^$WORK/$TREE/uppsrc/([^:]+):([0-9]+):[0-9]+: warning: .*(\[-W[^]]+\])\$|\1:\2 \3|" \
+               | grep -xFf <(grep -vE '^(#|$)' "$HERE/supp/strict-reviewed.txt"); } | grep -c .)
+  upp=$(( $(grep -c . <<< "$u") - style ))
+  echo "$ours $upp $style"
 }
 
 # build_one COMPILER -> builds both check programs; sets BUILT_DIR, prints result lines
@@ -152,31 +187,57 @@ build_one() {
     t0=$(date +%s)
     # +USEMALLOC: sanitizers and valgrind need the system allocator, not U++'s heap
     local cfg=""; [ -n "$CHECK" ] && cfg="+USEMALLOC"
-    "$WORK/umk/umk" "$HERE/check,$WORK/$TREE/uppsrc" "$p" "$bm" $flags $cfg "$BUILT_DIR/$p" 2>&1 | tee "$log" | grep --line-buffered -E "$show" | sed -u 's/^/  /'
+    local diag="$WORK/diag/$tag-$p"; rm -rf "$diag"; mkdir -p "$diag"
+    UPP_BASEFIX_DIAG="$diag" "$WORK/umk/umk" "$HERE/check,$WORK/$TREE/uppsrc" "$p" "$bm" $flags $cfg "$BUILT_DIR/$p" 2>&1 | tee "$log" | grep --line-buffered -E "$show" | sed -u 's/^/  /'
     rc=${PIPESTATUS[0]}; t1=$(date +%s)
-    ours=$(grep -E "^$HERE/.*warning:" "$log" | sort -u | wc -l)
-    upp=$(grep -E "^$WORK/$TREE/uppsrc/.*warning:" "$log" | sort -u | wc -l)
-    echo "result: build $p $c $MODE: $([ "$rc" = 0 ] && echo ok || echo FAILED) $((t1 - t0)) s  warnings: ours $ours, U++ $upp (unique)  log: $log"
+    local counts style; counts=$(count_warnings "$diag")
+    read -r ours upp style <<< "$counts"
+    # Only files compiled in this run print warnings: a clean build counts the whole tree,
+    # so its count is kept and shown next to an incremental build's.
+    local wfile="$BUILT_DIR/$p.warnings" scope
+    if [ "$CLEAN" = 1 ]; then
+      [ "$rc" = 0 ] && echo "$counts" > "$wfile"
+      scope="whole tree"
+    elif [ -f "$wfile" ]; then
+      scope="files compiled now; last clean build: ours $(cut -d' ' -f1 "$wfile"), U++ $(cut -d' ' -f2 "$wfile")"
+    else
+      scope="files compiled now; tick Clean for the whole tree"
+    fi
+    echo "result: build $p $c $MODE: $([ "$rc" = 0 ] && echo ok || echo FAILED) $((t1 - t0)) s  warnings: ours $ours, U++ $upp$([ "${style:-0}" -gt 0 ] && echo ", U++ house style $style") ($scope)  log: $log"
     [ "$rc" = 0 ] || FAILS=$((FAILS + 1))
   done
+}
+
+# UBSan reports and goes on (exit 0): a "runtime error:" in the output fails the run.
+ub_fail() {
+  local n; n=$(echo "$out" | grep -c 'runtime error:')
+  [ "$n" -gt 0 ] && [ "$rc" = 0 ] && { rc=98; echo "  ($n UBSan runtime error(s): counted as a failure)"; }
 }
 
 run_checks() {
   local c=$1 out rc
   local run=()
   case $CHECK in
-    valgrind) run=(valgrind --error-exitcode=99 --leak-check=full --errors-for-leak-kinds=definite -q) ;;
-    helgrind) run=(valgrind --tool=helgrind --error-exitcode=99 -q) ;;
+    valgrind) run=(valgrind --error-exitcode=99 --leak-check=full --errors-for-leak-kinds=definite -q
+                            --suppressions="$HERE/supp/valgrind.supp") ;;
+    helgrind) run=(valgrind --tool=helgrind --error-exitcode=99 -q --suppressions="$HERE/supp/valgrind.supp") ;;
   esac
+  # system-library noise is suppressed (supp/); UBSan prints a stack for each report
+  export TSAN_OPTIONS="suppressions=$HERE/supp/tsan.supp second_deadlock_stack=1" LSAN_OPTIONS="suppressions=$HERE/supp/lsan.supp"
+  export UBSAN_OPTIONS="print_stacktrace=1"
   step "run UppBaseCheck ($c${CHECK:+, $CHECK})"
   out=$("${run[@]}" "$BUILT_DIR/UppBaseCheck" 2>&1); rc=$?
   echo "$out" | sed 's/^/  /'
+  ub_fail
   echo "result: test UppBaseCheck $c $MODE${CHECK:+ $CHECK}: $([ "$rc" = 0 ] && echo ok || echo "FAILED (exit $rc)")  $(echo "$out" | grep -E '^(passed|FAILED):' | tail -1)"
   [ "$rc" = 0 ] || FAILS=$((FAILS + 1))
   if [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && [ "$CHECK" != helgrind ]; then
     step "run UppBaseCheckGui --smoke ($c${CHECK:+, $CHECK})"
-    out=$(timeout 120 "${run[@]}" "$BUILT_DIR/UppBaseCheckGui" --smoke 2>&1); rc=$?
+    # checked runs: no accessibility bridge (dbus) or GVFS: system threads, not U++
+    local quiet=(); [ -n "$CHECK" ] && quiet=(env NO_AT_BRIDGE=1 GTK_A11Y=none GIO_USE_VFS=local)
+    out=$(timeout 120 "${quiet[@]}" "${run[@]}" "$BUILT_DIR/UppBaseCheckGui" --smoke 2>&1); rc=$?
     echo "$out" | grep -v '^Gdk-Message' | sed 's/^/  /'
+    ub_fail
     echo "result: test UppBaseCheckGui $c $MODE${CHECK:+ $CHECK}: $([ "$rc" = 0 ] && echo ok || echo "FAILED (exit $rc)")"
     [ "$rc" = 0 ] || FAILS=$((FAILS + 1))
   else
