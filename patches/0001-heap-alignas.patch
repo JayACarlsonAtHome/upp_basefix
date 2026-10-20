@@ -1,0 +1,11 @@
+--- a/uppsrc/Core/sheap.cpp	2026-10-20 07:54:40.246184716 -0700
++++ b/uppsrc/Core/sheap.cpp	2026-10-20 07:54:40.250184717 -0700
+@@ -403,7 +403,7 @@
+ 	if(heap_tls__)
+ 		return heap_tls__;
+ 
+-	static thread_local byte sHeap__[sizeof(Heap)]; // zero initialization is fine for us
++	alignas(Heap) static thread_local byte sHeap__[sizeof(Heap)]; // zero initialization is fine for us
+ 	heap_tls__ = (Heap *)sHeap__;
+ 
+ 	static thread_local HeapExitThreadGuard __;

@@ -1,0 +1,3 @@
+# the work area lives outside the repo (UPP_BASEFIX_WORK, default /home/jay/upp_basefix_work)
+*.orig
+*.rej
