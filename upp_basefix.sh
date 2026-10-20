@@ -22,6 +22,10 @@
 #        (--asan/--tsan need clang or gcc runtimes; valgrind needs valgrind)
 #   ./upp_basefix.sh gui                      build the UppBaseFixBuild window (gcc release,
 #                                             patched tree) and start it
+#   ./upp_basefix.sh install [DIR]            a U++ install for other projects (default
+#                                             ~/upp_basefix): DIR/umk, DIR/uppsrc (the patched
+#                                             tree), GCC.bm + CLANG.bm next to umk, VERSION;
+#                                             umk's config + object cache stay in DIR/.config
 #
 # WORK (UPP_BASEFIX_WORK, default ~/upp_basefix_work) holds the download, the trees, its
 # own umk (built from the pinned commit; UPP_BASEFIX_UMK names another) + object cache
@@ -343,6 +347,36 @@ cmd_gui() {
   step "started $WORK/out/gui/UppBaseFixBuild"
 }
 
+cmd_install() {
+  local dir="${1:-$HOME/upp_basefix}" c
+  local version="U++ $PIN (github.com/ultimatepp/ultimatepp $PIN_COMMIT) + upp_basefix $(git -C "$HERE" describe --always --dirty 2>/dev/null)"
+  if [ -e "$dir" ] && [ ! -f "$dir/VERSION" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
+    die "$dir exists and is not an upp_basefix install: not touching it"
+  fi
+  tree_ok "$WORK/patched" || die "no patched tree: run ./upp_basefix.sh bootstrap"
+  cmd_status "$WORK/patched" > /dev/null || die "the patched tree lacks patches: ./upp_basefix.sh patch"
+  setup_umk
+  step "install U++ $PIN + patches -> $dir"
+  # a new pin's files can be older than the objects of the last one: start the cache afresh
+  if [ -f "$dir/VERSION" ] && ! grep -q "$PIN_COMMIT" "$dir/VERSION"; then
+    step "new pin: clearing umk's object cache in $dir/.config"
+    rm -rf "$dir/.config"
+  fi
+  mkdir -p "$dir/.config"   # umk finds it next to itself: its own config and cache, not ~/.config
+  rsync -a --delete "$WORK/patched/uppsrc/" "$dir/uppsrc/" || die "rsync failed"
+  cp "$WORK/umk/umk" "$dir/umk.new" && mv "$dir/umk.new" "$dir/umk"
+  for c in gcc clang; do   # umk looks up "GCC" / "CLANG" next to itself; the real compilers
+    local src name
+    case $c in gcc) src="$HERE/bm/GCC15.bm"; name=GCC ;; clang) src="$HERE/bm/CLANG26.bm"; name=CLANG ;; esac
+    sed "s|^COMPILER = \".*\";|COMPILER = \"$(compiler $c)\";|" "$src" > "$dir/$name.bm"
+  done
+  { echo "$version"
+    echo "installed $(date '+%Y-%m-%d %H:%M') from $WORK/patched"
+    ls "$HERE/patches" | sed 's/^/patch: /'; } > "$dir/VERSION"
+  echo "install: $dir  (umk, uppsrc, GCC.bm, CLANG.bm, VERSION)"
+  echo "install: projects use it with UPP_DIR=$dir"
+}
+
 # The U++ packages the check programs and the window build; their .upp files name the
 # system packages they need (external_dependency(RPM ...) / (DPKG ...)).
 UPP_PACKAGES="Core Core/SSH Draw Painter PdfDraw RichText Sql CtrlCore CtrlLib plugin/png plugin/sqlite3 plugin/bmp"
@@ -406,11 +440,12 @@ cmd_bootstrap() {
 case "${1:-}" in
   bootstrap) shift; cmd_bootstrap "$@" ;;
   pristine) shift; cmd_pristine "$@" ;;
+  install)  shift; cmd_install "$@" ;;
   verify)   shift; cmd_verify "$@" ;;
   patch)    shift; cmd_patch ;;
   status)   shift; cmd_status "$@" ;;
   build)    shift; cmd_build 0 "$@" ;;
   test)     shift; cmd_build 1 "$@" ;;
   gui)      shift; cmd_gui ;;
-  *) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+  *) sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac
