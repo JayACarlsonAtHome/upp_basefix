@@ -411,7 +411,21 @@ cmd_bootstrap() {
   elif command -v apt-get > /dev/null; then kind=DPKG; have="dpkg -s"; pm=apt-get
   else die "neither dnf nor apt-get: install the packages by hand (see the .upp files' external_dependency lines)"; fi
   # the package list comes from the patched .upp files (0016 adds Draw's RPM names), so the
-  # pinned tree comes first: download + patch need only curl, tar, patch, rsync
+  # pinned tree comes first: download + patch need only curl, tar, patch, rsync. Those four
+  # are checked here, before the download (Fedora Workstation has no patch by default).
+  local tools=() t
+  for t in curl tar patch rsync; do command -v "$t" > /dev/null || tools+=("$t"); done
+  if [ ${#tools[@]} -gt 0 ]; then
+    echo "missing tools: ${tools[*]}"
+    if [ "$install" = 1 ]; then
+      step "sudo $pm install ${tools[*]}"
+      sudo $pm install -y "${tools[@]}" || die "install failed: ${tools[*]}"
+    else
+      echo "install them: sudo $pm install ${tools[*]}"
+      echo "         (or: ./upp_basefix.sh bootstrap --install)"
+      exit 1
+    fi
+  fi
   step "pinned tree and patches"
   tree_ok "$WORK/pristine" && cmd_verify "$WORK/pristine" > /dev/null || cmd_pristine || exit 1
   cmd_patch > /dev/null || die "the patches do not apply: ./upp_basefix.sh patch"
