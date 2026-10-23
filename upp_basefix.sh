@@ -476,7 +476,13 @@ cmd_bootstrap() {
     echo "system packages: all there"
   fi
   setup_umk
-  echo "bootstrap: done. Next: ./upp_basefix.sh test   or   ./upp_basefix.sh gui"
+  # the hint is for a person at the prompt, not for a project's bootstrap that calls us
+  # (it sets UPP_BASEFIX_FROM, e.g. jac313) and goes straight on to `install`
+  if [ -z "${UPP_BASEFIX_FROM:-}" ]; then
+    echo "bootstrap: done. Next: ./upp_basefix.sh test   or   ./upp_basefix.sh gui"
+  else
+    echo "bootstrap: done."
+  fi
 }
 
 case "${1:-}" in
