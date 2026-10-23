@@ -40,6 +40,7 @@ WORK="${UPP_BASEFIX_WORK:-$HOME/upp_basefix_work}"
 PIN=18761                                          # U++ build number: git commit count + 2270
 PIN_COMMIT=af8e133a7697615f18693b071dac39992f9f7ace  # ultimatepp/ultimatepp master, 2026-10-19
 PIN_URL="https://codeload.github.com/ultimatepp/ultimatepp/tar.gz/$PIN_COMMIT"
+PIN_BYTES=128739092   # size of that archive, for the download's progress bar (GitHub sends no length)
 step() { echo "step: $*"; }
 die() { echo "error: $*" >&2; exit 2; }
 
@@ -58,13 +59,39 @@ cmd_verify() {
   [ "$bad" = 0 ] && [ "$extra" = 0 ]
 }
 
+# fetch_with_bar FILE URL: curl to FILE; on a terminal, a progress bar from the file's size
+# against PIN_BYTES (codeload sends no Content-Length, so curl's own bar has no total)
+fetch_with_bar() {
+  local out=$1 url=$2
+  if [ ! -t 2 ]; then curl -fsSL -o "$out" "$url"; return; fi
+  rm -f "$out"
+  curl -fsSL -o "$out" "$url" & local pid=$!
+  local have pct fill total_mb=$((PIN_BYTES / 1048576)) bar
+  while kill -0 "$pid" 2>/dev/null; do
+    have=$(stat -c %s "$out" 2>/dev/null || echo 0)
+    pct=$((have * 100 / PIN_BYTES)); [ "$pct" -gt 99 ] && pct=99
+    fill=$((pct * 30 / 100))
+    bar=$(printf '%*s' "$fill" '' | tr ' ' '#')$(printf '%*s' $((30 - fill)) '' | tr ' ' '-')
+    printf '\r  [%s] %3d%%  %4d / %d MB' "$bar" "$pct" $((have / 1048576)) "$total_mb" >&2
+    sleep 0.5
+  done
+  wait "$pid"; local rc=$?
+  if [ "$rc" = 0 ]; then
+    printf '\r  [%s] 100%%  %4d / %d MB\n' "$(printf '%*s' 30 '' | tr ' ' '#')" \
+      $(( $(stat -c %s "$out") / 1048576 )) "$total_mb" >&2
+  else
+    printf '\n' >&2
+  fi
+  return "$rc"
+}
+
 # download -> path of the pinned commit's archive (fetched once)
 download() {
   local tgz="$WORK/download/ultimatepp-$PIN_COMMIT.tar.gz"
   if [ ! -s "$tgz" ]; then
     step "download U++ $PIN (commit ${PIN_COMMIT:0:12}) from GitHub" >&2
     mkdir -p "$WORK/download"
-    curl -fsSL -o "$tgz.part" "$PIN_URL" && mv "$tgz.part" "$tgz" || die "download failed: $PIN_URL"
+    fetch_with_bar "$tgz.part" "$PIN_URL" && mv "$tgz.part" "$tgz" || die "download failed: $PIN_URL"
   fi
   echo "$tgz"
 }
