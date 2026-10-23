@@ -407,7 +407,8 @@ system_packages() {
 cmd_bootstrap() {
   local install=0 kind have pm
   [ "${1:-}" = --install ] && install=1
-  if command -v dnf > /dev/null; then kind=RPM; have="rpm -q"; pm=dnf
+  # rpm -q --whatprovides: Fedora 44's zlib-devel is provided by zlib-ng-compat-devel
+  if command -v dnf > /dev/null; then kind=RPM; have="rpm -q --whatprovides"; pm=dnf
   elif command -v apt-get > /dev/null; then kind=DPKG; have="dpkg -s"; pm=apt-get
   else die "neither dnf nor apt-get: install the packages by hand (see the .upp files' external_dependency lines)"; fi
   # the package list comes from the patched .upp files (0016 adds Draw's RPM names), so the
