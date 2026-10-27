@@ -431,6 +431,19 @@ system_packages() {
   esac
 }
 
+# RHEL-family: xxhash-devel is only in EPEL, and EPEL needs CRB. True when this is one and
+# EPEL is not installed yet. el_epel_cmd prints the commands that enable both (for the hint).
+el_needs_epel() {
+  local id; id=$(. /etc/os-release 2>/dev/null; echo " ${ID:-} ${ID_LIKE:-} ")
+  case $id in *" rhel "*|*" centos "*|*" rocky "*|*" almalinux "*) ;; *) return 1 ;; esac
+  ! rpm -q epel-release > /dev/null 2>&1
+}
+el_epel_cmd() {
+  local el; el=$(rpm -E %rhel)
+  echo "sudo dnf config-manager --set-enabled crb 2>/dev/null || sudo subscription-manager repos --enable codeready-builder-for-rhel-$el-$(uname -m)-rpms"
+  echo "sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-$el.noarch.rpm"
+}
+
 cmd_bootstrap() {
   local install=0 kind have pm
   [ "${1:-}" = --install ] && install=1
@@ -465,9 +478,18 @@ cmd_bootstrap() {
   if [ ${#missing[@]} -gt 0 ]; then
     echo "missing: ${missing[*]}"
     if [ "$install" = 1 ]; then
+      if [ $kind = RPM ] && el_needs_epel; then
+        step "enable CRB and EPEL (xxhash-devel is only in EPEL)"
+        local cmds c; mapfile -t cmds < <(el_epel_cmd)
+        for c in "${cmds[@]}"; do sh -c "$c" || die "could not enable CRB/EPEL: $c"; done
+      fi
       step "sudo $pm install ${missing[*]}"
       sudo $pm install -y "${missing[@]}" || die "install failed (on RHEL, xxhash-devel is in EPEL; gcc-toolset-15 in AppStream)"
     else
+      if [ $kind = RPM ] && el_needs_epel; then
+        echo "enable CRB and EPEL first (xxhash-devel is only in EPEL):"
+        el_epel_cmd | sed 's/^/  /'
+      fi
       echo "install them: sudo $pm install ${missing[*]}"
       echo "         (or: ./upp_basefix.sh bootstrap --install)"
       exit 1
