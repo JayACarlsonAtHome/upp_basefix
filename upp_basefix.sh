@@ -391,13 +391,16 @@ cmd_install() {
     step "new pin: clearing umk's object cache in $dir/.config"
     rm -rf "$dir/.config"
   fi
-  mkdir -p "$dir/.config"   # umk finds it next to itself: its own config and cache, not ~/.config
+  mkdir -p "$dir/.config/u++/theide"   # umk finds it next to itself: its own config and cache, not ~/.config
   rsync -a --delete "$WORK/patched/uppsrc/" "$dir/uppsrc/" || die "rsync failed"
   cp "$WORK/umk/umk" "$dir/umk.new" && mv "$dir/umk.new" "$dir/umk"
-  for c in gcc clang; do   # umk looks up "GCC" / "CLANG" next to itself; the real compilers
+  # umk resolves method "GCC" / "CLANG" in its config dir first, and writes its own C++17
+  # defaults there when none exist, so the real file goes there; the name next to umk links to it
+  for c in gcc clang; do
     local src name
     case $c in gcc) src="$HERE/bm/GCC15.bm"; name=GCC ;; clang) src="$HERE/bm/CLANG26.bm"; name=CLANG ;; esac
-    sed "s|^COMPILER = \".*\";|COMPILER = \"$(compiler $c)\";|" "$src" > "$dir/$name.bm"
+    sed "s|^COMPILER = \".*\";|COMPILER = \"$(compiler $c)\";|" "$src" > "$dir/.config/u++/theide/$name.bm"
+    ln -sfn ".config/u++/theide/$name.bm" "$dir/$name.bm"
   done
   { echo "$version"
     echo "installed $(date '+%Y-%m-%d %H:%M') from $WORK/patched"
