@@ -30,8 +30,8 @@
 # WORK (UPP_BASEFIX_WORK, default ~/upp_basefix_work) holds the download, the trees, its
 # own umk (built from the pinned commit; UPP_BASEFIX_UMK names another) + object cache
 # (umk/.cache/upp.out: never shared with other projects), out/ and logs/.
-# Compilers: the bm/ files' paths if they exist, else g++ / clang++ from PATH
-# (UPP_BASEFIX_GCC, UPP_BASEFIX_CLANG override).
+# Compilers: the bm/ files' paths if they exist, else from PATH g++-16 / g++-15 / g++ and
+# clang++ (UPP_BASEFIX_GCC, UPP_BASEFIX_CLANG override).
 # Every step prints "step: ..." lines; build/test end with one "result:" line per run
 # and a "summary:" line. The exit code is 0 only when everything asked for passed.
 set -u
@@ -151,15 +151,17 @@ cmd_status() {
 }
 
 # compiler C -> the compiler to run: UPP_BASEFIX_GCC / UPP_BASEFIX_CLANG, else the bm/ file's
-# path if it exists, else g++ / clang++ from PATH
+# path if it exists, else the first of its fallbacks on PATH (a versioned g++ first: on
+# Ubuntu/Mint plain g++ is 13, which has no -std=c++26)
 compiler() {
-  local env bm path fallback
-  case $1 in gcc) env=${UPP_BASEFIX_GCC:-}; bm="$HERE/bm/GCC15.bm"; fallback=g++ ;;
-             clang) env=${UPP_BASEFIX_CLANG:-}; bm="$HERE/bm/CLANG26.bm"; fallback=clang++ ;; esac
+  local env bm path fallbacks f
+  case $1 in gcc) env=${UPP_BASEFIX_GCC:-}; bm="$HERE/bm/GCC15.bm"; fallbacks="g++-16 g++-15 g++" ;;
+             clang) env=${UPP_BASEFIX_CLANG:-}; bm="$HERE/bm/CLANG26.bm"; fallbacks=clang++ ;; esac
   [ -n "$env" ] && { echo "$env"; return; }
   path=$(sed -n 's/^COMPILER = "\(.*\)";/\1/p' "$bm")
   [ -x "$path" ] && { echo "$path"; return; }
-  command -v "$fallback" || die "no $1 compiler (set UPP_BASEFIX_${1^^})"
+  for f in $fallbacks; do command -v "$f" && return; done
+  die "no $1 compiler (set UPP_BASEFIX_${1^^})"
 }
 
 # umk: UPP_BASEFIX_UMK if set, else built once from the pinned commit (its mkumk_gcc.sh,
