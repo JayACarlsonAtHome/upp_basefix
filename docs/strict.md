@@ -91,3 +91,8 @@ ids), and OFFSETOF rewritten on offsetof.
 **strict-full is 0** (2026-10-31): no warning in U++ or the checks, debug and release, gcc 16 and
 clang 22, and --strict-full now builds with -Werror, as jac313 does. UppBaseCheck 23/23 in debug,
 release, ASan + UBSan and valgrind.
+
+0025 (2026-10-31): jac313's GUI. Jac313Runner and JTextGui (U++ packages) now build with jac313's
+whole set and -Werror against this U++ (installed by `install`, with the -isystem build methods),
+gcc 16 and clang 22. That instantiated one U++ template the check programs never do:
+AString::ReverseFind (0025). The rest was in jac313's and jText_GUI's own code, fixed there.

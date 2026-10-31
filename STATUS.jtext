@@ -41,8 +41,6 @@
 === Data ===
 1. #|# 1|1|Fedora suppressions|The GUI check fails under ASan and valgrind on Fedora 44 with or without the patches: GLib / pango / fontconfig / PackageKit's GTK module reports that supp/ (made on RHEL) does not cover.
 
-1. #|# 2|2|jac313's GUI on the clean U++, then GitHub|At 0: Jac313Runner and JTextGui with jac313's warnings and -Werror in their .upp files, built on this U++; then push to GitHub (not before, Jay 2026-10-31).
-
 === End Data ===
 === End Section ===
 
@@ -61,7 +59,7 @@
 
 
 === Data ===
-1. #|# 1|When this goes to GitHub, should main move to dev-work too?|GitHub's dev-work, main and test-work are all at 2acac63 today.|2026-10-31|Claude (jac313 session)|
+1. #|# 1|When this goes to GitHub, should main move to dev-work too?|GitHub's dev-work, main and test-work are all at 2acac63 today.|2026-10-31|Claude (jac313 session)|Yes: jac313's bsir.sh clones main and pulls it, so Jay's 'upload to github, download to the other projects' (2026-10-31) needs main; it was a fast-forward.
 
 === End Data ===
 === End Section ===
