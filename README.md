@@ -41,6 +41,8 @@ CtrlLib, plugin/png, plugin/sqlite3, plugin/bmp.
 | 0014 | bugs: ParseQtf reads past the end of truncated QTF text; `InfoCtrl::GetTabOffset` ignores its argument; `Regex`/`WRegex(options, pattern, len)` drop the options |
 | 0015 | the remaining strict warnings (signed/unsigned compares, debug `CHECK` as one expression, default member values, sized `operator delete`, ...) |
 | 0016 | Draw/Draw.upp: the RPM names of its system packages (it lists only the Debian ones) |
+| 0017 | bugs strict-full and gcc 16 found: `Sprintf` cut results at 1500 characters, `WwwFormat` put the zone text in the format, a stream `long` loaded only its low half where long is 64 bits, `memset8__`/`memcpy8__` formed a pointer before the block |
+| 0018 | strict-full, the small kinds: fall-through, format, pedantic, virtual destructors, hidden overloads, cast-align (see `docs/strict.md`) |
 
 Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/strict.md`.
 
@@ -50,6 +52,7 @@ Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/
                                            # GitHub, umk built from it, the patched tree
     ./upp_basefix.sh test --clean          # gcc and clang: build, count warnings, run the checks
     ./upp_basefix.sh test --release --strict
+    ./upp_basefix.sh build --strict-full --clean   # jac313's whole warning set: the count to work down
     ./upp_basefix.sh test --asan           # or --tsan (clang), --valgrind, --helgrind
     ./upp_basefix.sh test --tree pristine  # the unpatched tree, to compare
     ./upp_basefix.sh gui                   # the same in a window

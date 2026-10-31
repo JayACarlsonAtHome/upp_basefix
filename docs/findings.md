@@ -30,9 +30,16 @@ no finding is in them.
 | 0014 | strict: -Wunused-parameter | Core/Regex.h (new since 18619) | `Regex(dword options, const char *pattern, int len)` and the `WRegex` one call `Set(pattern, len)`: the options (e.g. `PCRE2_CASELESS`) are dropped |
 | 0015 | strict: the rest | 21 files | signed/unsigned compares (`findarg`/`decode` compare integers by value: no negative number equals an unsigned one), debug `CHECK` as one expression (it left an empty `else`), default member values for aggregates, `[[maybe_unused]]` SSH allocators, sized `operator delete`, enum/int in `?:`, `(const T)` casts, byte fields tested `>= 0`, two string-literal `?:` gcc -O3 + ASan misread |
 | 0016 | bootstrap | Draw/Draw.upp | the system packages are declared for DPKG only (freetype, fontconfig, X11, xcb, expat); the RPM names are added |
+| 0017 | reading `VFormat` for -Wformat-nonliteral | Core/Format.cpp `VFormat` (behind `Sprintf`) | when the format is long it allocates `2 * strlen(fmt) + 1024` bytes but passes 1500 to `vsnprintf`, and the estimate can be short anyway: results over 1500 characters are cut. Now measures, then formats |
+| 0017 | `printf` format attribute on `Sprintf` (-Wformat-nonliteral) | Core/InetUtil.cpp `WwwFormat` | the time zone text was appended to the *format* (`"%2d:%02d:%02d " + GetTimeZoneText()`), so a `%` in it would be read as a directive; it is appended to the result now |
+| 0017 | gcc 16 -O2 -Wmaybe-uninitialized | Core/Stream.h `operator%(long&)`, `(unsigned long&)` | a long is 32 bits in the stream, read through `(dword *)&d`: where long is 64 bits (Linux, macOS), loading sets only its low half and leaves the rest as it was. Now loads the whole value (sign / zero extended); `float` / `double` copy their bytes instead of reading them through a `dword *` / `uint64 *` (aliasing) |
+| 0017 | gcc 16 -O2 -Warray-bounds | Core/Mem.cpp `memset8__`, `memcpy8__` | the main loops stop at an end pointer less 128 (64), which for a short block points before its start (undefined); the loops count what is left instead |
+| 0018 | strict-full (jac313's warnings) | 62 files | the small kinds: `[[fallthrough]]`, `printf_format` attributes (Defs.h) on `Sprintf` / `VFormat` / `__LOGF__`, the run-time printf formats of `Format()` kept local, `%p` given `void *`, `__int128` as `__extension__`, Font's struct named outside its anonymous union, `virtual` destructors for 9 callback/interface bases, `using Base::Name` where an override hid the other overloads (48; `SubMenuItem` keeps it private as `MenuItem` does), cast-align (through `void *` for raw storage the allocator aligns; `memcpy` / `Peek32` loads where bytes were read as wider integers), two gcc 16 -O2 maybe-uninitialized (CvFlt's `e10`; a stream container loading plain values starts them at zero) |
 
-UppBaseCheck checks the bugs of 0008 and 0014 and the `findarg` rule of 0015 directly:
-on the pristine tree it passes 13/21, on the patched tree 21/21.
+UppBaseCheck checks the bugs of 0008, 0014 and 0017 (`Sprintf` past 1500 characters, a stream `long`)
+and the `findarg` rule of 0015 directly: on the pristine tree it passes 13/23, on the patched tree 23/23.
+0017's `WwwFormat` and `memset8__` / `memcpy8__` fixes cannot be shown by a check: the zone text
+comes from the system, and the pointer is undefined behaviour with no visible effect on x86.
 
 ## Not in uppsrc, so not patched
 

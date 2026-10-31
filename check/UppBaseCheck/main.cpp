@@ -142,6 +142,23 @@ static void CheckPatchedBugs()
 	// 0014: Regex(options, pattern, len) used to drop the options
 	Expect(Regex(PCRE2_UTF | PCRE2_CASELESS, "abc", 3).Match("ABC"), "Regex: options with a length");
 	Expect(WRegex(PCRE2_UTF | PCRE2_CASELESS, WString("abc").Begin(), 3).Match(WString("ABC")), "WRegex: options with a length");
+	// 0017: Sprintf results longer than 1500 characters (VFormat passed 1500 for a bigger buffer).
+	// A format of 300+ characters takes the old code's big-buffer path, where its debug ASSERT
+	// holds and the result comes back cut (a short format would stop the run at that ASSERT).
+#define Y50 "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+	String long_text('x', 3000);
+	Expect(Sprintf(Y50 Y50 Y50 Y50 Y50 Y50 "%s", ~long_text).GetCount() == 3300, "Sprintf: a result longer than 1500 characters");
+#undef Y50
+	// 0017: a long is 32 bits in a stream; where long is 64 bits, loading set only its low half
+	StringStream out;
+	out.SetStoring();
+	long stored = -5;
+	out % stored;
+	StringStream in(out.GetResult());
+	in.SetLoading();
+	long loaded = 0x123456789A;   // high bits set, as a reused variable might have
+	in % loaded;
+	Expect(loaded == -5, "Stream: a long loads whole");
 }
 
 static void CheckSsh()

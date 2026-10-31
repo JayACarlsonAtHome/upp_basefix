@@ -1,0 +1,104 @@
+diff -ruN a/uppsrc/Core/Format.cpp b/uppsrc/Core/Format.cpp
+--- a/uppsrc/Core/Format.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/Format.cpp	2026-10-30 23:17:06.510704882 -0700
+@@ -1102,21 +1102,24 @@
+ // Old format ---------------------------
+ 
+ String  VFormat(const char *fmt, va_list ptr) {
+-	int limit = 2 * (int)strlen(fmt) + 1024;
+-	if(limit < 1500) {
+-		char buffer[1500];
+-		vsnprintf(buffer, 1500, fmt, ptr);
+-		int len = (int)strlen(buffer);
+-		ASSERT(len <= limit);
+-		return String(buffer, len);
++	// The stack buffer first, then exactly the length vsnprintf says it needs (it used to
++	// allocate 2 * strlen(fmt) + 1024 but pass 1500, so longer results were cut at 1500).
++	char buffer[1500];
++	va_list again;
++	va_copy(again, ptr);
++	int len = vsnprintf(buffer, sizeof(buffer), fmt, ptr);
++	if(len < 0) {
++		va_end(again);
++		return String();
+ 	}
+-	else {
+-		Buffer<char> buffer(limit);
+-		vsnprintf(buffer, 1500, fmt, ptr);
+-		int len = (int)strlen(buffer);
+-		ASSERT(len <= limit);
++	if(len < static_cast<int>(sizeof(buffer))) {
++		va_end(again);
+ 		return String(buffer, len);
+ 	}
++	Buffer<char> big(len + 1);
++	vsnprintf(big, static_cast<size_t>(len) + 1, fmt, again);
++	va_end(again);
++	return String(big, len);
+ }
+ 
+ 
+diff -ruN a/uppsrc/Core/InetUtil.cpp b/uppsrc/Core/InetUtil.cpp
+--- a/uppsrc/Core/InetUtil.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/InetUtil.cpp	2026-10-30 23:17:24.111941792 -0700
+@@ -14,7 +14,7 @@
+ 		<< dayofweek[DayOfWeek(tm)] << ", "
+ 		<< (int)tm.day << ' ' << s_www_month[tm.month - 1]
+ 		<< ' ' << (int)tm.year
+-		<< ' ' << Sprintf("%2d:%02d:%02d " + GetTimeZoneText(), tm.hour, tm.minute, tm.second);
++		<< ' ' << Sprintf("%2d:%02d:%02d ", tm.hour, tm.minute, tm.second) << GetTimeZoneText();   // the zone text was in the format
+ }
+ 
+ int FindMonth(const String& m)
+diff -ruN a/uppsrc/Core/Mem.cpp b/uppsrc/Core/Mem.cpp
+--- a/uppsrc/Core/Mem.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Mem.cpp	2026-10-30 23:17:24.112512763 -0700
+@@ -17,7 +17,8 @@
+ 	const byte *e = t + len;
+ 	t = (byte *)(((uintptr_t)t | 15) + 1);
+ 	len = e - t;
+-	e -= 128;
++	// whole 128-byte steps while that much is left (an end pointer less 128 could point
++	// before the start of a short block: undefined, and gcc -O2 reports it)
+ #if 0 // streaming does not seem to be benefical anymore
+ #ifdef CPU_SSE2
+ 	if(len >= 1024*1024 && 0) { // for really huge data, bypass the cache
+@@ -32,7 +33,7 @@
+ 	}
+ #endif
+ #endif
+-	while(t <= e) {
++	while(e - t >= 128) {
+ 		Set4(0*16); Set4(1*16); Set4(2*16); Set4(3*16);
+ 		Set4(4*16); Set4(5*16); Set4(6*16); Set4(7*16);
+ 		t += 128;
+@@ -72,8 +73,7 @@
+ 	s += t1 - t;
+ 	t = t1;
+ 	len = e - t;
+-	e -= 64;
+-	while(t <= e) {
++	while(e - t >= 64) {   // whole 64-byte steps while that much is left (as memset8__)
+ 		Copy128(0*16); Copy128(1*16); Copy128(2*16), Copy128(3*16);
+ 		t += 64;
+ 		s += 64;
+diff -ruN a/uppsrc/Core/Stream.h b/uppsrc/Core/Stream.h
+--- a/uppsrc/Core/Stream.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Stream.h	2026-10-30 23:17:06.511051254 -0700
+@@ -207,10 +207,12 @@
+ 	Stream&   operator%(unsigned short& d) { return SerializeRaw((word *)&d); }
+ 	Stream&   operator%(int& d)            { return SerializeRaw((dword *)&d); }
+ 	Stream&   operator%(unsigned int& d)   { return SerializeRaw((dword *)&d); }
+-	Stream&   operator%(long& d)           { return SerializeRaw((dword *)&d); }
+-	Stream&   operator%(unsigned long& d)  { return SerializeRaw((dword *)&d); }
+-	Stream&   operator%(float& d)          { return SerializeRaw((dword *)&d); }
+-	Stream&   operator%(double& d)         { return SerializeRaw((uint64 *)&d); }
++	// long is 32 bits in the stream; where long is 64 bits, loading used to set only its low half.
++	Stream&   operator%(long& d)           { dword h = static_cast<dword>(d); SerializeRaw(&h); if(IsLoading()) d = static_cast<int>(h); return *this; }
++	Stream&   operator%(unsigned long& d)  { dword h = static_cast<dword>(d); SerializeRaw(&h); if(IsLoading()) d = h; return *this; }
++	// float / double: their bytes, copied (reading a double through a uint64 * breaks aliasing)
++	Stream&   operator%(float& d)          { dword h; memcpy(&h, &d, sizeof(h)); SerializeRaw(&h); memcpy(&d, &h, sizeof(h)); return *this; }
++	Stream&   operator%(double& d)         { uint64 h; memcpy(&h, &d, sizeof(h)); SerializeRaw(&h); memcpy(&d, &h, sizeof(h)); return *this; }
+ 	Stream&   operator%(int64& d)          { return SerializeRaw((uint64 *)&d); }
+ 	Stream&   operator%(uint64& d)         { return SerializeRaw((uint64 *)&d); }
+ 

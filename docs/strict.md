@@ -21,3 +21,21 @@ Warnings are counted from one file per compile (the build method runs the compil
 through `$WORK/bin/<compiler>-cc`, which keeps its messages in `$WORK/diag/`): umk's log
 interleaves the lines of parallel compiles, so counting it splits some warnings.
 Only files compiled in a run print warnings: tick Clean for the whole tree's count.
+
+## Strict-full (jac313's warning set), from 2026-10-31
+
+`--strict-full` adds what jac313 builds its own code with: `-Wpedantic -Wshadow
+-Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Woverloaded-virtual -Wimplicit-fallthrough
+-Wformat=2 -Wconversion -Wsign-conversion` (jac313 also has `-Werror`). On 18761 + 0001-0016,
+gcc 16 and clang 22 (Fedora 44), the check programs gave 5,964 warning sites:
+
+| Kind | Sites | Patch |
+|---|---|---|
+| -Wold-style-cast | 2,725 | to do |
+| -Wsign-conversion, -Wconversion and clang's int / float / 64-to-32 kinds | 2,226 | to do |
+| -Wshadow | 900 | to do |
+| the small kinds (cast-align, non-virtual-dtor, overloaded-virtual, format, fall-through, pedantic, ...) | 113 | 0018 (bugs: 0017) |
+
+704 of them are in GLib's headers, which U++ includes as plain `-I` paths (pkg-config): not
+ours to fix in GLib; U++'s build could give those paths as `-isystem`. After 0017 + 0018:
+5,799 sites, none of the small kinds; `--strict` stays at 0 (gcc 16 release had 2, fixed in 0018).

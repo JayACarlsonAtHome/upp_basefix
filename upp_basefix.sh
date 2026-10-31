@@ -14,6 +14,10 @@
 #   ./upp_basefix.sh build [options]          build the check programs, count warnings
 #        --compiler gcc|clang|both   (default both)      --release   (default debug)
 #        --tree patched|pristine     (default patched)   --strict    (-Wall -Wextra)
+#        --strict-full               jac313's whole set: --strict plus -Wpedantic -Wshadow
+#                                    -Wnon-virtual-dtor -Wold-style-cast -Wcast-align
+#                                    -Woverloaded-virtual -Wimplicit-fallthrough -Wformat=2
+#                                    -Wconversion -Wsign-conversion
 #        --clean                     rebuild every package (umk -a)
 #        --verbose                   the compiler's whole output while it builds (default: each
 #                                    file compiled; warnings and errors listed after the build)
@@ -139,11 +143,25 @@ cmd_patch() {
 }
 
 cmd_status() {
-  local dir="${1:-$WORK/patched}" p n=0 have=0
+  local dir="${1:-$WORK/patched}" p i n have=0
   tree_ok "$dir" || die "no U++ tree at $dir"
-  for p in "$HERE"/patches/*.patch; do
-    n=$((n + 1))
-    if patch_applied "$dir" "$p"; then have=$((have + 1)); echo "status: applied  $(basename "$p")"
+  # The patches are a stack: a later one can change lines next to an earlier one's, so each is
+  # checked on a scratch copy with the later ones taken off first (last to first, as applied).
+  local list=("$HERE"/patches/*.patch) tmp
+  n=${#list[@]}
+  tmp=$(mktemp -d) || die "mktemp failed"
+  rsync -a "$dir/uppsrc/" "$tmp/uppsrc/" || { rm -rf "${tmp:?}"; die "rsync failed"; }
+  local -A on=()
+  for (( i = n - 1; i >= 0; i-- )); do
+    p=${list[i]}
+    if patch_applied "$tmp" "$p"; then
+      patch -p1 -R -s -f -d "$tmp" < "$p" > /dev/null 2>&1
+      on[$p]=1
+    fi
+  done
+  rm -rf "${tmp:?}"
+  for p in "${list[@]}"; do
+    if [ -n "${on[$p]:-}" ]; then have=$((have + 1)); echo "status: applied  $(basename "$p")"
     else echo "status: missing  $(basename "$p")"; fi
   done
   echo "status: $have of $n patches in $dir"
@@ -188,6 +206,11 @@ setup_umk() {
   echo "$want" > "$WORK/umk/umk.from"
 }
 
+# The warnings jac313 builds its own code with (its CMakeLists' always-on line, less -Werror).
+STRICT_FULL="-Wpedantic -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Woverloaded-virtual -Wimplicit-fallthrough -Wformat=2 -Wconversion -Wsign-conversion"
+# strict_tag STRICT -> "", "-strict" or "-strictfull" (build method, output and log names)
+strict_tag() { case $1 in 1) echo -strict ;; 2) echo -strictfull ;; esac; }
+
 # bm COMPILER STRICT [EXTRA_CPP] [EXTRA_LINK] -> path of a build method in $WORK/bm
 make_bm() {
   local c=$1 strict=$2 extra=${3:-} link=${4:-} src name
@@ -195,10 +218,11 @@ make_bm() {
   # tree and pin in the name: umk keeps objects per build method; the check programs'
   # sources are the same files for both trees, and a new pin's files can be older than
   # the objects of the last one
-  name="$TREE-$PIN-$c$([ "$strict" = 1 ] && echo -strict)$([ -n "$extra" ] && echo "-$(echo "$extra" | md5sum | cut -c1-6)")"
+  name="$TREE-$PIN-$c$(strict_tag "$strict")$([ -n "$extra" ] && echo "-$(echo "$extra" | md5sum | cut -c1-6)")"
   mkdir -p "$WORK/bm"
   local add=""
-  [ "$strict" = 1 ] && add=" -Wall -Wextra"
+  [ "$strict" -ge 1 ] && add=" -Wall -Wextra"
+  [ "$strict" = 2 ] && add="$add $STRICT_FULL"
   [ -n "$extra" ] && add="$add $extra"
   # the compiler through a wrapper: each compile's messages also go to a file of its own
   # in $UPP_BASEFIX_DIAG, so warnings are counted whole (umk's log interleaves the
@@ -231,6 +255,7 @@ parse_build_opts() {
       --debug) MODE=debug; shift ;;
       --tree) case ${2:-} in patched|pristine) TREE=$2 ;; *) die "--tree patched|pristine" ;; esac; shift 2 ;;
       --strict) STRICT=1; shift ;;
+      --strict-full) STRICT=2; shift ;;
       --clean) CLEAN=1; shift ;;
       --verbose) VERBOSE=1; shift ;;
       --valgrind|--helgrind|--asan|--tsan) CHECK=${1#--}; shift ;;
@@ -270,8 +295,9 @@ build_one() {
   local bm; bm=$(make_bm "$c" "$STRICT" "$extra" "$link")
   flags="bsH"; [ "$MODE" = release ] && flags="brsH"; [ "$CLEAN" = 1 ] && flags="a$flags"
   flags="-$flags"
-  local what="$MODE"; [ "$STRICT" = 1 ] && what="$what, strict"; [ -n "$CHECK" ] && what="$what, $CHECK"
-  local tag="$TREE-$c-$MODE$([ "$STRICT" = 1 ] && echo -strict)${CHECK:+-$CHECK}"
+  local what="$MODE"; [ "$STRICT" = 1 ] && what="$what, strict"; [ "$STRICT" = 2 ] && what="$what, strict-full"
+  [ -n "$CHECK" ] && what="$what, $CHECK"
+  local tag="$TREE-$c-$MODE$(strict_tag "$STRICT")${CHECK:+-$CHECK}"
   BUILT_DIR="$WORK/out/$tag"; mkdir -p "$BUILT_DIR" "$WORK/logs"
   local p rc log ours upp t0 t1
   for p in UppBaseCheck UppBaseCheckGui; do
