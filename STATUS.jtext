@@ -22,7 +22,7 @@
 
 
 === Data ===
-1. #|# 1|U++ clean under jac313's whole warning set (--strict-full)|A patch per warning kind, bugs in their own patch with a check. 5,964 sites at the start; 0017 (bugs) + 0018 (small kinds) + 0019 (-Wshadow) + 0020 (conversions made explicit) + 0021 (x op= y) + 0022 (the rest by hand) bring it to 2,650: conversions and shadows are 0. Left: old-style casts, GLib's headers.|2026-10-31|Claude (jac313 session)
+1. #|# 1|U++ clean under jac313's whole warning set (--strict-full)|A patch per warning kind, bugs in their own patch with a check. 5,964 sites at the start; 0017 (bugs) + 0018 (small kinds) + 0019 (-Wshadow) + 0020 (conversions made explicit) + 0021 (x op= y) + 0022 (the rest by hand) + 0023 (old-style casts by tool) bring it to 1,111: 716 in system headers, 389 casts by hand, 6 in the checks.|2026-10-31|Claude (jac313 session)
 
 === End Data ===
 === End Section ===

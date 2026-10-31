@@ -31,7 +31,7 @@ gcc 16 and clang 22 (Fedora 44), the check programs gave 5,964 warning sites:
 
 | Kind | Sites | Patch |
 |---|---|---|
-| -Wold-style-cast | 2,725 | to do |
+| -Wold-style-cast | 2,725 | 0023 (and 0025 by hand) |
 | -Wsign-conversion, -Wconversion and clang's int / float / 64-to-32 kinds | 2,226 | 0020, 0021, 0022: 0 |
 | -Wshadow | 900 | 0019 |
 | the small kinds (cast-align, non-virtual-dtor, overloaded-virtual, format, fall-through, pedantic, ...) | 113 | 0018 (bugs: 0017) |
@@ -68,3 +68,11 @@ metrics, ASSERTs mixing uintptr_t and int, ...), each to be fixed by hand.
 0022 (2026-10-31): the last conversions, by hand (see findings.md). Conversions are 0 in debug
 and release with gcc 16 and clang 22. After 0022: 2,650 sites, all -Wold-style-cast (and GLib's
 headers); --strict 0, UppBaseCheck 23/23.
+
+0023 (2026-10-31): old-style casts, by a tool. clang gives the cast's `(` and the operand's exact
+range; `(T)x` becomes `static_cast<T>(x)`. The compiler then picks the kind: a cast it rejects
+as static_cast moves to reinterpret_cast ("not allowed") or const_cast ("casts away
+qualifiers"), again until a syntax check of every file (debug) and a release build compile;
+a template cast takes the kind every instantiation accepts. Left for 0025: casts written in
+macros (227), casts no single kind fits (137, e.g. const away and a type change at once), and
+47 that are not a plain `(T) operand`. After 0023: 1,111 sites, 716 in system headers (0024).

@@ -47,6 +47,7 @@ CtrlLib, plugin/png, plugin/sqlite3, plugin/bmp.
 | 0020 | strict-full, the conversions made explicit: 1,799 `static_cast<T>(expr)` around exactly the expression clang or gcc names, T the type it converts to (same behaviour, now written down); left for 0021: compound assignments, templates, macros |
 | 0021 | strict-full: `x op= y` on a narrower x written as C++ defines it, `x = static_cast<T>(x op y)` (79 one-line statements whose x has no side effects) |
 | 0022 | strict-full, the last conversions by hand: hash constants unsigned, flag masks on 16-bit / bit fields, FreeType's 26.6 metrics, chained and template cases; conversions 0 in debug and release |
+| 0023 | strict-full, old-style casts: 1,845 `(T)x` made `static_cast` / `reinterpret_cast` / `const_cast<T>(x)`, the kind chosen by the compiler (debug and release, gcc and clang); 389 left for 0025 |
 
 Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/strict.md`.
 
