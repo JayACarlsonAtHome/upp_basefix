@@ -33,9 +33,16 @@ gcc 16 and clang 22 (Fedora 44), the check programs gave 5,964 warning sites:
 |---|---|---|
 | -Wold-style-cast | 2,725 | to do |
 | -Wsign-conversion, -Wconversion and clang's int / float / 64-to-32 kinds | 2,226 | to do |
-| -Wshadow | 900 | to do |
+| -Wshadow | 900 | 0019 |
 | the small kinds (cast-align, non-virtual-dtor, overloaded-virtual, format, fall-through, pedantic, ...) | 113 | 0018 (bugs: 0017) |
 
 704 of them are in GLib's headers, which U++ includes as plain `-I` paths (pkg-config): not
 ours to fix in GLib; U++'s build could give those paths as `-isystem`. After 0017 + 0018:
 5,799 sites, none of the small kinds; `--strict` stays at 0 (gcc 16 release had 2, fixed in 0018).
+
+0019 (2026-10-31): -Wshadow. The sites were renamed by a tool, not by hand: clang (libclang)
+parses each file with its real compile command, finds the declaration at each warning, and
+lists exactly the uses that resolve to it; those are renamed together, byte for byte (CRLF
+kept). A file that does not parse cleanly is never used. Where `NAME_` would meet another
+`NAME_` (an outer and an inner one), the inner one got a name of its own. After 0019:
+4,896 sites, no -Wshadow in debug or release; --strict stays at 0, UppBaseCheck 23/23.

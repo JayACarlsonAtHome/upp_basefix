@@ -43,6 +43,7 @@ CtrlLib, plugin/png, plugin/sqlite3, plugin/bmp.
 | 0016 | Draw/Draw.upp: the RPM names of its system packages (it lists only the Debian ones) |
 | 0017 | bugs strict-full and gcc 16 found: `Sprintf` cut results at 1500 characters, `WwwFormat` put the zone text in the format, a stream `long` loaded only its low half where long is 64 bits, `memset8__`/`memcpy8__` formed a pointer before the block |
 | 0018 | strict-full, the small kinds: fall-through, format, pedantic, virtual destructors, hidden overloads, cast-align (see `docs/strict.md`) |
+| 0019 | strict-full, -Wshadow: 1,031 declarations renamed with exactly their uses (clang's AST says which); `NAME_`, as U++ already writes it |
 
 Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/strict.md`.
 
