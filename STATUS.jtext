@@ -22,7 +22,7 @@
 
 
 === Data ===
-1. #|# 1|U++ clean under jac313's whole warning set (--strict-full)|A patch per warning kind, bugs in their own patch with a check. 5,964 sites at the start; 0017 (bugs) + 0018 (small kinds) + 0019 (-Wshadow) + 0020 (conversions made explicit) + 0021 (x op= y) bring it to 2,778. Left: 99 by hand (0022), old-style casts, GLib's headers.|2026-10-31|Claude (jac313 session)
+1. #|# 1|U++ clean under jac313's whole warning set (--strict-full)|A patch per warning kind, bugs in their own patch with a check. 5,964 sites at the start; 0017 (bugs) + 0018 (small kinds) + 0019 (-Wshadow) + 0020 (conversions made explicit) + 0021 (x op= y) + 0022 (the rest by hand) bring it to 2,650: conversions and shadows are 0. Left: old-style casts, GLib's headers.|2026-10-31|Claude (jac313 session)
 
 === End Data ===
 === End Section ===
@@ -40,15 +40,13 @@
 
 
 === Data ===
-1. #|# 1|1|The last 99 conversions by hand (0022)|Hash constants (HASH_CONST* signed), flag masks on 16-bit fields (~ENUM), FreeType's 64-bit metrics, ASSERTs mixing uintptr_t and int, ImageScale's chained assignments, the few 0021 statements cast to the operand's type: each needs its own fix.
+1. #|# 1|1|Old-style casts|About 2,700 sites: static_cast, reinterpret_cast or const_cast by what each one does.
 
-1. #|# 2|2|Old-style casts|About 2,700 sites: static_cast, reinterpret_cast or const_cast by what each one does.
+1. #|# 2|2|GLib's headers as system headers|704 sites in GLib, which U++ includes as plain -I paths from pkg-config: a U++ build patch to give those paths as -isystem.
 
-1. #|# 3|3|GLib's headers as system headers|704 sites in GLib, which U++ includes as plain -I paths from pkg-config: a U++ build patch to give those paths as -isystem.
+1. #|# 3|3|Fedora suppressions|The GUI check fails under ASan and valgrind on Fedora 44 with or without the patches: GLib / pango / fontconfig / PackageKit's GTK module reports that supp/ (made on RHEL) does not cover.
 
-1. #|# 4|4|Fedora suppressions|The GUI check fails under ASan and valgrind on Fedora 44 with or without the patches: GLib / pango / fontconfig / PackageKit's GTK module reports that supp/ (made on RHEL) does not cover.
-
-1. #|# 5|5|jac313's GUI on the clean U++, then GitHub|At 0: Jac313Runner and JTextGui with jac313's warnings and -Werror in their .upp files, built on this U++; then push to GitHub (not before, Jay 2026-10-31).
+1. #|# 4|4|jac313's GUI on the clean U++, then GitHub|At 0: Jac313Runner and JTextGui with jac313's warnings and -Werror in their .upp files, built on this U++; then push to GitHub (not before, Jay 2026-10-31).
 
 === End Data ===
 === End Section ===

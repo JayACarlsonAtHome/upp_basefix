@@ -32,7 +32,7 @@ gcc 16 and clang 22 (Fedora 44), the check programs gave 5,964 warning sites:
 | Kind | Sites | Patch |
 |---|---|---|
 | -Wold-style-cast | 2,725 | to do |
-| -Wsign-conversion, -Wconversion and clang's int / float / 64-to-32 kinds | 2,226 | 0020 (and 0021 by hand) |
+| -Wsign-conversion, -Wconversion and clang's int / float / 64-to-32 kinds | 2,226 | 0020, 0021, 0022: 0 |
 | -Wshadow | 900 | 0019 |
 | the small kinds (cast-align, non-virtual-dtor, overloaded-virtual, format, fall-through, pedantic, ...) | 113 | 0018 (bugs: 0017) |
 
@@ -64,3 +64,7 @@ few statements cast to that (e.g. `size.cy = static_cast<unsigned int>(size.cy |
 with an int cy): the value stored is the same, but the line still warns. After 0021: 2,778 sites,
 99 of them not old-style casts (hash constants, flag masks on 16-bit fields, FreeType's 64-bit
 metrics, ASSERTs mixing uintptr_t and int, ...), each to be fixed by hand.
+
+0022 (2026-10-31): the last conversions, by hand (see findings.md). Conversions are 0 in debug
+and release with gcc 16 and clang 22. After 0022: 2,650 sites, all -Wold-style-cast (and GLib's
+headers); --strict 0, UppBaseCheck 23/23.

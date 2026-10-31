@@ -1,0 +1,674 @@
+diff -ruN a/uppsrc/Core/AString.hpp b/uppsrc/Core/AString.hpp
+--- a/uppsrc/Core/AString.hpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/AString.hpp	2026-10-31 01:05:04.177936845 -0700
+@@ -10,7 +10,7 @@
+ {
+ 	tchar *s = B::Insert(GetLength(), count, NULL);
+ 	while(count--)
+-		*s++ = c;
++		*s++ = static_cast<tchar>(c);
+ }
+ 
+ template <class B>
+diff -ruN a/uppsrc/Core/BinUndoRedo.cpp b/uppsrc/Core/BinUndoRedo.cpp
+--- a/uppsrc/Core/BinUndoRedo.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/BinUndoRedo.cpp	2026-10-31 01:05:04.179684399 -0700
+@@ -73,7 +73,7 @@
+ 		if(h & 128) { // 32 bit
+ 			byte h0 = Get();
+ 			byte l0 = Get();
+-			return MAKELONG(MAKEWORD(l0, h0), MAKEWORD(l, h & 127));
++			return static_cast<int>(MAKELONG(MAKEWORD(l0, h0), MAKEWORD(l, h & 127)));
+ 		}
+ 		return MAKEWORD(l, h);
+ 	};
+diff -ruN a/uppsrc/Core/BlockStream.cpp b/uppsrc/Core/BlockStream.cpp
+--- a/uppsrc/Core/BlockStream.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/BlockStream.cpp	2026-10-31 01:05:04.179825031 -0700
+@@ -418,7 +418,7 @@
+ 	while(pos_ > len) {
+ 		static char buffer_[1024];
+ 		int64 diff = pos_ - len;
+-		int chunk = (diff > (int64)sizeof(buffer_) ? sizeof(buffer_) : static_cast<long unsigned int>((int)diff));
++		int chunk = diff > static_cast<int64>(sizeof(buffer_)) ? static_cast<int>(sizeof(buffer_)) : static_cast<int>(diff);
+ 		if(write(handle, buffer_, static_cast<size_t>(chunk)) != chunk) {
+ 			SetLastError();
+ 			LSEEK64_(handle, cur, SEEK_SET);
+diff -ruN a/uppsrc/Core/Convert.hpp b/uppsrc/Core/Convert.hpp
+--- a/uppsrc/Core/Convert.hpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Convert.hpp	2026-10-31 01:05:04.178553008 -0700
+@@ -25,7 +25,7 @@
+ const CHAR *ScanUint0(UINT& result, const CHAR *s, bool& overflow)
+ {
+ 	auto Get = [&] (int i) -> int {
+-		int c = (BYTE)s[i];
++		int c = static_cast<int>(static_cast<BYTE>(s[i]));
+ 		if(base > 10) {
+ 			if(c <= '9')
+ 				return c - '0';
+@@ -53,7 +53,7 @@
+ 		}
+ 		int c2 = Get(1);
+ 		if(c2 < 0 || c2 >= base) {
+-			result = base * n + c1;
++			result = static_cast<UINT>(base) * n + static_cast<UINT>(c1);   // c1 checked 0..base-1 above
+ 			CheckOverflow(result);
+ 			return s + 1;
+ 		}
+@@ -103,7 +103,7 @@
+ 	s = ScanUint0<CHAR, BYTE, UINT, base>(uresult, s, overflow);
+ 	if(s) {
+ 		if(sgn < 0) {
+-			result = INT(sgn * uresult);
++			result = INT(UINT(0) - uresult);   // sgn is -1 here: the same bits as sgn * uresult
+ 			if(result > 0) overflow = true;
+ 		}
+ 		else {
+diff -ruN a/uppsrc/Core/CvFlt.cpp b/uppsrc/Core/CvFlt.cpp
+--- a/uppsrc/Core/CvFlt.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/CvFlt.cpp	2026-10-31 01:05:04.178609832 -0700
+@@ -530,7 +530,7 @@
+ 	SkipSpaces__<CHAR, BYTE>(s);
+ 
+ 	double sign = ScanSgn__<CHAR, BYTE>(s);
+-	if(!static_cast<int>(IsDigit(*s)) && *s != '.' && (int)*s != alt_dp)
++	if(!IsDigit(static_cast<int>(*s)) && *s != '.' && (int)*s != alt_dp)
+ 		return NULL;
+ 
+ 	int ignored = 0;
+diff -ruN a/uppsrc/Core/Debug.cpp b/uppsrc/Core/Debug.cpp
+--- a/uppsrc/Core/Debug.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Debug.cpp	2026-10-31 01:05:04.179279279 -0700
+@@ -58,7 +58,8 @@
+ 
+ TimingInspector::TimingInspector(const char *_name) {
+ 	name = _name ? _name : "";
+-	all_count = call_count = max_nesting = min_time = max_time = total_time = 0;
++	all_count = call_count = max_nesting = 0;
++	min_time = max_time = total_time = 0;
+ 	static bool init;
+ 	if(!init) {
+ #if defined(PLATFORM_WIN32) && !defined(PLATFORM_WINCE)
+diff -ruN a/uppsrc/Core/FilterStream.cpp b/uppsrc/Core/FilterStream.cpp
+--- a/uppsrc/Core/FilterStream.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/FilterStream.cpp	2026-10-31 01:08:25.578382888 -0700
+@@ -67,7 +67,7 @@
+ 		t += sz;
+ 		s += sz;
+ 		todo -= sz;
+-		size = static_cast<int>(size - (static_cast<dword>(sz)));
++		size -= static_cast<int>(sz);   // sz = min(todo, size)
+ 		pos += sz;
+ 	}
+ 	if(size) {
+diff -ruN a/uppsrc/Core/Format.cpp b/uppsrc/Core/Format.cpp
+--- a/uppsrc/Core/Format.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Format.cpp	2026-10-31 01:18:58.954419885 -0700
+@@ -1063,7 +1063,7 @@
+ 				ft = formatmap()[fi];
+ #else
+ 			for(;;) {
+-				int fi = formatmap().Find(FormId(f.id, f.arg.GetType()));
++				int fi = formatmap().Find(FormId(f.id, static_cast<int>(f.arg.GetType())));
+ 				if(fi < 0) fi = formatmap().Find(FormId(f.id, VALUE_V));
+ 				if(fi >= 0)
+ 				{
+diff -ruN a/uppsrc/Core/heaputil.cpp b/uppsrc/Core/heaputil.cpp
+--- a/uppsrc/Core/heaputil.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/heaputil.cpp	2026-10-31 01:08:25.578453687 -0700
+@@ -98,7 +98,7 @@
+ {
+ 	Page *page = GetPage(p);
+ 	ASSERT((byte *)page + sizeof(Page) <= (byte *)p && (byte *)p < (byte *)page + 4096);
+-	ASSERT((4096 - ((uintptr_t)p & (uintptr_t)4095)) % Ksz(k) == 0);
++	ASSERT((4096 - ((uintptr_t)p & (uintptr_t)4095)) % static_cast<uintptr_t>(Ksz(k)) == 0);
+ 	ASSERT(page->klass == k);
+ 	DbgFreeCheck((FreeLink *)p + 1, static_cast<unsigned long>(Ksz(k)) - sizeof(FreeLink));
+ 	return p;
+diff -ruN a/uppsrc/Core/Lang.cpp b/uppsrc/Core/Lang.cpp
+--- a/uppsrc/Core/Lang.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Lang.cpp	2026-10-31 01:05:04.179785806 -0700
+@@ -56,13 +56,13 @@
+ 	if(IsAlpha(*s)) {
+ 		l = static_cast<int>((ToUpper(*s++) - 'A' + 1) << 15);
+ 		if(IsAlpha(*s)) {
+-			l |= (ToUpper(*s++) - 'A' + 1) << 10;
++			l |= static_cast<int>(ToUpper(*s++) - 'A' + 1) << 10;
+ 			if(*s && !IsAlpha(*s))
+ 				s++;
+ 			if(IsAlpha(*s)) {
+-				l |= (ToUpper(*s++) - 'A' + 1) << 5;
++				l |= static_cast<int>(ToUpper(*s++) - 'A' + 1) << 5;
+ 				if(IsAlpha(*s)) {
+-					l |= (ToUpper(*s++) - 'A' + 1);
++					l |= static_cast<int>(ToUpper(*s++) - 'A' + 1);
+ 					while(*s && *s != ' ')
+ 						s++;
+ 					if(*s == ' ') {
+diff -ruN a/uppsrc/Core/Mem.cpp b/uppsrc/Core/Mem.cpp
+--- a/uppsrc/Core/Mem.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Mem.cpp	2026-10-31 01:05:04.177491737 -0700
+@@ -108,36 +108,36 @@
+ 			uint64 val1, val2, val3, val4;
+ 			val1 = val2 = val3 = val4 = HASH_CONST1;
+ 			while(len >= 32) {
+-				val1 = HASH_CONST2 * static_cast<long long unsigned int>(val1) + static_cast<uint64>(Peek64(s));
+-				val2 = HASH_CONST2 * static_cast<long long unsigned int>(val2) + static_cast<uint64>(Peek64(s + 8));
+-				val3 = HASH_CONST2 * static_cast<long long unsigned int>(val3) + static_cast<uint64>(Peek64(s + 16));
+-				val4 = HASH_CONST2 * static_cast<long long unsigned int>(val4) + static_cast<uint64>(Peek64(s + 24));
++				val1 = HASH_CONST2 * val1 + static_cast<uint64>(Peek64(s));
++				val2 = HASH_CONST2 * val2 + static_cast<uint64>(Peek64(s + 8));
++				val3 = HASH_CONST2 * val3 + static_cast<uint64>(Peek64(s + 16));
++				val4 = HASH_CONST2 * val4 + static_cast<uint64>(Peek64(s + 24));
+ 				s += 32;
+ 				len -= 32;
+ 			}
+-			val = HASH_CONST2 * static_cast<long long unsigned int>(val) + val1;
+-			val = HASH_CONST2 * static_cast<long long unsigned int>(val) + val2;
+-			val = HASH_CONST2 * static_cast<long long unsigned int>(val) + val3;
+-			val = HASH_CONST2 * static_cast<long long unsigned int>(val) + val4;
++			val = HASH_CONST2 * val + val1;
++			val = HASH_CONST2 * val + val2;
++			val = HASH_CONST2 * val + val3;
++			val = HASH_CONST2 * val + val4;
+ 		}
+ 		const byte *e = s + len - 8;
+ 		while(s < e) {
+-			val = HASH_CONST2 * static_cast<long long unsigned int>(val) + static_cast<uint64>(Peek64(s));
++			val = HASH_CONST2 * val + static_cast<uint64>(Peek64(s));
+ 			s += 8;
+ 		}
+-		return HASH_CONST2 * static_cast<long long unsigned int>(val) + static_cast<uint64>(Peek64(e));
++		return HASH_CONST2 * val + static_cast<uint64>(Peek64(e));
+ 	}
+ 	if(len > 4) {
+-		val = HASH_CONST2 * static_cast<long long unsigned int>(val) + static_cast<uint64>(Peek32(s));
+-		val = HASH_CONST2 * static_cast<long long unsigned int>(val) + static_cast<uint64>(Peek32(s + len - 4));
++		val = HASH_CONST2 * val + static_cast<uint64>(Peek32(s));
++		val = HASH_CONST2 * val + static_cast<uint64>(Peek32(s + len - 4));
+ 		return val;
+ 	}
+ 	if(len >= 2) {
+-		val = HASH_CONST2 * static_cast<long long unsigned int>(val) + static_cast<uint64>(Peek16(s));
+-		val = HASH_CONST2 * static_cast<long long unsigned int>(val) + static_cast<uint64>(Peek16(s + len - 2));
++		val = HASH_CONST2 * val + static_cast<uint64>(Peek16(s));
++		val = HASH_CONST2 * val + static_cast<uint64>(Peek16(s + len - 2));
+ 		return val;
+ 	}
+-	return len ? HASH_CONST2 * static_cast<long long unsigned int>(val) + *s : val;
++	return len ? HASH_CONST2 * val + *s : val;
+ }
+ 
+ #else
+diff -ruN a/uppsrc/Core/Ops.h b/uppsrc/Core/Ops.h
+--- a/uppsrc/Core/Ops.h	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Ops.h	2026-10-31 01:05:04.177156341 -0700
+@@ -135,15 +135,15 @@
+ 
+ #define HASH64
+ 
+-#define HASH_CONST1 I64(0xf7c21089bee7c0a5)
+-#define HASH_CONST2 I64(0xc85abc8da7534a4d)
+-#define HASH_CONST3 I64(0x8642b0fe3e86671b)
++#define HASH_CONST1 0xf7c21089bee7c0a5ULL
++#define HASH_CONST2 0xc85abc8da7534a4dULL
++#define HASH_CONST3 0x8642b0fe3e86671bULL
+ 
+ typedef qword hash_t;
+ 
+ inline dword FoldHash(qword h)
+ {
+-	return (dword)SwapEndian64(HASH_CONST3 * static_cast<long long unsigned int>(h));
++	return (dword)SwapEndian64(HASH_CONST3 * h);
+ }
+ 
+ #else
+diff -ruN a/uppsrc/Core/Other.h b/uppsrc/Core/Other.h
+--- a/uppsrc/Core/Other.h	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Other.h	2026-10-31 01:05:04.178459482 -0700
+@@ -200,8 +200,8 @@
+ 
+ template <int N = 1>
+ struct Link {
+-	Link *link_prev[N];
+-	Link *link_next[N];
++	Link *link_prev[static_cast<size_t>(N)];
++	Link *link_next[static_cast<size_t>(N)];
+ 
+ protected:
+ 	void LPN(int i)                      { link_prev[i]->link_next[i] = link_next[i]->link_prev[i] = this; }
+diff -ruN a/uppsrc/Core/sheap.cpp b/uppsrc/Core/sheap.cpp
+--- a/uppsrc/Core/sheap.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/sheap.cpp	2026-10-31 01:08:25.578600789 -0700
+@@ -220,7 +220,7 @@
+ {
+ 	LTIMING("Small Free");
+ 	LLOG("Small free page: " << (void *)page << ", k: " << k << ", ksz: " << Ksz(k));
+-	ASSERT((4096 - ((uintptr_t)ptr & (uintptr_t)4095)) % Ksz(k) == 0);
++	ASSERT((4096 - ((uintptr_t)ptr & (uintptr_t)4095)) % static_cast<uintptr_t>(Ksz(k)) == 0);
+ 	if(page->heap != this) { // freeing block allocated in different thread
+ 		RemoteFree(ptr, Ksz(k)); // add to originating heap's list of free pages to be properly freed later
+ 		return;
+@@ -268,7 +268,7 @@
+ 	ASSERT(page->heap == this);
+ 	int k = page->klass;
+ 	LLOG("Small free page: " << (void *)page << ", k: " << k << ", ksz: " << Ksz(k));
+-	ASSERT((4096 - ((uintptr_t)ptr & (uintptr_t)4095)) % Ksz(k) == 0);
++	ASSERT((4096 - ((uintptr_t)ptr & (uintptr_t)4095)) % static_cast<uintptr_t>(Ksz(k)) == 0);
+ 	DbgFreeFillK(ptr, k);
+ 	FreeK(ptr, page, k);
+ }
+diff -ruN a/uppsrc/Core/SSH/Channels.h b/uppsrc/Core/SSH/Channels.h
+--- a/uppsrc/Core/SSH/Channels.h	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/SSH/Channels.h	2026-10-31 01:05:04.180013770 -0700
+@@ -36,8 +36,8 @@
+     bool                SetTerminalSize(int width, int height);
+     bool                SetTerminalSize(Size sz)                                            { return SetTerminalSize(sz.cx, sz.cy); }
+     bool                SetReadWindowSize(uint32 size, bool force = false);
+-    uint32              GetReadWindowSize()                                                 { return libssh2_channel_window_read(*channel); }
+-    uint32              GetWriteWindowSize()                                                { return libssh2_channel_window_write(*channel); }
++    uint32              GetReadWindowSize()                                                 { return static_cast<uint32>(libssh2_channel_window_read(*channel)); }
++    uint32              GetWriteWindowSize()                                                { return static_cast<uint32>(libssh2_channel_window_write(*channel)); }
+     int                 GetExitCode();
+     String              GetExitSignal();
+ 
+diff -ruN a/uppsrc/Core/Stream.cpp b/uppsrc/Core/Stream.cpp
+--- a/uppsrc/Core/Stream.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Stream.cpp	2026-10-31 01:05:04.179171715 -0700
+@@ -77,7 +77,9 @@
+ void Stream::Flush() {}
+ 
+ Stream::Stream() {
+-	errorcode = pos = style = static_cast<short unsigned int>(0);
++	errorcode = 0;
++	pos = 0;
++	style = 0;
+ 	buffer = NULL;
+ 	ptr = rdlim = wrlim = NULL;
+ }
+diff -ruN a/uppsrc/Core/Stream.h b/uppsrc/Core/Stream.h
+--- a/uppsrc/Core/Stream.h	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Stream.h	2026-10-31 01:05:04.178969967 -0700
+@@ -73,7 +73,7 @@
+ #endif
+ 	int       GetError() const       { return errorcode; }
+ 	String    GetErrorText() const;
+-	void      ClearError()           { style = style & ~STRM_ERROR; errorcode = 0; }
++	void      ClearError()           { style = static_cast<byte>(style & ~STRM_ERROR & 0x3f); errorcode = 0; }
+ 
+ 	int64     GetPos() const         { return dword(ptr - buffer) + pos; }
+ 	int64     GetLeft() const        { return GetSize() - GetPos(); }
+@@ -178,7 +178,7 @@
+ 
+ //  Stream as serialization streamer
+ 	void      SetLoading()                 { ASSERT(style & STRM_READ); style |= STRM_LOADING; }
+-	void      SetStoring()                 { ASSERT(style & STRM_WRITE); style &= ~STRM_LOADING; }
++	void      SetStoring()                 { ASSERT(style & STRM_WRITE); style = static_cast<byte>(style & ~STRM_LOADING & 0x3f); }
+ 	bool      IsLoading() const            { return style & STRM_LOADING; }
+ 	bool      IsStoring() const            { return !IsLoading(); }
+ 
+diff -ruN a/uppsrc/Core/String.cpp b/uppsrc/Core/String.cpp
+--- a/uppsrc/Core/String.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/String.cpp	2026-10-31 01:08:25.578714141 -0700
+@@ -158,7 +158,7 @@
+ 	if(IsSmall()) {
+ 		if(SLen() + len_ < 14) {
+ 			memcpy8(chr + SLen(), s_, static_cast<size_t>(len_));
+-			SLen() += len_;
++			SLen() = static_cast<char>(SLen() + len_);   // still < 14, checked above
+ 			chr[(int)SLen()] = 0;
+ 			Dsyn();
+ 			return;
+diff -ruN a/uppsrc/Core/String.h b/uppsrc/Core/String.h
+--- a/uppsrc/Core/String.h	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/String.h	2026-10-31 01:05:04.178221446 -0700
+@@ -48,8 +48,8 @@
+ 	const tchar *Last() const                                 { return End() - !!B::GetCount(); }
+ 	const tchar *GetIter(int i) const                         { ASSERT(i >= 0 && i <= B::GetCount()); return B::Begin() + i; }
+ 
+-	int operator*() const                                     { return *B::Begin(); }
+-	int operator[](int i) const                               { ASSERT(i >= 0 && i <= B::GetCount()); return B::Begin()[i]; }
++	int operator*() const                                     { return static_cast<int>(*B::Begin()); }
++	int operator[](int i) const                               { ASSERT(i >= 0 && i <= B::GetCount()); return static_cast<int>(B::Begin()[i]); }
+ 
+ 	operator const tchar *() const                            { return B::Begin(); }
+ 	const tchar *operator~() const                            { return B::Begin(); }
+diff -ruN a/uppsrc/Core/t.cpp b/uppsrc/Core/t.cpp
+--- a/uppsrc/Core/t.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/t.cpp	2026-10-31 01:05:04.179929455 -0700
+@@ -125,7 +125,7 @@
+ {
+ 	CharS ids;
+ 	ids.s = id;
+-	lang = static_cast<int>(lang & (static_cast<dword>(mask)));
++	lang = static_cast<int>(static_cast<dword>(lang) & mask);
+ 	Array<LngModule>& ma = sMod();
+ 	for(int i = 0; i < ma.GetCount(); i++) {
+ 		LngModule& m = ma[i];
+diff -ruN a/uppsrc/Core/Topt.h b/uppsrc/Core/Topt.h
+--- a/uppsrc/Core/Topt.h	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Topt.h	2026-10-31 01:05:04.177680411 -0700
+@@ -497,7 +497,7 @@
+ 	template <class T> CombineHash& Do(const T& x)                  { Put(GetHashValue(x)); return *this; }
+ 
+ public:
+-	CombineHash& Put(hash_t h)                                      { hash = HASH_CONST2 * static_cast<long long unsigned int>(hash) + h; return *this; }
++	CombineHash& Put(hash_t h)                                      { hash = HASH_CONST2 * hash + h; return *this; }
+ 
+ 	operator hash_t() const                                         { return hash; }
+ 
+diff -ruN a/uppsrc/Core/UnicodeInfo.cpp b/uppsrc/Core/UnicodeInfo.cpp
+--- a/uppsrc/Core/UnicodeInfo.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/UnicodeInfo.cpp	2026-10-31 01:05:04.179426953 -0700
+@@ -127,7 +127,7 @@
+ 	}
+ 	
+ 	int count = canonical_count = static_cast<int>(data[0]);
+-	count += data[1];
++	count += static_cast<int>(data[1]);
+ 	for(int i = 0; i < count; i++) {
+ 		composed.Add(data[i + 2]);
+ 		WString h;
+diff -ruN a/uppsrc/Core/Vcont.hpp b/uppsrc/Core/Vcont.hpp
+--- a/uppsrc/Core/Vcont.hpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Core/Vcont.hpp	2026-10-31 01:05:04.178365848 -0700
+@@ -101,7 +101,7 @@
+ template <class T>
+ T * Vector<T>::RawAlloc(int& n)
+ {
+-	size_t sz0 = static_cast<long unsigned int>(n * sizeof(T));
++	size_t sz0 = static_cast<size_t>(n) * sizeof(T);
+ 	size_t sz = sz0;
+ 	void *q = MemoryAllocSz(sz);
+ 	n += (int)((sz - sz0) / sizeof(T));
+diff -ruN a/uppsrc/CtrlCore/GtkDrawImage.cpp b/uppsrc/CtrlCore/GtkDrawImage.cpp
+--- a/uppsrc/CtrlCore/GtkDrawImage.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/CtrlCore/GtkDrawImage.cpp	2026-10-31 01:05:04.180240222 -0700
+@@ -84,7 +84,7 @@
+ 	ImageSysDataMaker m;
+ 	static LRUCache<ImageSysData, int64> cache;
+ 	static int Rsz;
+-	Rsz += img.GetLength();
++	Rsz += static_cast<int>(img.GetLength());
+ 	if(Rsz > 200 * 200) { // we do not want to do this for each small image painted...
+ 		Rsz = 0;
+ 		cache.Remove([](const ImageSysData& object) {
+diff -ruN a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
+--- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-31 01:05:04.180075765 -0700
+@@ -833,14 +833,14 @@
+ 					};
+ 					kv = hwkv.Get(hw, kv);
+ 				}
+-				kv = static_cast<int>(kv + (static_cast<unsigned int>(K_DELTA)));
++				kv = static_cast<int>(static_cast<dword>(kv) + K_DELTA);
+ 			}
+ 			if(GetShift() && kv != K_SHIFT_KEY)
+-				kv = static_cast<int>(kv | (static_cast<unsigned int>(K_SHIFT)));
++				kv = static_cast<int>(static_cast<dword>(kv) | K_SHIFT);
+ 			if(GetCtrl() && kv != K_CTRL_KEY)
+-				kv = static_cast<int>(kv | (static_cast<unsigned int>(K_CTRL)));
++				kv = static_cast<int>(static_cast<dword>(kv) | K_CTRL);
+ 			if(GetAlt() && kv != K_ALT_KEY)
+-				kv = static_cast<int>(kv | (static_cast<unsigned int>(K_ALT)));
++				kv = static_cast<int>(static_cast<dword>(kv) | K_ALT);
+ 			LLOG(GetKeyDesc(kv) << ", pressed: " << pressed << ", count: " << CurrentEvent.count);
+ #ifdef GDK_WINDOWING_X11
+ 			if(pressed)
+diff -ruN a/uppsrc/CtrlCore/GtkX11Util.cpp b/uppsrc/CtrlCore/GtkX11Util.cpp
+--- a/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-31 01:05:04.180192304 -0700
+@@ -54,7 +54,7 @@
+ 			int len = format == 32 ? static_cast<int>(sizeof(unsigned long) * nitems) : static_cast<int>(nitems * (static_cast<unsigned long>(format >> 3)));
+ 			result.Cat(data, len);
+ 			XFree((char *)data);
+-			offset = static_cast<long int>(offset + (nitems / (static_cast<unsigned long>(32 / format))));
++			offset += static_cast<long>(nitems / static_cast<unsigned long>(32 / format));
+ 		}
+ 		else
+ 			break;
+diff -ruN a/uppsrc/CtrlLib/LabelBase.cpp b/uppsrc/CtrlLib/LabelBase.cpp
+--- a/uppsrc/CtrlLib/LabelBase.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/CtrlLib/LabelBase.cpp	2026-10-31 01:05:04.180734669 -0700
+@@ -366,7 +366,7 @@
+ 
+ LabelBase& LabelBase::SetAlign(int align) {
+ 	if(lbl.align != align) {
+-		lbl.align = align;
++		lbl.align = align & 7;
+ 		LabelUpdate();
+ 	}
+ 	return *this;
+@@ -374,7 +374,7 @@
+ 
+ LabelBase& LabelBase::SetVAlign(int valign) {
+ 	if(lbl.valign != valign) {
+-		lbl.valign = valign;
++		lbl.valign = valign & 7;
+ 		LabelUpdate();
+ 	}
+ 	return *this;
+diff -ruN a/uppsrc/CtrlLib/SmartText.cpp b/uppsrc/CtrlLib/SmartText.cpp
+--- a/uppsrc/CtrlLib/SmartText.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/CtrlLib/SmartText.cpp	2026-10-31 01:05:04.179739617 -0700
+@@ -197,7 +197,7 @@
+ 			text.Cat(*s++);
+ 	text.Shrink();
+ 	label = text;
+-	return MAKELONG(akey, pos);
++	return static_cast<int>(MAKELONG(akey, pos));
+ }
+ 
+ int  ChooseAccessKey(const char *text, dword used)
+@@ -205,7 +205,7 @@
+ 	for(const char *s = text; *s; s++) {
+ 		byte ac = static_cast<byte>(*s);
+ 		if(ac < 128 && ac >= 'A' && ac <= 'Z' && (Ctrl::AccessKeyBit(ac) & used) == 0)
+-			return MAKELONG(ac, s - text + 1);
++			return static_cast<int>(MAKELONG(ac, s - text + 1));
+ 	}
+ 	for(const char *s = text; *s; s++) {
+ 		dword ac = ToUpper(*s);
+diff -ruN a/uppsrc/CtrlLib/Static.cpp b/uppsrc/CtrlLib/Static.cpp
+--- a/uppsrc/CtrlLib/Static.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/CtrlLib/Static.cpp	2026-10-31 01:05:04.180807504 -0700
+@@ -63,12 +63,12 @@
+ 	l.text = text;
+ 	l.font = GetFont();
+ 	l.ink = GetInk();
+-	l.align = GetAlign();
+-	l.valign = GetVAlign();
++	l.align = GetAlign() & 7;
++	l.valign = GetVAlign() & 7;
+ 	l.limg = GetImage();
+ 	l.lspc = Nvl(GetIntAttr(ATTR_IMAGE_SPC), 0);
+ 	l.disabled = !IsShowEnabled();
+-	l.orientation = GetOrientation();
++	l.orientation = GetOrientation() & 7;
+ 	l.accesskey = accesskey;
+ 	if(dynamic_cast<const LabelBox *>(this)) {
+ 		l.valign = ALIGN_TOP;
+diff -ruN a/uppsrc/Draw/Draw.h b/uppsrc/Draw/Draw.h
+--- a/uppsrc/Draw/Draw.h	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Draw/Draw.h	2026-10-31 01:05:04.178770490 -0700
+@@ -144,23 +144,23 @@
+ 	Font& Height(int n)             { v.height = static_cast<int16>(n); return *this; }
+ 	Font& Width(int n)              { v.width = static_cast<int16>(n); return *this; }
+ 	Font& Bold()                    { v.flags |= FONT_BOLD; return *this; }
+-	Font& NoBold()                  { v.flags &= ~FONT_BOLD; return *this; }
++	Font& NoBold()                  { v.flags = static_cast<word>(v.flags & ~FONT_BOLD); return *this; }
+ 	Font& Bold(bool b)              { return b ? Bold() : NoBold(); }
+ 	Font& Italic()                  { v.flags |= FONT_ITALIC; return *this; }
+-	Font& NoItalic()                { v.flags &= ~FONT_ITALIC; return *this; }
++	Font& NoItalic()                { v.flags = static_cast<word>(v.flags & ~FONT_ITALIC); return *this; }
+ 	Font& Italic(bool b)            { return b ? Italic() : NoItalic(); }
+ 	Font& Underline()               { v.flags |= FONT_UNDERLINE; return *this; }
+-	Font& NoUnderline()             { v.flags &= ~FONT_UNDERLINE; return *this; }
++	Font& NoUnderline()             { v.flags = static_cast<word>(v.flags & ~FONT_UNDERLINE); return *this; }
+ 	Font& Underline(bool b)         { return b ? Underline() : NoUnderline(); }
+ 	Font& Strikeout()               { v.flags |= FONT_STRIKEOUT; return *this; }
+-	Font& NoStrikeout()             { v.flags &= ~FONT_STRIKEOUT; return *this; }
++	Font& NoStrikeout()             { v.flags = static_cast<word>(v.flags & ~FONT_STRIKEOUT); return *this; }
+ 	Font& Strikeout(bool b)         { return b ? Strikeout() : NoStrikeout(); }
+-	Font& NoColor(bool b = true)    { if(b) v.flags |= FONT_NOCOLOR; else v.flags &= ~FONT_NOCOLOR; return *this; }
++	Font& NoColor(bool b = true)    { if(b) v.flags |= FONT_NOCOLOR; else v.flags = static_cast<word>(v.flags & ~FONT_NOCOLOR); return *this; }
+ 	Font& NonAntiAliased()          { v.flags |= FONT_NON_ANTI_ALIASED; return *this; }
+-	Font& NoNonAntiAliased()        { v.flags &= ~FONT_NON_ANTI_ALIASED; return *this; } // deprecated
++	Font& NoNonAntiAliased()        { v.flags = static_cast<word>(v.flags & ~FONT_NON_ANTI_ALIASED); return *this; } // deprecated
+ 	Font& NonAntiAliased(bool b)    { return b ? NonAntiAliased() : NoNonAntiAliased(); } // deprecated
+ 	Font& TrueTypeOnly()            { v.flags |= FONT_TRUE_TYPE_ONLY; return *this; } // deprecated
+-	Font& NoTrueTypeOnly()          { v.flags &= ~FONT_TRUE_TYPE_ONLY; return *this; } // deprecated
++	Font& NoTrueTypeOnly()          { v.flags = static_cast<word>(v.flags & ~FONT_TRUE_TYPE_ONLY); return *this; } // deprecated
+ 	Font& TrueTypeOnly(bool b)      { return b ? TrueTypeOnly() : NoTrueTypeOnly(); } // deprecated
+ 
+ 	Font& FaceName(const String& name);
+diff -ruN a/uppsrc/Draw/Drawing.cpp b/uppsrc/Draw/Drawing.cpp
+--- a/uppsrc/Draw/Drawing.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Draw/Drawing.cpp	2026-10-31 01:05:04.180292906 -0700
+@@ -666,11 +666,11 @@
+ void Drawing::Serialize(Stream& s)
+ {
+ 	if(val.GetCount())
+-		size.cy = static_cast<unsigned int>(size.cy | 0x80000000);
++		size.cy = static_cast<int>(static_cast<dword>(size.cy) | 0x80000000);   // a flag in the sign bit
+ 	s % size;
+ 	s % data;
+ 	if(static_cast<unsigned int>(size.cy) & 0x80000000) {
+-		size.cy = static_cast<unsigned int>(size.cy & (~0x80000000));
++		size.cy = static_cast<int>(static_cast<dword>(size.cy) & ~0x80000000u);
+ 		s % val;
+ 	}
+ }
+diff -ruN a/uppsrc/Draw/FontFc.cpp b/uppsrc/Draw/FontFc.cpp
+--- a/uppsrc/Draw/FontFc.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Draw/FontFc.cpp	2026-10-31 01:05:04.180377991 -0700
+@@ -187,16 +187,16 @@
+ 			if(FT_Load_Glyph(face, static_cast<unsigned int>(glyph_index), FT_LOAD_DEFAULT|FT_LOAD_NO_BITMAP) == 0 ||
+ 			   FT_Load_Glyph(face, static_cast<unsigned int>(glyph_index), FT_LOAD_DEFAULT) == 0) {
+ 				FT_Glyph_Metrics& m = face->glyph->metrics;
+-				int left  = FLOOR(m.horiBearingX);
+-				int width = TRUNC(CEIL(m.horiBearingX + m.width) - left);
+-				gi.width = TRUNC(ROUND(face->glyph->advance.x));
++				int left  = static_cast<int>(FLOOR(m.horiBearingX));
++				int width = static_cast<int>(TRUNC(CEIL(m.horiBearingX + m.width) - left));
++				gi.width = static_cast<int16>(TRUNC(ROUND(face->glyph->advance.x)));
+ 				if(font.GetFaceInfo() & Font::COLORIMG) {
+ 					gi.lspc = gi.rspc = 0;
+ 					int q = GetFontInfo(font).colorimg_cy;
+ 					gi.width = static_cast<int16>(font.GetCy() * gi.width / q + max(1, font.GetCy() / 10)); // add a little space there...
+ 				}
+ 				else {
+-					gi.lspc = TRUNC(left);
++					gi.lspc = static_cast<int16>(TRUNC(left));
+ 					gi.rspc = static_cast<int16>(gi.width - width - gi.lspc);
+ 				}
+ 				gi.glyphi = static_cast<word>(glyph_index);
+diff -ruN a/uppsrc/Draw/ImageScale.cpp b/uppsrc/Draw/ImageScale.cpp
+--- a/uppsrc/Draw/ImageScale.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Draw/ImageScale.cpp	2026-10-31 01:08:25.578860097 -0700
+@@ -113,7 +113,7 @@
+ //			DUMP(end);
+ 			if(pb >= send)
+ 			{
+-				last += *out++ = static_cast<dword>(sendoffset - last);
++				last += static_cast<int>(*out++ = static_cast<dword>(sendoffset - last));
+ 				if(!bigseg)
+ 				{
+ 					int i = segment - 1;
+@@ -126,7 +126,7 @@
+ 			{ // 1 source pixel only
+ //				ASSERT(!bigseg);
+ 				int scomp = minmax(start + segment - smax, 0, start - smin);
+-				last += *out++ = static_cast<dword>((start - scomp) * times - last);
++				last += static_cast<int>(*out++ = static_cast<dword>((start - scomp) * times - last));
+ 				if(!bigseg)
+ 				{
+ 					int i = scomp;
+@@ -144,7 +144,7 @@
+ 				if(!delta)
+ 					start++;
+ 				int scomp = minmax(start + span - smax, 0, start - smin);
+-				last += *out++ = static_cast<dword>((start - scomp) * times - last);
++				last += static_cast<int>(*out++ = static_cast<dword>((start - scomp) * times - last));
+ 				if(!bigseg)
+ 				{
+ 					int i = scomp;
+@@ -189,13 +189,13 @@
+ 		{
+ 			if(spos <= sbegin)
+ 			{
+-				last += out[0] = static_cast<dword>(smin * times - last);
++				last += static_cast<int>(out[0] = static_cast<dword>(smin * times - last));
+ 				out[1] = static_cast<dword>(avail);
+ 				out[2] = 0;
+ 			}
+ 			else if(spos >= send)
+ 			{
+-				last += out[0] = static_cast<dword>(sendoffset - last);
++				last += static_cast<int>(out[0] = static_cast<dword>(sendoffset - last));
+ 				out[1] = 0;
+ 				out[2] = static_cast<dword>(avail);
+ 			}
+@@ -203,7 +203,7 @@
+ 			{
+ 				int pos = spos / dw;
+ 				int rel = spos % dw;
+-				last += out[0] = static_cast<dword>(pos * times - last);
++				last += static_cast<int>(out[0] = static_cast<dword>(pos * times - last));
+ 				out[1] = static_cast<dword>(avail) - (out[2] = curve[rel * COUNT_STRETCH_CURVE / dw]);
+ 			}
+ 			out += 3;
+@@ -215,7 +215,7 @@
+ 	int offs = 0, step = static_cast<int>(map[MAP_BLOCK]), segspan = static_cast<int>((map[MAP_SEGMENT] - 1) * map[MAP_STEP] + 1);
+ 	for(int t = 0; t < (int)map[MAP_COUNT]; t++)
+ 	{
+-		offs += map[MAP_DATA + t * step];
++		offs += static_cast<int>(map[MAP_DATA + t * step]);
+ 		ASSERT(offs >= times * smin && offs + segspan <= times * smax);
+ 	}
+ #endif
+@@ -416,7 +416,7 @@
+ 		memset(tgt, 0, sizeof(RGBA) * static_cast<unsigned long>(tsz.cx));
+ 		return;
+ 	}
+-	offset = static_cast<dword>(offset + (*offsets++));
++	offset += static_cast<int>(*offsets++);
+ 	ASSERT(offset >= 0 && offset + segspan <= size.cy);
+ 	if(bigseg) {
+ 		row_proc(&row_buffers[0 * cx4], GetLine(offset + 0 * step), horz);
+diff -ruN a/uppsrc/Painter/Fillers.cpp b/uppsrc/Painter/Fillers.cpp
+--- a/uppsrc/Painter/Fillers.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Painter/Fillers.cpp	2026-10-31 01:05:04.180527677 -0700
+@@ -308,7 +308,7 @@
+ 	int v = val >> 1;
+ 	if(last == val) {
+ 		int n = min(v + 128 - *lastn - 1, len);
+-		*lastn += n;
++		*lastn = static_cast<byte>(*lastn + n);   // n <= v + 127 - *lastn: fits
+ 		len -= n;
+ 	}
+ 	last = -1;
+diff -ruN a/uppsrc/Painter/Path.cpp b/uppsrc/Painter/Path.cpp
+--- a/uppsrc/Painter/Path.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/Painter/Path.cpp	2026-10-31 01:05:04.180588110 -0700
+@@ -53,7 +53,7 @@
+ {
+ 	Vector<byte>& p = path_info->path.Top();
+ 	int l = p.GetCount();
+-	p.SetCount(static_cast<unsigned long>(l) + sizeof(T));
++	p.SetCount(l + static_cast<int>(sizeof(T)));
+ 	T *e = static_cast<T *>(static_cast<void *>(p.begin() + l));
+ 	e->type = type;
+ 	return *e;
+diff -ruN a/uppsrc/RichText/ParaData.cpp b/uppsrc/RichText/ParaData.cpp
+--- a/uppsrc/RichText/ParaData.cpp	2026-10-31 01:04:58.305965211 -0700
++++ b/uppsrc/RichText/ParaData.cpp	2026-10-31 01:05:04.180636335 -0700
+@@ -478,7 +478,7 @@
+ 					format.dashed = chrstyle.dashed;
+ 					break;
+ 				case SSCRIPT:
+-					format.sscript = static_cast<dword>(in.Get());
++					format.sscript = static_cast<dword>(in.Get()) & 3;
+ 					if(format.sscript == 3)
+ 						format.sscript = chrstyle.sscript;
+ 					break;
