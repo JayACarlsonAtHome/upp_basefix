@@ -32,7 +32,7 @@ gcc 16 and clang 22 (Fedora 44), the check programs gave 5,964 warning sites:
 | Kind | Sites | Patch |
 |---|---|---|
 | -Wold-style-cast | 2,725 | to do |
-| -Wsign-conversion, -Wconversion and clang's int / float / 64-to-32 kinds | 2,226 | to do |
+| -Wsign-conversion, -Wconversion and clang's int / float / 64-to-32 kinds | 2,226 | 0020 (and 0021 by hand) |
 | -Wshadow | 900 | 0019 |
 | the small kinds (cast-align, non-virtual-dtor, overloaded-virtual, format, fall-through, pedantic, ...) | 113 | 0018 (bugs: 0017) |
 
@@ -46,3 +46,12 @@ lists exactly the uses that resolve to it; those are renamed together, byte for 
 kept). A file that does not parse cleanly is never used. Where `NAME_` would meet another
 `NAME_` (an outer and an inner one), the inner one got a name of its own. After 0019:
 4,896 sites, no -Wshadow in debug or release; --strict stays at 0, UppBaseCheck 23/23.
+
+0020 (2026-10-31): the conversions made explicit, by a tool. clang prints the exact range of each
+converted expression (`-fdiagnostics-print-source-range-info`, end exclusive) and gcc does in its
+SARIF output (display columns: a tab counts to the next multiple of 8); each expression becomes
+`static_cast<T>(expr)`, T the type the compiler converts to, written as clang / gcc spell it when
+that name is safe at the spot (a built-in type or a U++ / C typedef such as size_t, dword, byte).
+Left for a hand fix (0021): a site in a macro expansion or a template instantiation (one T would
+be wrong for the others), `x op= y` on a narrower x, a range that is not a whole expression.
+After 0020: 2,847 sites; the conversion kinds 168 (from 2,226); --strict 0, UppBaseCheck 23/23.

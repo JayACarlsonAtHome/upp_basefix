@@ -22,7 +22,7 @@
 
 
 === Data ===
-1. #|# 1|U++ clean under jac313's whole warning set (--strict-full)|A patch per warning kind, bugs in their own patch with a check. 5,964 sites at the start; 0017 (bugs) + 0018 (small kinds) + 0019 (-Wshadow) bring it to 4,896. Left: old-style casts, the conversion kinds, GLib's headers.|2026-10-31|Claude (jac313 session)
+1. #|# 1|U++ clean under jac313's whole warning set (--strict-full)|A patch per warning kind, bugs in their own patch with a check. 5,964 sites at the start; 0017 (bugs) + 0018 (small kinds) + 0019 (-Wshadow) + 0020 (conversions made explicit) bring it to 2,847. Left: 168 conversions by hand (0021), old-style casts, GLib's headers.|2026-10-31|Claude (jac313 session)
 
 === End Data ===
 === End Section ===
@@ -40,7 +40,7 @@
 
 
 === Data ===
-1. #|# 1|1|The conversion kinds|-Wsign-conversion, -Wconversion and clang's int / float / 64-to-32 kinds: about 2,200 sites, package by package; each needs the right type or a checked cast.
+1. #|# 1|1|The last 168 conversions by hand (0021)|Compound assignments on a narrower type (x op= y), sites in templates and macros, a few 64-to-32 truncations: each needs its own fix.
 
 1. #|# 2|2|Old-style casts|About 2,700 sites: static_cast, reinterpret_cast or const_cast by what each one does.
 

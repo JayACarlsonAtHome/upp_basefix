@@ -44,6 +44,7 @@ CtrlLib, plugin/png, plugin/sqlite3, plugin/bmp.
 | 0017 | bugs strict-full and gcc 16 found: `Sprintf` cut results at 1500 characters, `WwwFormat` put the zone text in the format, a stream `long` loaded only its low half where long is 64 bits, `memset8__`/`memcpy8__` formed a pointer before the block |
 | 0018 | strict-full, the small kinds: fall-through, format, pedantic, virtual destructors, hidden overloads, cast-align (see `docs/strict.md`) |
 | 0019 | strict-full, -Wshadow: 1,031 declarations renamed with exactly their uses (clang's AST says which); `NAME_`, as U++ already writes it |
+| 0020 | strict-full, the conversions made explicit: 1,799 `static_cast<T>(expr)` around exactly the expression clang or gcc names, T the type it converts to (same behaviour, now written down); left for 0021: compound assignments, templates, macros |
 
 Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/strict.md`.
 
