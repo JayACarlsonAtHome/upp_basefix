@@ -55,3 +55,12 @@ that name is safe at the spot (a built-in type or a U++ / C typedef such as size
 Left for a hand fix (0021): a site in a macro expansion or a template instantiation (one T would
 be wrong for the others), `x op= y` on a narrower x, a range that is not a whole expression.
 After 0020: 2,847 sites; the conversion kinds 168 (from 2,226); --strict 0, UppBaseCheck 23/23.
+
+0021 (2026-10-31): `x op= y` on a narrower x, which 0020 left: C++ defines it as
+`x = T(x op y)`, so the tool writes exactly that (y in parentheses unless a plain name), for
+one-line statements whose x has no ++, -- or call. Slip, fixed by hand in the next patch: for a
+-Wsign-conversion message gcc names the type the *operand* is converted to, not x's type, so a
+few statements cast to that (e.g. `size.cy = static_cast<unsigned int>(size.cy | 0x80000000)`
+with an int cy): the value stored is the same, but the line still warns. After 0021: 2,778 sites,
+99 of them not old-style casts (hash constants, flag masks on 16-bit fields, FreeType's 64-bit
+metrics, ASSERTs mixing uintptr_t and int, ...), each to be fixed by hand.

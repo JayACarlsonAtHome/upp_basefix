@@ -45,6 +45,7 @@ CtrlLib, plugin/png, plugin/sqlite3, plugin/bmp.
 | 0018 | strict-full, the small kinds: fall-through, format, pedantic, virtual destructors, hidden overloads, cast-align (see `docs/strict.md`) |
 | 0019 | strict-full, -Wshadow: 1,031 declarations renamed with exactly their uses (clang's AST says which); `NAME_`, as U++ already writes it |
 | 0020 | strict-full, the conversions made explicit: 1,799 `static_cast<T>(expr)` around exactly the expression clang or gcc names, T the type it converts to (same behaviour, now written down); left for 0021: compound assignments, templates, macros |
+| 0021 | strict-full: `x op= y` on a narrower x written as C++ defines it, `x = static_cast<T>(x op y)` (79 one-line statements whose x has no side effects) |
 
 Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/strict.md`.
 
