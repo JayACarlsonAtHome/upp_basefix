@@ -14,7 +14,7 @@
 #   ./upp_basefix.sh build [options]          build the check programs, count warnings
 #        --compiler gcc|clang|both   (default both)      --release   (default debug)
 #        --tree patched|pristine     (default patched)   --strict    (-Wall -Wextra)
-#        --strict-full               jac313's whole set: --strict plus -Wpedantic -Wshadow
+#        --strict-full               jac313's whole set: --strict plus -Werror -Wpedantic -Wshadow
 #                                    -Wnon-virtual-dtor -Wold-style-cast -Wcast-align
 #                                    -Woverloaded-virtual -Wimplicit-fallthrough -Wformat=2
 #                                    -Wconversion -Wsign-conversion
@@ -206,8 +206,21 @@ setup_umk() {
   echo "$want" > "$WORK/umk/umk.from"
 }
 
-# The warnings jac313 builds its own code with (its CMakeLists' always-on line, less -Werror).
-STRICT_FULL="-Wpedantic -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Woverloaded-virtual -Wimplicit-fallthrough -Wformat=2 -Wconversion -Wsign-conversion"
+# The warnings jac313 builds its own code with (its CMakeLists' always-on line), -Werror included.
+STRICT_FULL="-Werror -Wpedantic -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Woverloaded-virtual -Wimplicit-fallthrough -Wformat=2 -Wconversion -Wsign-conversion"
+# system_includes UPPSRC -> "-isystem DIR ..." for every include dir of the pkg-config packages
+# the tree's .upp files declare (GTK, GLib, FreeType, X11, ...). umk gives those dirs as plain -I,
+# so warnings in those headers, and in their macros used in U++ code, counted as U++'s; given
+# again with -isystem, gcc and clang treat them as the system headers they are. No code changes.
+system_includes() {
+  local pkgs p have=()
+  pkgs=$(grep -rhoE 'pkg_config(\([^)]*\))?[[:space:]]+"?[^";]+' "$1" --include='*.upp' 2>/dev/null |
+         sed -E 's/pkg_config(\([^)]*\))?[[:space:]]+"?//' | tr ' ' '\n' | sort -u)
+  for p in $pkgs; do pkg-config --exists "$p" 2>/dev/null && have+=("$p"); done
+  [ ${#have[@]} -gt 0 ] || return 0
+  pkg-config --cflags-only-I "${have[@]}" | tr ' ' '\n' | sed -n 's/^-I/-isystem /p' | sort -u | tr '\n' ' ' | sed 's/ $//'
+}
+
 # strict_tag STRICT -> "", "-strict" or "-strictfull" (build method, output and log names)
 strict_tag() { case $1 in 1) echo -strict ;; 2) echo -strictfull ;; esac; }
 
@@ -220,8 +233,8 @@ make_bm() {
   # the objects of the last one
   name="$TREE-$PIN-$c$(strict_tag "$strict")$([ -n "$extra" ] && echo "-$(echo "$extra" | md5sum | cut -c1-6)")"
   mkdir -p "$WORK/bm"
-  local add=""
-  [ "$strict" -ge 1 ] && add=" -Wall -Wextra"
+  local add=" $(system_includes "$WORK/$TREE/uppsrc")"
+  [ "$strict" -ge 1 ] && add="$add -Wall -Wextra"
   [ "$strict" = 2 ] && add="$add $STRICT_FULL"
   [ -n "$extra" ] && add="$add $extra"
   # the compiler through a wrapper: each compile's messages also go to a file of its own
@@ -425,7 +438,8 @@ cmd_install() {
   for c in gcc clang; do
     local src name
     case $c in gcc) src="$HERE/bm/GCC15.bm"; name=GCC ;; clang) src="$HERE/bm/CLANG26.bm"; name=CLANG ;; esac
-    sed "s|^COMPILER = \".*\";|COMPILER = \"$(compiler $c)\";|" "$src" > "$dir/.config/u++/theide/$name.bm"
+    sed -e "s|^COMPILER = \".*\";|COMPILER = \"$(compiler $c)\";|" \
+        -e "s|^COMMON_CPP_OPTIONS = \"\\(.*\\)\";|COMMON_CPP_OPTIONS = \"\\1 $(system_includes "$dir/uppsrc")\";|" "$src" > "$dir/.config/u++/theide/$name.bm"
     ln -sfn ".config/u++/theide/$name.bm" "$dir/$name.bm"
   done
   { echo "$version"

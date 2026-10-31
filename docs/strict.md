@@ -31,7 +31,7 @@ gcc 16 and clang 22 (Fedora 44), the check programs gave 5,964 warning sites:
 
 | Kind | Sites | Patch |
 |---|---|---|
-| -Wold-style-cast | 2,725 | 0023 (and 0025 by hand) |
+| -Wold-style-cast | 2,725 | 0023, 0024: 0 |
 | -Wsign-conversion, -Wconversion and clang's int / float / 64-to-32 kinds | 2,226 | 0020, 0021, 0022: 0 |
 | -Wshadow | 900 | 0019 |
 | the small kinds (cast-align, non-virtual-dtor, overloaded-virtual, format, fall-through, pedantic, ...) | 113 | 0018 (bugs: 0017) |
@@ -76,3 +76,18 @@ qualifiers"), again until a syntax check of every file (debug) and a release bui
 a template cast takes the kind every instantiation accepts. Left for 0025: casts written in
 macros (227), casts no single kind fits (137, e.g. const away and a type change at once), and
 47 that are not a plain `(T) operand`. After 0023: 1,111 sites, 716 in system headers (0024).
+
+System headers (2026-10-31): umk gives the pkg-config include dirs (GTK, GLib, FreeType, X11,
+HarfBuzz, ...) as plain -I, so their headers and macros counted as U++'s (716 sites). The build
+methods upp_basefix makes and installs now also give those dirs with -isystem (system_includes
+in upp_basefix.sh): gcc and clang then treat them as system headers. No U++ code changes.
+
+0024 (2026-10-31): the last 330 casts. The tool's second pass fixes a cast written in a macro body
+where clang's "expanded from macro" note points, reads a macro argument's operand from the line,
+and, where neither a static, reinterpret nor const cast compiles, keeps const on the target or
+spells const-away plus the type change as two casts; a few by hand (Value, Vector<void *>, GTK
+ids), and OFFSETOF rewritten on offsetof.
+
+**strict-full is 0** (2026-10-31): no warning in U++ or the checks, debug and release, gcc 16 and
+clang 22, and --strict-full now builds with -Werror, as jac313 does. UppBaseCheck 23/23 in debug,
+release, ASan + UBSan and valgrind.

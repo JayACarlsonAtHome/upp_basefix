@@ -78,8 +78,8 @@ static void CheckSqlite()
 	          q.Execute("insert into t values(1, 'one')") &&
 	          q.Execute("insert into t values(2, 'two')") &&
 	          q.Execute("select sum(a), group_concat(b, ',') from t") && q.Fetch();
-	Expect(ok && (int)q[0] == 3 && (String)q[1] == "one,two", "SQLite: create, insert, select");
-	Expect(q.Execute("select sqlite_version()") && q.Fetch() && ((String)q[0]).GetCount() > 0, "SQLite: version");
+	Expect(ok && static_cast<int>(q[0]) == 3 && static_cast<String>(q[1]) == "one,two", "SQLite: create, insert, select");
+	Expect(q.Execute("select sqlite_version()") && q.Fetch() && static_cast<String>(q[0]).GetCount() > 0, "SQLite: version");
 }
 
 static void CheckPng()
@@ -104,7 +104,7 @@ static void CheckPatchedBugs()
 	auto decode = [](const char *text) -> int {   // first character of a C string literal
 		try {
 			WString w = CParser(text).ReadString().ToWString();
-			return w.GetCount() ? (int)w[0] : -1;
+			return w.GetCount() ? static_cast<int>(w[0]) : -1;
 		}
 		catch(CParser::Error) {
 			return -2;
@@ -120,7 +120,7 @@ static void CheckPatchedBugs()
 	for(int y = 0; y < 16; y++)
 		for(int x = 0; x < 16; x++) {
 			RGBA& c = ib[y][x];
-			c.r = c.g = c.b = (byte)(100 + 2 * x + y % 2);
+			c.r = c.g = c.b = static_cast<byte>(100 + 2 * x + y % 2);
 			c.a = 255;
 		}
 	Image flat = ib;
@@ -129,7 +129,7 @@ static void CheckPatchedBugs()
 	// 0008: memory status: sysconf's -1 is not taken as a huge unsigned count
 	uint64 total = 0, avail = 0;
 	GetSystemMemoryStatus(total, avail);
-	Expect(total > 0 && avail <= total && total < ((uint64)1 << 50), "GetSystemMemoryStatus");
+	Expect(total > 0 && avail <= total && total < (static_cast<uint64>(1) << 50), "GetSystemMemoryStatus");
 	// 0014: QTF that ends too soon: the parser stops at the NUL (it read on past it; the
 	// bytes after the NUL here are ours, so the old reads are visible, not undefined)
 	static const char cut_p[] = "[p\0XYZ";

@@ -48,6 +48,7 @@ CtrlLib, plugin/png, plugin/sqlite3, plugin/bmp.
 | 0021 | strict-full: `x op= y` on a narrower x written as C++ defines it, `x = static_cast<T>(x op y)` (79 one-line statements whose x has no side effects) |
 | 0022 | strict-full, the last conversions by hand: hash constants unsigned, flag masks on 16-bit / bit fields, FreeType's 26.6 metrics, chained and template cases; conversions 0 in debug and release |
 | 0023 | strict-full, old-style casts: 1,845 `(T)x` made `static_cast` / `reinterpret_cast` / `const_cast<T>(x)`, the kind chosen by the compiler (debug and release, gcc and clang); 389 left for 0025 |
+| 0024 | strict-full, the last casts: casts in macro bodies and arguments, const-away plus a type change spelled as both, Value / Vector<void *> storage, GTK callback ids; `OFFSETOF` on `offsetof` (it read a member of a fake object at address 1) — strict-full 0, with -Werror |
 
 Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/strict.md`.
 
@@ -57,7 +58,7 @@ Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/
                                            # GitHub, umk built from it, the patched tree
     ./upp_basefix.sh test --clean          # gcc and clang: build, count warnings, run the checks
     ./upp_basefix.sh test --release --strict
-    ./upp_basefix.sh build --strict-full --clean   # jac313's whole warning set: the count to work down
+    ./upp_basefix.sh test --strict-full --clean    # jac313's whole warning set, -Werror: 0 warnings
     ./upp_basefix.sh test --asan           # or --tsan (clang), --valgrind, --helgrind
     ./upp_basefix.sh test --tree pristine  # the unpatched tree, to compare
     ./upp_basefix.sh gui                   # the same in a window
