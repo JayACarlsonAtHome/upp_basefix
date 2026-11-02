@@ -440,7 +440,15 @@ cmd_install() {
   for c in gcc clang; do
     local src name
     case $c in gcc) src="$HERE/bm/GCC15.bm"; name=GCC ;; clang) src="$HERE/bm/CLANG26.bm"; name=CLANG ;; esac
+    # GCC with native contracts (16: __cpp_contracts at -std=c++26) links the violation handler
+    # only with -fcontracts. Older GCC must not get it: its driver adds -lstdc++exp, which
+    # gcc-toolset-15 does not ship, and it has no use for it.
+    local link=""
+    if [ $c = gcc ] && "$(compiler $c)" -std=c++26 -dM -E -x c++ /dev/null 2>/dev/null | grep -q __cpp_contracts; then
+      link=-fcontracts
+    fi
     sed -e "s|^COMPILER = \".*\";|COMPILER = \"$(compiler $c)\";|" \
+        -e "s|^COMMON_LINK = \"\\(.*\\)\";|COMMON_LINK = \"\\1${link:+ $link}\";|" \
         -e "s|^COMMON_CPP_OPTIONS = \"\\(.*\\)\";|COMMON_CPP_OPTIONS = \"\\1 $(system_includes "$dir/uppsrc")\";|" "$src" > "$dir/.config/u++/theide/$name.bm"
     ln -sfn ".config/u++/theide/$name.bm" "$dir/$name.bm"
   done
