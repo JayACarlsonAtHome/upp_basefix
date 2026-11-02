@@ -182,10 +182,12 @@ compiler() {
   die "no $1 compiler (set UPP_BASEFIX_${1^^})"
 }
 
-# umk: UPP_BASEFIX_UMK if set, else built once from the pinned commit (its mkumk_gcc.sh,
-# which since U++'s switch to system libraries also needs lz4, zstd, lzma, pcre2, xxhash)
+# umk: UPP_BASEFIX_UMK if set, else built from the patched tree of the pinned commit, so the
+# build methods it writes hold the patched C++23 default; rebuilt when the patches change. Uses
+# the commit's mkumk_gcc.sh, which since U++'s switch to system libraries also needs lz4, zstd,
+# lzma, pcre2, xxhash.
 setup_umk() {
-  local want="${UPP_BASEFIX_UMK:-pin $PIN_COMMIT}"
+  local want="${UPP_BASEFIX_UMK:-pin $PIN_COMMIT patches $(cat "$HERE"/patches/*.patch | sha256sum | cut -c1-16)}"
   [ -x "$WORK/umk/umk" ] && [ "$(cat "$WORK/umk/umk.from" 2>/dev/null)" = "$want" ] && return 0
   mkdir -p "$WORK/umk/.config/u++/theide"
   if [ -n "${UPP_BASEFIX_UMK:-}" ]; then
@@ -193,12 +195,12 @@ setup_umk() {
     step "own umk + object cache in $WORK/umk (umk from $UPP_BASEFIX_UMK)"
     cp "$UPP_BASEFIX_UMK" "$WORK/umk/umk"
   else
-    tree_ok "$WORK/pristine" || die "no pristine tree: run ./upp_basefix.sh pristine"
+    tree_ok "$WORK/patched" || die "no patched tree: run ./upp_basefix.sh patch"
     local tgz b="$WORK/umk-build" cc; tgz=$(download); cc=$(compiler gcc)
     step "build umk from U++ $PIN with $cc (about a minute)"
     rm -rf "$b" && mkdir -p "$b"
     tar -xzf "$tgz" -C "$b" --strip-components=1 "ultimatepp-$PIN_COMMIT/mkumk_gcc.sh" "ultimatepp-$PIN_COMMIT/mkumk_blitz.cpp" || die "unpack failed"
-    ln -s "$WORK/pristine/uppsrc" "$b/uppsrc"
+    ln -s "$WORK/patched/uppsrc" "$b/uppsrc"
     ( cd "$b" && sed -e "s|^gcc |$cc -std=c++26 |" -e "s|-lbz2|-lbz2 -llz4 -lzstd -llzma -lpcre2-8 -lpcre2-32 -lxxhash|" mkumk_gcc.sh | bash ) > "$b/build.log" 2>&1
     [ -x "$b/umk" ] || { grep -E 'error|undefined' "$b/build.log" | head -10; die "umk build failed: $b/build.log"; }
     cp "$b/umk" "$WORK/umk/umk"
@@ -433,8 +435,8 @@ cmd_install() {
   mkdir -p "$dir/.config/u++/theide"   # umk finds it next to itself: its own config and cache, not ~/.config
   rsync -a --delete "$WORK/patched/uppsrc/" "$dir/uppsrc/" || die "rsync failed"
   cp "$WORK/umk/umk" "$dir/umk.new" && mv "$dir/umk.new" "$dir/umk"
-  # umk resolves method "GCC" / "CLANG" in its config dir first, and writes its own C++17
-  # defaults there when none exist, so the real file goes there; the name next to umk links to it
+  # umk resolves method "GCC" / "CLANG" in its config dir first, and writes its own defaults
+  # there when none exist, so the real file goes there; the name next to umk links to it
   for c in gcc clang; do
     local src name
     case $c in gcc) src="$HERE/bm/GCC15.bm"; name=GCC ;; clang) src="$HERE/bm/CLANG26.bm"; name=CLANG ;; esac

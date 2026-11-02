@@ -1,0 +1,81 @@
+diff -ruN a/uppsrc/ide/Builders/Install.cpp b/uppsrc/ide/Builders/Install.cpp
+--- a/uppsrc/ide/Builders/Install.cpp	2026-11-02 11:03:50.051017633 -0800
++++ b/uppsrc/ide/Builders/Install.cpp	2026-11-02 11:03:50.053775380 -0800
+@@ -8,7 +8,7 @@
+ R"(BUILDER = "CLANG";
+ COMPILER = "clang++";
+ COMMON_OPTIONS = "$COMMON$";
+-COMMON_CPP_OPTIONS = "-std=c++17 -Wall -Wno-logical-op-parentheses";
++COMMON_CPP_OPTIONS = "-std=c++23 -Wall -Wno-logical-op-parentheses";
+ COMMON_C_OPTIONS = "";
+ COMMON_LINK = "$COMMON$";
+ COMMON_FLAGS = "";
+@@ -37,7 +37,7 @@
+ R"(BUILDER = "GCC";
+ COMPILER = "";
+ COMMON_OPTIONS = "";
+-COMMON_CPP_OPTIONS = "-std=c++17";
++COMMON_CPP_OPTIONS = "-std=c++23";
+ COMMON_C_OPTIONS = "";
+ COMMON_LINK = "";
+ COMMON_FLAGS = "";
+@@ -64,7 +64,7 @@
+ R"(BUILDER = "CLANG";
+ COMPILER = "clang++";
+ COMMON_OPTIONS = "-mpopcnt";
+-COMMON_CPP_OPTIONS = "-std=c++17 -Wno-logical-op-parentheses";
++COMMON_CPP_OPTIONS = "-std=c++23 -Wno-logical-op-parentheses";
+ COMMON_C_OPTIONS = "";
+ COMMON_LINK = "";
+ COMMON_FLAGS = "";
+@@ -93,7 +93,7 @@
+ R"(BUILDER = "GCC";
+ COMPILER = "";
+ COMMON_OPTIONS = "$COMMON$";
+-COMMON_CPP_OPTIONS = "-std=c++17";
++COMMON_CPP_OPTIONS = "-std=c++23";
+ COMMON_C_OPTIONS = "";
+ COMMON_LINK = "";
+ COMMON_FLAGS = "";
+@@ -120,7 +120,7 @@
+ R"(BUILDER = "CLANG";
+ COMPILER = "clang++";
+ COMMON_OPTIONS = "$COMMON$";
+-COMMON_CPP_OPTIONS = "-std=c++17 -Wno-logical-op-parentheses";
++COMMON_CPP_OPTIONS = "-std=c++23 -Wno-logical-op-parentheses";
+ COMMON_C_OPTIONS = "";
+ COMMON_LINK = "";
+ COMMON_FLAGS = "";
+diff -ruN a/uppsrc/ide/InstantSetup.cpp b/uppsrc/ide/InstantSetup.cpp
+--- a/uppsrc/ide/InstantSetup.cpp	2026-11-02 11:03:50.062017634 -0800
++++ b/uppsrc/ide/InstantSetup.cpp	2026-11-02 11:03:50.063957100 -0800
+@@ -182,7 +182,7 @@
+ 			bmSet(bm, "BUILDER", "CLANG");
+ 			bmSet(bm, "COMPILER", decode(target, ARCH_X86, "i686-w64-mingw32-c++", ARCH_AMD64, "x86_64-w64-mingw32-c++", ARCH_ARM64, "aarch64-w64-mingw32-c++", ""));
+ 			bmSet(bm, "COMMON_OPTIONS", target == ARCH_ARM64 ? "" : "-mpopcnt");
+-			bmSet(bm, "COMMON_CPP_OPTIONS", "-std=c++17");
++			bmSet(bm, "COMMON_CPP_OPTIONS", "-std=c++23");
+ 			bmSet(bm, "COMMON_C_OPTIONS", "");
+ 			bmSet(bm, "COMMON_LINK", "");
+ 			bmSet(bm, "COMMON_FLAGS", target == ARCH_X86 ? "CPU32" : "");
+@@ -406,7 +406,7 @@
+ 			bmSet(bm, "BUILDER", "GCC");
+ 			bmSet(bm, "COMPILER", "");
+ 			bmSet(bm, "COMMON_OPTIONS", "-msse2 -D__CRT__NO_INLINE");
+-			bmSet(bm, "COMMON_CPP_OPTIONS", "-std=c++17");
++			bmSet(bm, "COMMON_CPP_OPTIONS", "-std=c++23");
+ 			bmSet(bm, "COMMON_C_OPTIONS", "");
+ 			bmSet(bm, "COMMON_LINK", "");
+ 			bmSet(bm, "COMMON_FLAGS", "");
+diff -ruN a/uppsrc/ide/Methods.cpp b/uppsrc/ide/Methods.cpp
+--- a/uppsrc/ide/Methods.cpp	2026-11-02 11:03:50.072017635 -0800
++++ b/uppsrc/ide/Methods.cpp	2026-11-02 11:03:50.074283415 -0800
+@@ -229,7 +229,7 @@
+ 		
+ 		ndk_arch_arm64_v8a.Set(1);
+ 		ndk_arch_x86_64.Set(1);
+-		ndk_common_cpp_options.SetData("-std=c++17 -fexceptions -frtti -Wno-logical-op-parentheses");
++		ndk_common_cpp_options.SetData("-std=c++23 -fexceptions -frtti -Wno-logical-op-parentheses");
+ 	}
+ 	else
+ 		ClearNdkCtrls();
