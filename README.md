@@ -57,7 +57,7 @@ Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/
 ## Use (Linux: Fedora/RHEL with dnf, or Debian/Ubuntu with apt)
 
     ./upp_basefix.sh bootstrap --install   # system packages (sudo), the pinned tree from
-                                           # GitHub, umk built from it, the patched tree
+                                           # GitHub, the patched tree, umk built from that
     ./upp_basefix.sh test --clean          # gcc and clang: build, count warnings, run the checks
     ./upp_basefix.sh test --release --strict
     ./upp_basefix.sh test --strict-full --clean    # jac313's whole warning set, -Werror: 0 warnings
@@ -67,11 +67,23 @@ Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/
 
 `./upp_basefix.sh` with no arguments lists every command and option.
 
-Everything runs in a work area (`UPP_BASEFIX_WORK`, default `~/upp_basefix_work`): the
+Everything runs in a work area (`UPP_BASEFIX_WORK`, default `upp_basefix_work` beside this repository): the
 download, the pristine and patched trees, its own umk with its own object cache, the
 programs and the logs. Nothing outside it is changed. Compilers: the paths in `bm/` if they
 exist (gcc-toolset-15 on RHEL), else `g++` / `clang++` from PATH; `UPP_BASEFIX_GCC` and
 `UPP_BASEFIX_CLANG` override. On RHEL, `xxhash-devel` comes from EPEL.
+
+`umk` is built from the patched tree, so the build methods it writes by itself ask for C++23, and
+it is rebuilt when the patches change.
+
+    ./upp_basefix.sh install               # U++ for other projects: upp_basefix_install beside this repository
+
+The install holds `umk`, `uppsrc`, `GCC.bm`, `CLANG.bm` and `VERSION`, with umk's config and object
+cache in its own `.config`. Projects use it from its relative position beside them, or from
+`UPP_DIR`, and pass the method by path. `GCC.bm` links with `-fcontracts` only when the compiler
+has native contracts (`__cpp_contracts` at `-std=c++26`, GCC 16). An older GCC's driver would turn
+the flag into `-lstdc++exp`, which gcc-toolset-15 does not ship. `VERSION` names the upp_basefix
+commit, so a project can tell when its install is behind.
 
 The window (`gui/UppBaseFixBuild`) shows the options and checks, the commands, each file
 compiled and any message (column 1), and the steps and results (column 2); it logs what it

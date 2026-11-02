@@ -27,11 +27,11 @@
 #   ./upp_basefix.sh gui                      build the UppBaseFixBuild window (gcc release,
 #                                             patched tree) and start it
 #   ./upp_basefix.sh install [DIR]            a U++ install for other projects (default
-#                                             ~/upp_basefix): DIR/umk, DIR/uppsrc (the patched
+#                                             ../upp_basefix_install): DIR/umk, DIR/uppsrc (the patched
 #                                             tree), GCC.bm + CLANG.bm next to umk, VERSION;
 #                                             umk's config + object cache stay in DIR/.config
 #
-# WORK (UPP_BASEFIX_WORK, default ~/upp_basefix_work) holds the download, the trees, its
+# WORK (UPP_BASEFIX_WORK, default ../upp_basefix_work) holds the download, the trees, its
 # own umk (built from the pinned commit; UPP_BASEFIX_UMK names another) + object cache
 # (umk/.cache/upp.out: never shared with other projects), out/ and logs/.
 # Compilers: the bm/ files' paths if they exist, else from PATH g++-16 / g++-15 / g++ and
@@ -40,7 +40,7 @@
 # and a "summary:" line. The exit code is 0 only when everything asked for passed.
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
-WORK="${UPP_BASEFIX_WORK:-$HOME/upp_basefix_work}"
+WORK="${UPP_BASEFIX_WORK:-$(dirname "$HERE")/upp_basefix_work}"
 PIN=18761                                          # U++ build number: git commit count + 2270
 PIN_COMMIT=af8e133a7697615f18693b071dac39992f9f7ace  # ultimatepp/ultimatepp master, 2026-10-19
 PIN_URL="https://codeload.github.com/ultimatepp/ultimatepp/tar.gz/$PIN_COMMIT"
@@ -418,7 +418,7 @@ cmd_gui() {
 }
 
 cmd_install() {
-  local dir="${1:-$HOME/upp_basefix}" c
+  local dir="${1:-$(dirname "$HERE")/upp_basefix_install}" c
   local version="U++ $PIN (github.com/ultimatepp/ultimatepp $PIN_COMMIT) + upp_basefix $(git -C "$HERE" describe --always --dirty 2>/dev/null)"
   if [ -e "$dir" ] && [ ! -f "$dir/VERSION" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
     die "$dir exists and is not an upp_basefix install: not touching it"
