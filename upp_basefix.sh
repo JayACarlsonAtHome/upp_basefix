@@ -197,7 +197,7 @@ setup_umk() {
   else
     tree_ok "$WORK/patched" || die "no patched tree: run ./upp_basefix.sh patch"
     local tgz b="$WORK/umk-build" cc; tgz=$(download); cc=$(compiler gcc)
-    step "build umk from U++ $PIN with $cc (about a minute)"
+    step "build umk from U++ $PIN with $cc (slow, several minutes: a good time for a coffee)"
     rm -rf "$b" && mkdir -p "$b"
     tar -xzf "$tgz" -C "$b" --strip-components=1 "ultimatepp-$PIN_COMMIT/mkumk_gcc.sh" "ultimatepp-$PIN_COMMIT/mkumk_blitz.cpp" || die "unpack failed"
     ln -s "$WORK/patched/uppsrc" "$b/uppsrc"
