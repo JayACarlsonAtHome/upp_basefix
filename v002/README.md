@@ -85,13 +85,14 @@ has native contracts (`__cpp_contracts` at `-std=c++26`, GCC 16). An older GCC's
 the flag into `-lstdc++exp`, which gcc-toolset-15 does not ship. `VERSION` names the upp_basefix
 commit, so a project can tell when its install is behind.
 
-Older versions installed to `~/upp_basefix`, with `~/upp_basefix_src` and `~/upp_basefix_work`. Once
-every project you build uses the install beside it (jac313 and jText_GUI do; jac315, jac317 and
-Date_001 do not yet), remove them, and remove any `UPP_DIR` from your shell profile, because it
-takes priority over the relative position:
+Older versions installed to `~/upp_basefix`, with `~/upp_basefix_src` and `~/upp_basefix_work`, and
+later to `upp_basefix`, `upp_basefix_install` and `upp_basefix_work` beside the repositories (one U++
+for every standard). jac313, jText_GUI, jac314 and jac317 now use `UPP/<version>/install`; remove the
+old folders, and any `UPP_DIR` in your shell profile:
 
     unset UPP_DIR
     rm -rf ~/upp_basefix ~/upp_basefix_src ~/upp_basefix_work
+    rm -rf <base>/upp_basefix_install <base>/upp_basefix_work   # <base>: beside the repositories
 
 The window (`gui/UppBaseFixBuild`) shows the options and checks, the commands, each file
 compiled and any message (column 1), and the steps and results (column 2); it logs what it
