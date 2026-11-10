@@ -1,0 +1,1659 @@
+diff -ruN a/uppsrc/Core/Debug.cpp b/uppsrc/Core/Debug.cpp
+--- a/uppsrc/Core/Debug.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/Debug.cpp	2026-10-31 02:43:30.558594597 -0700
+@@ -128,7 +128,7 @@
+ void  HexDumpData(Stream& s, const void *ptr, int size, bool adr, int maxsize) {
+ 	char h[256];
+ 	int a, b;
+-	byte *q = (byte *)ptr;
++	byte *q = const_cast<byte *>(static_cast<const byte *>(ptr));
+ 	a = 0;
+ 	if(size > maxsize) size = maxsize;
+ 	while(a < size) {
+diff -ruN a/uppsrc/Core/Defs.h b/uppsrc/Core/Defs.h
+--- a/uppsrc/Core/Defs.h	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/Defs.h	2026-10-31 02:43:30.588097983 -0700
+@@ -4,7 +4,7 @@
+ #define UPP_HEAP
+ #endif
+ 
+-#define __BREAK__        (*(volatile int *)0 = 0) // kill(getpid(), SIGTRAP)
++#define __BREAK__        (*static_cast<volatile int *>(0) = 0) // kill(getpid(), SIGTRAP)
+ 
+ #ifdef COMPILER_MSC
+ 	#pragma warning(disable : 4800)
+@@ -186,7 +186,7 @@
+ #ifdef COMPILER_MSC
+ 	#define I64(c) ((int64)COMBINE(c, i64))
+ #else
+-	#define I64(c) ((int64)COMBINE(c, LL))
++	#define I64(c) (static_cast<int64>(COMBINE(c, LL)))
+ #endif
+ 
+ #ifndef INT64_MIN
+@@ -198,21 +198,21 @@
+ 
+ #if !defined(PLATFORM_WIN32)
+ 
+-#define HIBYTE(a)        (byte)((a) >> 8)
++#define HIBYTE(a)        static_cast<byte>(((a) >> 8))
+ #define LOBYTE(a)        byte(a)
+-#define HIWORD(a)        (word)((a) >> 16)
++#define HIWORD(a)        static_cast<word>(((a) >> 16))
+ #define LOWORD(a)        word(a)
+ 
+-#define MAKEWORD(l, h)   ((word)  (((byte) (l)) | ((word) ((byte) (h))) << 8))
+-#define MAKELONG(l, h)   ((dword) (((word) (l)) | ((dword) ((word) (h))) << 16))
++#define MAKEWORD(l, h)   (static_cast<word>(((static_cast<byte>((l))) | (static_cast<word>((static_cast<byte>((h))))) << 8)))
++#define MAKELONG(l, h)   (static_cast<dword>(((static_cast<word>((l))) | (static_cast<dword>((static_cast<word>((h))))) << 16)))
+ 
+ #endif
+ 
+-#define MAKEQWORD(l, h)  ((qword) (((dword) (l)) | ((qword) ((dword) (h))) << 32))
+-#define HIDWORD(a)       (dword)(((uint64)a) >> 32)
++#define MAKEQWORD(l, h)  (static_cast<qword>(((static_cast<dword>((l))) | (static_cast<qword>((static_cast<dword>((h))))) << 32)))
++#define HIDWORD(a)       static_cast<dword>(((static_cast<uint64>(a)) >> 32))
+ #define LODWORD(a)       dword(a)
+ 
+-#define OFFSETOF(clss, mbr) ((int)(uintptr_t)&(((clss *)1)->mbr) - 1)
++#define OFFSETOF(clss, mbr) static_cast<int>(offsetof(clss, mbr)) // was a member of a fake object at address 1 (undefined)
+ 
+ template <typename T> T clone(const T& x) { return x; }
+ 
+diff -ruN a/uppsrc/Core/FileMapping.cpp b/uppsrc/Core/FileMapping.cpp
+--- a/uppsrc/Core/FileMapping.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/FileMapping.cpp	2026-10-31 02:43:30.559252593 -0700
+@@ -104,7 +104,7 @@
+ 		hfile, rawoffset));
+ #endif
+ #ifdef PLATFORM_POSIX
+-	if(rawbase == (byte *)-1)
++	if(rawbase == reinterpret_cast<byte *>(-1))
+ #else
+ 	if(!rawbase)
+ #endif
+diff -ruN a/uppsrc/Core/FileMapping.h b/uppsrc/Core/FileMapping.h
+--- a/uppsrc/Core/FileMapping.h	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/FileMapping.h	2026-10-31 02:49:41.382094073 -0700
+@@ -15,7 +15,7 @@
+ 	Time        GetTime() const;
+ 
+ 	byte       *Map(int64 mapoffset, size_t maplen);
+-	byte       *Map()                     { ASSERT((int64)(size_t)GetFileSize() == GetFileSize()); return Map(0, static_cast<size_t>(GetFileSize())); }
++	byte       *Map()                     { ASSERT(static_cast<int64>(static_cast<size_t>(GetFileSize())) == GetFileSize()); return Map(0, static_cast<size_t>(GetFileSize())); }
+ 	bool        Unmap();
+ 	bool        Close();
+ 
+@@ -27,12 +27,12 @@
+ 	const byte *operator~() const         { ASSERT(IsOpen()); return base; }
+ 	const byte *begin() const             { ASSERT(IsOpen()); return base; }
+ 	const byte *end() const               { ASSERT(IsOpen()); return base + size; }
+-	const byte& operator [] (int i) const { ASSERT(IsOpen() && i >= 0 && (size_t)i < size); return base[i]; }
++	const byte& operator [] (int i) const { ASSERT(IsOpen() && i >= 0 && static_cast<size_t>(i) < size); return base[i]; }
+ 
+ 	byte       *operator ~ ()             { ASSERT(IsOpen()); return base; }
+ 	byte       *begin()                   { ASSERT(IsOpen()); return base; }
+ 	byte       *end()                     { ASSERT(IsOpen()); return base + size; }
+-	byte&       operator [] (int i)       { ASSERT(IsOpen() && i >= 0 && (size_t)i < size); return base[i]; }
++	byte&       operator [] (int i)       { ASSERT(IsOpen() && i >= 0 && static_cast<size_t>(i) < size); return base[i]; }
+ 
+ // deprecated:
+ 	bool        Create(const char *file, int64 filesize, bool delete_share);
+@@ -42,11 +42,11 @@
+ 
+ 	const byte *Begin() const             { ASSERT(IsOpen()); return base; }
+ 	const byte *End() const               { ASSERT(IsOpen()); return base + size; }
+-	const byte *GetIter(int i) const      { ASSERT(IsOpen() && i >= 0 && (size_t)i <= size); return base + i; }
++	const byte *GetIter(int i) const      { ASSERT(IsOpen() && i >= 0 && static_cast<size_t>(i) <= size); return base + i; }
+ 
+ 	byte       *Begin()                   { ASSERT(IsOpen()); return base; }
+ 	byte       *End()                     { ASSERT(IsOpen()); return base + size; }
+-	byte       *GetIter(int i)            { ASSERT(IsOpen() && i >= 0 && (size_t)i <= size); return base + i; }
++	byte       *GetIter(int i)            { ASSERT(IsOpen() && i >= 0 && static_cast<size_t>(i) <= size); return base + i; }
+ 
+ private:
+ #ifdef PLATFORM_WIN32
+diff -ruN a/uppsrc/Core/FilterStream.cpp b/uppsrc/Core/FilterStream.cpp
+--- a/uppsrc/Core/FilterStream.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/FilterStream.cpp	2026-10-31 02:43:30.559342190 -0700
+@@ -60,7 +60,7 @@
+ 
+ void InFilterStream::Out(const void *p, int size)
+ {
+-	const byte *s = (byte *)p;
++	const byte *s = static_cast<const byte *>(p);
+ 	if(todo) {
+ 		dword sz = min(todo, static_cast<dword>(size));
+ 		memcpy8(t, s, sz);
+diff -ruN a/uppsrc/Core/Heap.h b/uppsrc/Core/Heap.h
+--- a/uppsrc/Core/Heap.h	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/Heap.h	2026-10-31 02:49:41.382171827 -0700
+@@ -42,7 +42,7 @@
+ #else
+ inline
+ bool  MemoryTryRealloc(void *ptr, size_t& newsize) {
+-	return (((dword)(uintptr_t)ptr) & 16) && MemoryTryRealloc__(ptr, newsize);
++	return (static_cast<dword>(reinterpret_cast<uintptr_t>(ptr)) & 16) && MemoryTryRealloc__(ptr, newsize);
+ }
+ #endif
+ 
+diff -ruN a/uppsrc/Core/HeapImp.h b/uppsrc/Core/HeapImp.h
+--- a/uppsrc/Core/HeapImp.h	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/HeapImp.h	2026-10-31 02:49:41.382418652 -0700
+@@ -168,7 +168,7 @@
+ force_inline
+ void BlkHeap<Detail, BlkSize>::Split(BlkHeader *h, word wcount, bool fill)
+ { // splits the block if bigger, links new block to free
+-	ASSERT(BlkSize != 4096 || ((dword)(uintptr_t)h & 4095) == 0);
++	ASSERT(BlkSize != 4096 || (static_cast<dword>(reinterpret_cast<uintptr_t>(h)) & 4095) == 0);
+ 	BlkHeader *h2 = static_cast<BlkHeader *>(static_cast<void *>(reinterpret_cast<byte *>(h) + BlkSize * static_cast<int>(wcount)));
+ 	word nsz = h->GetSize() - wcount;
+ 	if(nsz == 0) // nothing to split
+@@ -232,7 +232,7 @@
+ force_inline
+ typename BlkHeap<Detail, BlkSize>::BlkHeader *BlkHeap<Detail, BlkSize>::Free(BlkHeader *h)
+ {
+-	ASSERT(BlkSize != 4096 || ((dword)(uintptr_t)h & 4095) == 0);
++	ASSERT(BlkSize != 4096 || (static_cast<dword>(reinterpret_cast<uintptr_t>(h)) & 4095) == 0);
+ 	JoinNext(h);
+ 	if(!h->IsFirst()) { // try to join with previous header if it is free
+ 		BlkHeader *ph = h->GetPrevHeader();
+@@ -414,7 +414,7 @@
+ 	static void  AssertLeaks(bool b);
+ 
+ 	static bool  IsSmall(void *ptr) { return ((static_cast<dword>(reinterpret_cast<uintptr_t>(ptr))) & 16) == 0; }
+-	static Page *GetPage(void *ptr) { return (Page *)(reinterpret_cast<uintptr_t>(ptr) & ~static_cast<uintptr_t>(4095)); }
++	static Page *GetPage(void *ptr) { return reinterpret_cast<Page *>((reinterpret_cast<uintptr_t>(ptr) & ~static_cast<uintptr_t>(4095))); }
+ 
+ 	Page *WorkPage(int k);
+ 	void *AllocK(int k);
+diff -ruN a/uppsrc/Core/heaputil.cpp b/uppsrc/Core/heaputil.cpp
+--- a/uppsrc/Core/heaputil.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/heaputil.cpp	2026-10-31 02:43:30.562357805 -0700
+@@ -97,8 +97,8 @@
+ void *Heap::DbgFreeCheckK(void *p, int k)
+ {
+ 	Page *page = GetPage(p);
+-	ASSERT((byte *)page + sizeof(Page) <= (byte *)p && (byte *)p < (byte *)page + 4096);
+-	ASSERT((4096 - ((uintptr_t)p & (uintptr_t)4095)) % static_cast<uintptr_t>(Ksz(k)) == 0);
++	ASSERT(reinterpret_cast<byte *>(page) + sizeof(Page) <= static_cast<byte *>(p) && static_cast<byte *>(p) < reinterpret_cast<byte *>(page) + 4096);
++	ASSERT((4096 - (reinterpret_cast<uintptr_t>(p) & static_cast<uintptr_t>(4095))) % static_cast<uintptr_t>(Ksz(k)) == 0);
+ 	ASSERT(page->klass == k);
+ 	DbgFreeCheck(static_cast<FreeLink *>(p) + 1, static_cast<unsigned long>(Ksz(k)) - sizeof(FreeLink));
+ 	return p;
+diff -ruN a/uppsrc/Core/Inet.h b/uppsrc/Core/Inet.h
+--- a/uppsrc/Core/Inet.h	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/Inet.h	2026-10-31 02:43:30.559567460 -0700
+@@ -770,10 +770,10 @@
+ 	int    GetOpCode() const { return current_opcode & 15; }
+ 
+ 	bool   SendText(const String& data_, bool fin)                   { SendRaw((fin ? 0x80 : 0)|TEXT, data_); return !IsError(); }
+-	bool   SendText(const void *data_, int len, bool fin = true)     { return SendText(String((char *)data_, len), fin); }
++	bool   SendText(const void *data_, int len, bool fin = true)     { return SendText(String(static_cast<const char *>(data_), len), fin); }
+ 
+ 	bool   SendBinary(const String& data_, bool fin)                 { SendRaw((fin ? 0x80 : 0)|BINARY, data_); return !IsError(); }
+-	bool   SendBinary(const void *data_, int len, bool fin = true)   { return SendText(String((char *)data_, len), fin); }
++	bool   SendBinary(const void *data_, int len, bool fin = true)   { return SendText(String(static_cast<const char *>(data_), len), fin); }
+ 
+ 	String GetErrorDesc() const                                     { return GetError(); }
+ 
+diff -ruN a/uppsrc/Core/InetUtil.cpp b/uppsrc/Core/InetUtil.cpp
+--- a/uppsrc/Core/InetUtil.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/InetUtil.cpp	2026-10-31 02:43:30.559690351 -0700
+@@ -264,8 +264,8 @@
+ 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+ 		"abcdefghijklmnopqrstuvwxyz"
+ 		"0123456789+/";
+-	const byte *b = (byte *)_b; // avoid left shift of negative value sanitizer issue
+-	const byte *e = (byte *)_e;
++	const byte *b = const_cast<byte *>(reinterpret_cast<const byte *>(_b)); // avoid left shift of negative value sanitizer issue
++	const byte *e = const_cast<byte *>(reinterpret_cast<const byte *>(_e));
+ 	if(b == e)
+ 		return Null;
+ 	int out = (int(e - b) + 2) / 3 * 4;
+diff -ruN a/uppsrc/Core/LocalProcess.cpp b/uppsrc/Core/LocalProcess.cpp
+--- a/uppsrc/Core/LocalProcess.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/LocalProcess.cpp	2026-10-31 02:43:30.559973267 -0700
+@@ -338,7 +338,7 @@
+ 
+ 	LLOG("running execve, app = " << app << ", #args = " << args.GetCount());
+ 	if(envptr)
+-		execve(app_full, args.Begin(), (char *const *)env.Begin());
++		execve(app_full, args.Begin(), const_cast<char *const *>(env.Begin()));
+ 	else
+ 		execv(app_full, args.Begin());
+ 	LLOG("execve failed, errno = " << errno);
+diff -ruN a/uppsrc/Core/Log.cpp b/uppsrc/Core/Log.cpp
+--- a/uppsrc/Core/Log.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/Log.cpp	2026-10-31 02:43:30.560199712 -0700
+@@ -324,7 +324,7 @@
+ 
+ void  LogStream::_Put(const void *data, dword size)
+ {
+-	const byte *q = (byte *)data;
++	const byte *q = static_cast<const byte *>(data);
+ 	while(size--)
+ 		sTh.Put(*q++);
+ }
+diff -ruN a/uppsrc/Core/MD5.cpp b/uppsrc/Core/MD5.cpp
+--- a/uppsrc/Core/MD5.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/MD5.cpp	2026-10-31 02:43:30.560292028 -0700
+@@ -76,22 +76,22 @@
+ Rotation is separate from addition to prevent recomputation.
+ */
+ #define FF(a, b, c, d, x, s, ac) { \
+-		(a) += F ((b), (c), (d)) + (x) + (dword)(ac); \
++		(a) += F ((b), (c), (d)) + (x) + static_cast<dword>((ac)); \
+ 		(a) = ROTATE_LEFT ((a), (s)); \
+ 		(a) += (b); \
+ 	}
+ #define GG(a, b, c, d, x, s, ac) { \
+-		(a) += G ((b), (c), (d)) + (x) + (dword)(ac); \
++		(a) += G ((b), (c), (d)) + (x) + static_cast<dword>((ac)); \
+ 		(a) = ROTATE_LEFT ((a), (s)); \
+ 		(a) += (b); \
+ 	}
+ #define HH(a, b, c, d, x, s, ac) { \
+-		(a) += H ((b), (c), (d)) + (x) + (dword)(ac); \
++		(a) += H ((b), (c), (d)) + (x) + static_cast<dword>((ac)); \
+ 		(a) = ROTATE_LEFT ((a), (s)); \
+ 		(a) += (b); \
+ 	}
+ #define II(a, b, c, d, x, s, ac) { \
+-		(a) += I ((b), (c), (d)) + (x) + (dword)(ac); \
++		(a) += I ((b), (c), (d)) + (x) + static_cast<dword>((ac)); \
+ 		(a) = ROTATE_LEFT ((a), (s)); \
+ 		(a) += (b); \
+ 	}
+@@ -134,7 +134,7 @@
+ */
+ 	if (inputLen >= partLen) {
+ 		MD5_memcpy
+-			(static_cast<void *>(&context->buffer[index]), (void *)input, partLen);
++			(static_cast<void *>(&context->buffer[index]), static_cast<const void *>(input), partLen);
+ 		MD5Transform (context->state, context->buffer);
+ 
+ 		for (i = partLen; i + 63 < inputLen; i += 64)
+@@ -146,7 +146,7 @@
+ 		i = 0;
+ 
+ 	/* Buffer remaining input */
+-	MD5_memcpy(static_cast<void *>(&context->buffer[index]), (void *)&input[i],
++	MD5_memcpy(static_cast<void *>(&context->buffer[index]), static_cast<const void *>(&input[i]),
+ 	inputLen-i);
+ }
+ 
+diff -ruN a/uppsrc/Core/Mem.cpp b/uppsrc/Core/Mem.cpp
+--- a/uppsrc/Core/Mem.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/Mem.cpp	2026-10-31 02:43:30.560372244 -0700
+@@ -15,7 +15,7 @@
+ 	if(len <= 32)
+ 		return;
+ 	const byte *e = t + len;
+-	t = (byte *)((reinterpret_cast<uintptr_t>(t) | 15) + 1);
++	t = reinterpret_cast<byte *>(((reinterpret_cast<uintptr_t>(t) | 15) + 1));
+ 	len = static_cast<size_t>(e - t);
+ 	// whole 128-byte steps while that much is left (an end pointer less 128 could point
+ 	// before the start of a short block: undefined, and gcc -O2 reports it)
+@@ -69,7 +69,7 @@
+ 	if(len <= 32)
+ 		return;
+ 	const byte *e = t + len;
+-	byte *t1 = (byte *)((reinterpret_cast<uintptr_t>(t) | 15) + 1);
++	byte *t1 = reinterpret_cast<byte *>(((reinterpret_cast<uintptr_t>(t) | 15) + 1));
+ 	s += t1 - t;
+ 	t = t1;
+ 	len = static_cast<size_t>(e - t);
+@@ -101,7 +101,7 @@
+ 
+ hash_t memhash(const void *ptr, size_t len)
+ {
+-	const byte *s = (byte *)ptr;
++	const byte *s = static_cast<const byte *>(ptr);
+ 	uint64 val = HASH_CONST1;
+ 	if(len >= 8) {
+ 		if(len >= 32) {
+diff -ruN a/uppsrc/Core/Mem.h b/uppsrc/Core/Mem.h
+--- a/uppsrc/Core/Mem.h	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/Mem.h	2026-10-31 02:43:30.560419552 -0700
+@@ -154,7 +154,7 @@
+ void memcpy8(void *p, const void *q, size_t count)
+ {
+ 	byte *t = static_cast<byte *>(p);
+-	byte *s = (byte *)q;
++	byte *s = const_cast<byte *>(static_cast<const byte *>(q));
+ 	if(count <= 4) {
+ 		if(count < 2) {
+ 			if(count)
+@@ -189,7 +189,7 @@
+ void memcpy16(void *p, const void *q, size_t count)
+ {
+ 	word *t = static_cast<word *>(p);
+-	word *s = (word *)q;
++	word *s = const_cast<word *>(static_cast<const word *>(q));
+ 	if(count <= 4) {
+ 		if(count < 2) {
+ 			if(count)
+@@ -218,7 +218,7 @@
+ void memcpy32(void *p, const void *q, size_t count)
+ {
+ 	dword *t = static_cast<dword *>(p);
+-	dword *s = (dword *)q;
++	dword *s = const_cast<dword *>(static_cast<const dword *>(q));
+ 
+ #ifdef CPU_64
+ 	if(count <= 4) {
+@@ -267,7 +267,7 @@
+ void memcpy64(void *p, const void *q, size_t count)
+ {
+ 	qword *t = static_cast<qword *>(p);
+-	qword *s = (qword *)q;
++	qword *s = const_cast<qword *>(static_cast<const qword *>(q));
+ 
+ 	if(count <= 2) {
+ 		if(count) {
+@@ -305,7 +305,7 @@
+ 	static_assert(sizeof(dqword) == 16, "dqword sizeof");
+ 
+ 	dqword *t = static_cast<dqword *>(p);
+-	dqword *s = (dqword *)q;
++	dqword *s = const_cast<dqword *>(static_cast<const dqword *>(q));
+ 
+ 	auto Copy128 = [&](size_t at) { i16x8(s + at).Store(t + at); };
+ 
+@@ -349,8 +349,8 @@
+ bool memeq8__(const void *p, const void *q, size_t count)
+ {
+ 	ASSERT(count >= 16);
+-	const byte *t = (byte *)p;
+-	const byte *s = (byte *)q;
++	const byte *t = static_cast<const byte *>(p);
++	const byte *s = static_cast<const byte *>(q);
+ 	
+ 	auto Cmp128 = [&](size_t at)        { return i16x8(s + at) == i16x8(t + at); };
+ 	
+@@ -362,7 +362,7 @@
+ 
+ 	const byte *e = t + count; // align up
+ 
+-	byte *t1 = (byte *)((reinterpret_cast<uintptr_t>(t) | 15) + 1);
++	byte *t1 = reinterpret_cast<byte *>(((reinterpret_cast<uintptr_t>(t) | 15) + 1));
+ 	s += t1 - t;
+ 	t = t1;
+ 	count = static_cast<size_t>(e - t);
+@@ -451,9 +451,9 @@
+ inline
+ size_t memeq8len(const void *p, const void *q, size_t count)
+ {
+-	const byte *t = (byte *)p;
++	const byte *t = static_cast<const byte *>(p);
+ 	const byte *t0 = t;
+-	const byte *s = (byte *)q;
++	const byte *s = static_cast<const byte *>(q);
+ 
+ 	const byte *et = t0 + (count & static_cast<size_t>(~15));
+ 	
+@@ -747,7 +747,7 @@
+ inline
+ size_t memcnt8(const void *s, dword value, size_t sz)
+ {
+-	const byte *p = (byte *)s;
++	const byte *p = static_cast<const byte *>(s);
+ 	const byte *e = p + sz;
+ 	size_t n = 0;
+ 
+@@ -771,7 +771,7 @@
+ inline
+ size_t memcnt16(const void *s, dword value, size_t sz)
+ {
+-	const word *p = (word *)s;
++	const word *p = static_cast<const word *>(s);
+ 	const word *e = p + sz;
+ 	size_t n = 0;
+ 
+@@ -795,7 +795,7 @@
+ inline
+ size_t memcnt32(const void *s, dword value, size_t sz)
+ {
+-	const dword *p = (dword *)s;
++	const dword *p = static_cast<const dword *>(s);
+ 	const dword *e = p + sz;
+ 	size_t n = 0;
+ 
+diff -ruN a/uppsrc/Core/Other.h b/uppsrc/Core/Other.h
+--- a/uppsrc/Core/Other.h	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/Other.h	2026-10-31 02:43:30.560489744 -0700
+@@ -35,7 +35,7 @@
+ 
+ 	BaseData *ptr;
+ 
+-	void Chk() const                              { ASSERT(ptr != (void *)1); }
++	void Chk() const                              { ASSERT(ptr != reinterpret_cast<void *>(1)); }
+ 	void Pick(Any&& s)                            { ptr = s.ptr; const_cast<Any&>(s).ptr = NULL; }
+ 
+ public:
+diff -ruN a/uppsrc/Core/SHA1.cpp b/uppsrc/Core/SHA1.cpp
+--- a/uppsrc/Core/SHA1.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/SHA1.cpp	2026-10-31 02:49:41.382582072 -0700
+@@ -217,8 +217,8 @@
+     }
+     SHA1Update(context, finalcount, 8); /* Should cause a SHA1Transform() */
+     for (i = 0; i < 20; i++)
+-        digest[i] = (unsigned char)
+-            ((context->state[i >> 2] >> ((3 - (i & 3)) * 8)) & 255);
++        digest[i] = static_cast<unsigned char>(
++            (context->state[i >> 2] >> ((3 - (i & 3)) * 8)) & 255);
+ 
+     /* Wipe variables */
+     memset(context, '\0', sizeof(*context));
+@@ -227,7 +227,7 @@
+ 
+ void Sha1Stream::Out(const void *data, dword length)
+ {
+-	SHA1Update(ctx, (unsigned char *)data, length);
++	SHA1Update(ctx, static_cast<const unsigned char *>(data), length);
+ }
+ 
+ void Sha1Stream::Finish(byte *hash20)
+diff -ruN a/uppsrc/Core/sheap.cpp b/uppsrc/Core/sheap.cpp
+--- a/uppsrc/Core/sheap.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/sheap.cpp	2026-10-31 02:43:30.562407225 -0700
+@@ -220,7 +220,7 @@
+ {
+ 	LTIMING("Small Free");
+ 	LLOG("Small free page: " << (void *)page << ", k: " << k << ", ksz: " << Ksz(k));
+-	ASSERT((4096 - ((uintptr_t)ptr & (uintptr_t)4095)) % static_cast<uintptr_t>(Ksz(k)) == 0);
++	ASSERT((4096 - (reinterpret_cast<uintptr_t>(ptr) & static_cast<uintptr_t>(4095))) % static_cast<uintptr_t>(Ksz(k)) == 0);
+ 	if(page->heap != this) { // freeing block allocated in different thread
+ 		RemoteFree(ptr, Ksz(k)); // add to originating heap's list of free pages to be properly freed later
+ 		return;
+@@ -268,7 +268,7 @@
+ 	ASSERT(page->heap == this);
+ 	int k = page->klass;
+ 	LLOG("Small free page: " << (void *)page << ", k: " << k << ", ksz: " << Ksz(k));
+-	ASSERT((4096 - ((uintptr_t)ptr & (uintptr_t)4095)) % static_cast<uintptr_t>(Ksz(k)) == 0);
++	ASSERT((4096 - (reinterpret_cast<uintptr_t>(ptr) & static_cast<uintptr_t>(4095))) % static_cast<uintptr_t>(Ksz(k)) == 0);
+ 	DbgFreeFillK(ptr, k);
+ 	FreeK(ptr, page, k);
+ }
+diff -ruN a/uppsrc/Core/SIMD.cpp b/uppsrc/Core/SIMD.cpp
+--- a/uppsrc/Core/SIMD.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SIMD.cpp	2026-10-31 02:43:30.560604538 -0700
+@@ -6,26 +6,26 @@
+ 
+ String AsString(const f32x4& x)
+ {
+-	float *f = (float *)&x;
++	float *f = const_cast<float *>(reinterpret_cast<const float *>(&x));
+ 	return String() << FormatFloat(f[3]) << ' ' << FormatFloat(f[2]) << ' '
+ 	                << FormatFloat(f[1]) << ' ' << FormatFloat(f[0]);
+ }
+ 
+ String AsString(const i32x4& x)
+ {
+-	int *f = (int *)&x;
++	int *f = const_cast<int *>(reinterpret_cast<const int *>(&x));
+ 	return Format("%d %d %d %d", f[3], f[2], f[1], f[0]);
+ }
+ 
+ String AsString(const i16x8& x)
+ {
+-	int16 *f = (int16 *)&x;
++	int16 *f = const_cast<int16 *>(reinterpret_cast<const int16 *>(&x));
+ 	return Format("%d %d %d %d  %d %d %d %d", f[7], f[6], f[5], f[4], f[3], f[2], f[1], f[0]);
+ }
+ 
+ String AsString(const i8x16& x)
+ {
+-	int8 *f = (int8 *)&x;
++	int8 *f = const_cast<int8 *>(reinterpret_cast<const int8 *>(&x));
+ 	return Format("%d %d %d %d . %d %d %d %d . %d %d %d %d . %d %d %d %d",
+ 	              f[15], f[14], f[13], f[12], f[11], f[10], f[9], f[8],
+ 	              f[7], f[6], f[5], f[4], f[3], f[2], f[1], f[0]);
+diff -ruN a/uppsrc/Core/SIMD_SSE2.h b/uppsrc/Core/SIMD_SSE2.h
+--- a/uppsrc/Core/SIMD_SSE2.h	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/SIMD_SSE2.h	2026-10-31 02:43:30.560642236 -0700
+@@ -3,9 +3,9 @@
+ struct f32x4 {
+ 	__m128 data;
+ 
+-	f32x4& Load(const void *ptr)   { data = _mm_loadu_ps((float *)ptr); return *this; }
+-	f32x4& Load64(const void *ptr) { data = _mm_castpd_ps(_mm_load_sd((double *)ptr)); return *this; }
+-	f32x4& Load32(const void *ptr) { data = _mm_load_ss((float *)ptr); return *this; }
++	f32x4& Load(const void *ptr)   { data = _mm_loadu_ps(static_cast<const float *>(ptr)); return *this; }
++	f32x4& Load64(const void *ptr) { data = _mm_castpd_ps(_mm_load_sd(static_cast<const double *>(ptr))); return *this; }
++	f32x4& Load32(const void *ptr) { data = _mm_load_ss(static_cast<const float *>(ptr)); return *this; }
+ 
+ 	void   Store(void *ptr)        { _mm_storeu_ps(static_cast<float *>(ptr), data); }
+ 	void   Store64(void *ptr)      { _mm_store_sd(static_cast<double *>(ptr), _mm_castps_pd(data)); }
+@@ -63,9 +63,9 @@
+ 	
+ 	T& AsT()                       { return *static_cast<T *>(this); }
+ 
+-	T& Load(const void *ptr)       { data = _mm_loadu_si128((__m128i *)ptr); return AsT(); }
+-	T& Load64(const void *ptr)     { data = _mm_castpd_si128(_mm_load_sd((double *)ptr)); return AsT(); }
+-	T& Load32(const void *ptr)     { data = _mm_castps_si128(_mm_load_ss((float *)ptr)); return AsT(); }
++	T& Load(const void *ptr)       { data = _mm_loadu_si128(static_cast<const __m128i *>(ptr)); return AsT(); }
++	T& Load64(const void *ptr)     { data = _mm_castpd_si128(_mm_load_sd(static_cast<const double *>(ptr))); return AsT(); }
++	T& Load32(const void *ptr)     { data = _mm_castps_si128(_mm_load_ss(static_cast<const float *>(ptr))); return AsT(); }
+ 
+ 	void   Store(void *ptr)        { _mm_storeu_si128(static_cast<__m128i *>(ptr), data); }
+ 	void   Store64(void *ptr)      { _mm_store_sd(static_cast<double *>(ptr), _mm_castsi128_pd(data)); }
+diff -ruN a/uppsrc/Core/SSH/Channels.cpp b/uppsrc/Core/SSH/Channels.cpp
+--- a/uppsrc/Core/SSH/Channels.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/SSH/Channels.cpp	2026-10-31 02:43:30.560712193 -0700
+@@ -187,7 +187,7 @@
+ 
+ String SshChannel::GetExitSignal()
+ {
+-	char *sig = (char *)"none";
++	char *sig = const_cast<char *>("none");
+ 	size_t len = 0;
+ 	String s;
+ 	INTERLOCKED
+diff -ruN a/uppsrc/Core/SSH/libssh2/libssh2.h b/uppsrc/Core/SSH/libssh2/libssh2.h
+--- a/uppsrc/Core/SSH/libssh2/libssh2.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/libssh2/libssh2.h	2026-10-31 02:43:30.560975315 -0700
+@@ -739,7 +739,7 @@
+ #define libssh2_userauth_publickey_fromfile(session, username, publickey,  \
+                                             privatekey, passphrase)        \
+     libssh2_userauth_publickey_fromfile_ex((session), (username),          \
+-                                           (unsigned int)strlen(username), \
++                                           static_cast<unsigned int>(strlen(username)), \
+                                            (publickey),                    \
+                                            (privatekey), (passphrase))
+ 
+@@ -767,13 +767,13 @@
+ #define libssh2_userauth_hostbased_fromfile(session, username, publickey,     \
+                                             privatekey, passphrase, hostname) \
+     libssh2_userauth_hostbased_fromfile_ex((session), (username),             \
+-                                           (unsigned int)strlen(username),    \
++                                           static_cast<unsigned int>(strlen(username)),    \
+                                            (publickey),                       \
+                                            (privatekey), (passphrase),        \
+                                            (hostname),                        \
+-                                           (unsigned int)strlen(hostname),    \
++                                           static_cast<unsigned int>(strlen(hostname)),    \
+                                            (username),                        \
+-                                           (unsigned int)strlen(username))
++                                           static_cast<unsigned int>(strlen(username)))
+ 
+ LIBSSH2_API int
+ libssh2_userauth_publickey_frommemory(LIBSSH2_SESSION *session,
+@@ -801,7 +801,7 @@
+ #define libssh2_userauth_keyboard_interactive(session, username,             \
+                                               response_callback)             \
+     libssh2_userauth_keyboard_interactive_ex((session), (username),          \
+-                                             (unsigned int)strlen(username), \
++                                             static_cast<unsigned int>(strlen(username)), \
+                                              (response_callback))
+ 
+ LIBSSH2_API int
+@@ -877,8 +877,8 @@
+ 
+ #define libssh2_channel_setenv(channel, varname, value)                 \
+     libssh2_channel_setenv_ex((channel), (varname),                     \
+-                              (unsigned int)strlen(varname), (value),   \
+-                              (unsigned int)strlen(value))
++                              static_cast<unsigned int>(strlen(varname)), (value),   \
++                              static_cast<unsigned int>(strlen(value)))
+ 
+ LIBSSH2_API int libssh2_channel_request_auth_agent(LIBSSH2_CHANNEL *channel);
+ 
+diff -ruN a/uppsrc/Core/SSH/libssh2/libssh2_sftp.h b/uppsrc/Core/SSH/libssh2/libssh2_sftp.h
+--- a/uppsrc/Core/SSH/libssh2/libssh2_sftp.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/libssh2/libssh2_sftp.h	2026-10-31 02:43:30.561150003 -0700
+@@ -234,11 +234,11 @@
+                      long mode, int open_type);
+ #define libssh2_sftp_open(sftp, filename, flags, mode) \
+     libssh2_sftp_open_ex((sftp), \
+-                         (filename), (unsigned int)strlen(filename), \
++                         (filename), static_cast<unsigned int>(strlen(filename)), \
+                          (flags), (mode), LIBSSH2_SFTP_OPENFILE)
+ #define libssh2_sftp_opendir(sftp, path) \
+     libssh2_sftp_open_ex((sftp), \
+-                         (path), (unsigned int)strlen(path), \
++                         (path), static_cast<unsigned int>(strlen(path)), \
+                          0, 0, LIBSSH2_SFTP_OPENDIR)
+ LIBSSH2_API LIBSSH2_SFTP_HANDLE *
+ libssh2_sftp_open_ex_r(LIBSSH2_SFTP *sftp,
+@@ -297,8 +297,8 @@
+                                        long flags);
+ #define libssh2_sftp_rename(sftp, sourcefile, destfile) \
+     libssh2_sftp_rename_ex((sftp), \
+-                           (sourcefile), (unsigned int)strlen(sourcefile), \
+-                           (destfile), (unsigned int)strlen(destfile), \
++                           (sourcefile), static_cast<unsigned int>(strlen(sourcefile)), \
++                           (destfile), static_cast<unsigned int>(strlen(destfile)), \
+                            LIBSSH2_SFTP_RENAME_OVERWRITE | \
+                            LIBSSH2_SFTP_RENAME_ATOMIC | \
+                            LIBSSH2_SFTP_RENAME_NATIVE)
+@@ -316,7 +316,7 @@
+                                        const char *filename,
+                                        unsigned int filename_len);
+ #define libssh2_sftp_unlink(sftp, filename) \
+-    libssh2_sftp_unlink_ex((sftp), (filename), (unsigned int)strlen(filename))
++    libssh2_sftp_unlink_ex((sftp), (filename), static_cast<unsigned int>(strlen(filename)))
+ 
+ LIBSSH2_API int libssh2_sftp_fstatvfs(LIBSSH2_SFTP_HANDLE *handle,
+                                       LIBSSH2_SFTP_STATVFS *st);
+@@ -330,13 +330,13 @@
+                                       const char *path,
+                                       unsigned int path_len, long mode);
+ #define libssh2_sftp_mkdir(sftp, path, mode) \
+-    libssh2_sftp_mkdir_ex((sftp), (path), (unsigned int)strlen(path), (mode))
++    libssh2_sftp_mkdir_ex((sftp), (path), static_cast<unsigned int>(strlen(path)), (mode))
+ 
+ LIBSSH2_API int libssh2_sftp_rmdir_ex(LIBSSH2_SFTP *sftp,
+                                       const char *path,
+                                       unsigned int path_len);
+ #define libssh2_sftp_rmdir(sftp, path) \
+-    libssh2_sftp_rmdir_ex((sftp), (path), (unsigned int)strlen(path))
++    libssh2_sftp_rmdir_ex((sftp), (path), static_cast<unsigned int>(strlen(path)))
+ 
+ LIBSSH2_API int libssh2_sftp_stat_ex(LIBSSH2_SFTP *sftp,
+                                      const char *path,
+diff -ruN a/uppsrc/Core/SSH/Shell.cpp b/uppsrc/Core/SSH/Shell.cpp
+--- a/uppsrc/Core/SSH/Shell.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/SSH/Shell.cpp	2026-10-31 02:43:30.560900041 -0700
+@@ -300,7 +300,7 @@
+ 				read(sock, xbuffer, size_t(xbuflen))
+ 				);
+ 			if(rc > 0)
+-				libssh2_channel_write(xhandle, (const char*) xbuffer, size_t(rc));
++				libssh2_channel_write(xhandle, static_cast<const char*>(xbuffer), size_t(rc));
+ 		}
+ 		if(libssh2_channel_eof(xhandle) == 1) {
+ 			LLOG("[X11] EOF received.");
+diff -ruN a/uppsrc/Core/Stream.cpp b/uppsrc/Core/Stream.cpp
+--- a/uppsrc/Core/Stream.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/Stream.cpp	2026-10-31 02:43:30.561236061 -0700
+@@ -108,7 +108,7 @@
+ void Stream::Put64(const void *data, int64 size)
+ {
+ #ifdef CPU_64
+-	byte *ptr_ = (byte *)data;
++	byte *ptr_ = const_cast<byte *>(static_cast<const byte *>(data));
+ 	while(size > INT_MAX) {
+ 		Put(ptr_, INT_MAX);
+ 		ptr_ += INT_MAX;
+@@ -607,7 +607,7 @@
+ 			Put(0xff);
+ 			Put32le(len);
+ 		}
+-		SerializeRaw((byte *)~s, len);
++		SerializeRaw(const_cast<byte *>(reinterpret_cast<const byte *>(~s)), len);
+ 	}
+ 	return *this;
+ }
+@@ -622,7 +622,7 @@
+ 			LoadError();
+ 	}
+ 	else
+-		SerializeRLE((byte *)~s, static_cast<int>(len));
++		SerializeRLE(const_cast<byte *>(reinterpret_cast<const byte *>(~s)), static_cast<int>(len));
+ 	return *this;
+ }
+ 
+@@ -698,7 +698,7 @@
+ 	wdata.SetLength(static_cast<int>(static_cast<dword>(GetSize())));
+ 	dword p = static_cast<dword>(static_cast<uintptr_t>((ptr - buffer)));
+ 	data = wdata;
+-	buffer = (byte *) ~data;
++	buffer = const_cast<byte *>(reinterpret_cast<const byte *>(~data));
+ 	ptr = buffer + p;
+ 	wrlim = buffer;
+ 	rdlim = buffer + data.GetCount();
+@@ -711,7 +711,7 @@
+ 	data = adata;
+ 	style = STRM_READ|STRM_WRITE|STRM_SEEK|STRM_LOADING;
+ 	wdata.Clear();
+-	buffer = (byte *) ~data;
++	buffer = const_cast<byte *>(reinterpret_cast<const byte *>(~data));
+ 	ptr = wrlim = buffer;
+ 	rdlim = buffer + data.GetCount();
+ 	writemode = false;
+@@ -987,7 +987,7 @@
+ 	Flush();
+ 	pos += ptr - buffer;
+ 	ptr = buffer;
+-	byte *b = (byte *) data;
++	byte *b = const_cast<byte *>(static_cast<const byte *>(data));
+ 	while(size_ && equal) {
+ 		int sz = min<int>(static_cast<int>(size_), sizeof(h));
+ 		Compare(pos, b, sz);
+@@ -1424,7 +1424,7 @@
+ 		}
+ 	}
+ 	else
+-		stream.SerializeRaw((byte *)static_cast<const char*>(text), len);
++		stream.SerializeRaw(const_cast<byte *>(reinterpret_cast<const byte *>(static_cast<const char*>(text))), len);
+ 	stream / ver;
+ 	if(ver < minver || ver > maxver) {
+ 		stream.SetError();
+diff -ruN a/uppsrc/Core/String.cpp b/uppsrc/Core/String.cpp
+--- a/uppsrc/Core/String.cpp	2026-10-31 02:07:33.145755016 -0700
++++ b/uppsrc/Core/String.cpp	2026-10-31 02:43:30.561371245 -0700
+@@ -66,7 +66,7 @@
+ 	int newlen = len_ + count;
+ 	if(newlen < len_) // overflow, string >2GB
+ 		Panic("String is too big!");
+-	char *str = (char *)Begin();
++	char *str = const_cast<char *>(Begin());
+ 	if(newlen < GetAlloc() && !IsSharedRef() && (!s_ || s_ < str || s_ > str + len_)) {
+ 		if(pos < len_)
+ 			memmove(str + pos + count, str + pos, static_cast<size_t>(len_ - pos));
+@@ -122,7 +122,7 @@
+ {
+ 	ASSERT(pos >= 0 && count >= 0 && pos + count <= GetCount());
+ 	UnShare();
+-	char *s_ = (char *)Begin();
++	char *s_ = const_cast<char *>(Begin());
+ 	memmove(s_ + pos, s_ + pos + count, static_cast<size_t>(GetCount() - pos - count + 1));
+ 	if(IsSmall())
+ 		SetSLen(SLen() - count);
+@@ -185,7 +185,7 @@
+ void String::AssignLen(const char *s_, int slen)
+ {
+ 	int  len_ = GetCount();
+-	char *str = (char *)Begin();
++	char *str = const_cast<char *>(Begin());
+ 	if(s_ >= str && s_ <= str + len_)
+ 		*this = String(s_, slen);
+ 	else {
+diff -ruN a/uppsrc/Core/String.h b/uppsrc/Core/String.h
+--- a/uppsrc/Core/String.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/String.h	2026-10-31 02:43:30.561609006 -0700
+@@ -53,7 +53,7 @@
+ 
+ 	operator const tchar *() const                            { return B::Begin(); }
+ 	const tchar *operator~() const                            { return B::Begin(); }
+-	operator const bchar *() const                            { return (bchar *)B::Begin(); }
++	operator const bchar *() const                            { return const_cast<bchar *>(reinterpret_cast<const bchar *>(B::Begin())); }
+ 	operator const void *() const                             { return B::Begin(); }
+ 
+ 	void Insert(int pos, int c)                               { *B::Insert(pos, 1, NULL) = static_cast<wchar>(c); }
+@@ -183,7 +183,7 @@
+ 		Atomic refcount;
+ 		int    alloc;
+ 
+-		char *GetPtr() const  { return (char*)(this + 1); }
++		char *GetPtr() const  { return const_cast<char*>(reinterpret_cast<const char*>((this + 1))); }
+ 	};
+ 
+ 	union {
+diff -ruN a/uppsrc/Core/StringsStream.cpp b/uppsrc/Core/StringsStream.cpp
+--- a/uppsrc/Core/StringsStream.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/StringsStream.cpp	2026-10-31 02:43:30.561714660 -0700
+@@ -76,8 +76,8 @@
+ void StringsStreamIn::ResetBuffer()
+ {
+ 	if(i < part.GetCount()) {
+-		ptr = buffer = (byte *)part[i].begin();
+-		rdlim = (byte *)part[i].end();
++		ptr = buffer = const_cast<byte *>(reinterpret_cast<const byte *>(part[i].begin()));
++		rdlim = const_cast<byte *>(reinterpret_cast<const byte *>(part[i].end()));
+ 	}
+ 	else {
+ 		static byte nothing;
+diff -ruN a/uppsrc/Core/Topt.h b/uppsrc/Core/Topt.h
+--- a/uppsrc/Core/Topt.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/Topt.h	2026-10-31 02:43:30.561755648 -0700
+@@ -118,17 +118,17 @@
+ inline void Fill(char *t, const char *lim, const char& x)
+ { memset8(t, static_cast<byte>(x), size_t(lim - t)); }
+ inline void Copy(char *dst, const char *src, const char *lim)
+-{ memcpy8(dst, src, size_t((byte *)lim - (byte *)src)); }
++{ memcpy8(dst, src, size_t(const_cast<byte *>(reinterpret_cast<const byte *>(lim)) - const_cast<byte *>(reinterpret_cast<const byte *>(src)))); }
+ 
+ inline void Fill(signed char *t, const signed char *lim, const signed char& x)
+ { memset8(t, static_cast<byte>(x), size_t(lim - t)); }
+ inline void Copy(signed char *dst, const signed char *src, const signed char *lim)
+-{ memcpy8(dst, src, size_t((byte *)lim - (byte *)src)); }
++{ memcpy8(dst, src, size_t(const_cast<byte *>(reinterpret_cast<const byte *>(lim)) - const_cast<byte *>(reinterpret_cast<const byte *>(src)))); }
+ 
+ inline void Fill(unsigned char *t, const unsigned char *lim, const unsigned char& x)
+ { memset8(t, x, size_t(lim - t)); }
+ inline void Copy(unsigned char *dst, const unsigned char *src, const unsigned char *lim)
+-{ memcpy8(dst, src, size_t((byte *)lim - (byte *)src)); }
++{ memcpy8(dst, src, size_t(const_cast<byte *>(lim) - const_cast<byte *>(src))); }
+ 
+ template <class T>
+ inline void DeepCopyConstructFill(T *t, const T *end, const T& x) {
+diff -ruN a/uppsrc/Core/Util.h b/uppsrc/Core/Util.h
+--- a/uppsrc/Core/Util.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/Util.h	2026-10-31 02:43:30.561825768 -0700
+@@ -150,8 +150,8 @@
+ String timeFormat(double second);
+ 
+ String HexEncode(const byte *s, int count, int sep = INT_MAX, int sepchr = ' ');
+-inline String HexEncode(const char *s, int count, int sep = INT_MAX, int sepchr = ' ') { return HexEncode((byte *)s, count, sep, sepchr); }
+-inline String HexEncode(const void *s, int count, int sep = INT_MAX, int sepchr = ' ') { return HexEncode((byte *)s, count, sep, sepchr); }
++inline String HexEncode(const char *s, int count, int sep = INT_MAX, int sepchr = ' ') { return HexEncode(const_cast<byte *>(reinterpret_cast<const byte *>(s)), count, sep, sepchr); }
++inline String HexEncode(const void *s, int count, int sep = INT_MAX, int sepchr = ' ') { return HexEncode(static_cast<const byte *>(s), count, sep, sepchr); }
+ String HexEncode(const String& s, int sep = INT_MAX, int sepchr = ' ');
+ 
+ String HexDecode(const char *s, const char *lim);
+@@ -334,7 +334,7 @@
+ 	void  SetPtr(void *p) { bap = (1 & bap) | reinterpret_cast<uintptr_t>(p); }
+ 
+ 	bool  GetBit() const  { return bap & 1; }
+-	void *GetPtr() const  { return (void *) (bap & static_cast<uintptr_t>(~1)); }
++	void *GetPtr() const  { return reinterpret_cast<void *>((bap & static_cast<uintptr_t>(~1))); }
+ 
+ 	void  Set0(void *ptr) { bap = reinterpret_cast<uintptr_t>(ptr); }
+ 	void  Set1(void *ptr) { bap = reinterpret_cast<uintptr_t>(ptr) | 1; }
+@@ -549,8 +549,8 @@
+ 
+ // deprecated
+ String HexString(const byte *s, int count, int sep = INT_MAX, int sepchr = ' ');
+-inline String HexString(const char *s, int count, int sep = INT_MAX, int sepchr = ' ') { return HexString((byte *)s, count, sep, sepchr); }
+-inline String HexString(const void *s, int count, int sep = INT_MAX, int sepchr = ' ') { return HexString((byte *)s, count, sep, sepchr); }
++inline String HexString(const char *s, int count, int sep = INT_MAX, int sepchr = ' ') { return HexString(const_cast<byte *>(reinterpret_cast<const byte *>(s)), count, sep, sepchr); }
++inline String HexString(const void *s, int count, int sep = INT_MAX, int sepchr = ' ') { return HexString(static_cast<const byte *>(s), count, sep, sepchr); }
+ String HexString(const String& s, int sep = INT_MAX, int sepchr = ' ');
+ 
+ String ScanHexString(const char *s, const char *lim);
+diff -ruN a/uppsrc/Core/Value.cpp b/uppsrc/Core/Value.cpp
+--- a/uppsrc/Core/Value.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/Value.cpp	2026-10-31 02:49:41.382773974 -0700
+@@ -662,7 +662,7 @@
+ 	ASSERT(i >= 0 && IsRef());
+ 	dword t = GetRefType();
+ 	if(t == VALUEMAP_V) {
+-		ValueArray& va = ValueMap::UnShare((ValueMap::Data*&)ptr()).value;
++		ValueArray& va = ValueMap::UnShare(reinterpret_cast<ValueMap::Data*&>(ptr())).value;
+ 		ASSERT(i < va.GetCount());
+ 		return va.At(i);
+ 	}
+@@ -706,7 +706,7 @@
+ 		*this = m;
+ 	}
+ 	ASSERT(GetType() == VALUEMAP_V);
+-	return ValueMap::UnShare((ValueMap::Data*&)ptr()).GetAdd(key);
++	return ValueMap::UnShare(reinterpret_cast<ValueMap::Data*&>(ptr())).GetAdd(key);
+ }
+ 
+ Value& Value::operator()(const String& key)
+@@ -771,7 +771,7 @@
+ 
+ String GetErrorText(const Value& v) {
+ 	ASSERT(IsError(v));
+-	return ((RichValueRep<String> *)v.GetVoidPtr())->Get();
++	return (static_cast<const RichValueRep<String> *>(v.GetVoidPtr()))->Get();
+ }
+ 
+ }
+\ No newline at end of file
+diff -ruN a/uppsrc/Core/Value.h b/uppsrc/Core/Value.h
+--- a/uppsrc/Core/Value.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/Value.h	2026-10-31 02:49:41.382881744 -0700
+@@ -135,10 +135,10 @@
+ 
+ 	String   data;
+ 	Void    *&ptr()                  { ASSERT(IsRef()); return *reinterpret_cast<Void **>(&data); }
+-	Void     *ptr() const            { ASSERT(IsRef()); return *(Void **)&data; }
++	Void     *ptr() const            { ASSERT(IsRef()); return *reinterpret_cast<Void *const *>(&data); }
+ 
+ 	void     SetRefType(dword type)  { ASSERT(IsRef()); (reinterpret_cast<int *>(&data))[2] = static_cast<int>(type); }
+-	dword    GetRefType() const      { ASSERT(IsRef()); return static_cast<dword>(((int *)&data)[2]); }
++	dword    GetRefType() const      { ASSERT(IsRef()); return static_cast<dword>((const_cast<int *>(reinterpret_cast<const int *>(&data)))[2]); }
+ 
+ 	bool     IsString() const          { return !data.IsSpecial(); }
+ 	bool     Is(byte v) const          { return data.IsSpecial(v); }
+@@ -341,10 +341,10 @@
+ }
+ 
+ #define VALUE_COMPARE_V(T, VT) \
+-inline bool operator==(const Value& v, T x)   { return v.Is<VT>() ? (VT)v == x : v == Value(x); } \
+-inline bool operator==(T x, const Value& v)   { return v.Is<VT>() ? (VT)v == x : v == Value(x); } \
+-inline bool operator!=(const Value& v, T x)   { return v.Is<VT>() ? (VT)v != x : v != Value(x); } \
+-inline bool operator!=(T x, const Value& v)   { return v.Is<VT>() ? (VT)v != x : v != Value(x); } \
++inline bool operator==(const Value& v, T x)   { return v.Is<VT>() ? static_cast<VT>(v) == x : v == Value(x); } \
++inline bool operator==(T x, const Value& v)   { return v.Is<VT>() ? static_cast<VT>(v) == x : v == Value(x); } \
++inline bool operator!=(const Value& v, T x)   { return v.Is<VT>() ? static_cast<VT>(v) != x : v != Value(x); } \
++inline bool operator!=(T x, const Value& v)   { return v.Is<VT>() ? static_cast<VT>(v) != x : v != Value(x); } \
+ 
+ #define VALUE_COMPARE(T) VALUE_COMPARE_V(T, T)
+ 
+diff -ruN a/uppsrc/Core/Value.hpp b/uppsrc/Core/Value.hpp
+--- a/uppsrc/Core/Value.hpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/Value.hpp	2026-10-31 02:49:41.383092183 -0700
+@@ -173,16 +173,16 @@
+ 
+ template <class T>
+ struct SvoFn {
+-	static bool       IsNull(const void *p)                      { return UPP::IsNull(*(T *)p); }
++	static bool       IsNull(const void *p)                      { return UPP::IsNull(*static_cast<const T *>(p)); }
+ 	static void       Serialize(void *p, Stream& s)              { s % *static_cast<T*>(p); }
+ 	static void       Xmlize(void *p, XmlIO& xio)                { Upp::Xmlize(xio, *static_cast<T*>(p)); }
+ 	static void       Jsonize(void *p, JsonIO& jio)              { Upp::Jsonize(jio, *static_cast<T*>(p)); }
+-	static hash_t     GetHashValue(const void *p)                { return UPP::ValueGetHashValue(*(T*)p); }
+-	static bool       IsEqual(const void *p1, const void *p2)    { return *(T*)p1 == *(T*)p2; }
+-	static bool       IsPolyEqual(const void *p, const Value& v) { return UPP::IsPolyEqual(*(T*)p, v); }
+-	static String     AsString(const void *p)                    { return UPP::AsString(*(T*)p); }
+-	static int        Compare(const void *p1, const void *p2)    { return SgnCompare(*(T*)p1, *(T*)p2); }
+-	static int        PolyCompare(const void *p1, const Value& p2) { return UPP::PolyCompare(*(T*)p1, p2); }
++	static hash_t     GetHashValue(const void *p)                { return UPP::ValueGetHashValue(*static_cast<const T*>(p)); }
++	static bool       IsEqual(const void *p1, const void *p2)    { return *static_cast<const T*>(p1) == *static_cast<const T*>(p2); }
++	static bool       IsPolyEqual(const void *p, const Value& v) { return UPP::IsPolyEqual(*static_cast<const T*>(p), v); }
++	static String     AsString(const void *p)                    { return UPP::AsString(*static_cast<const T*>(p)); }
++	static int        Compare(const void *p1, const void *p2)    { return SgnCompare(*static_cast<const T*>(p1), *static_cast<const T*>(p2)); }
++	static int        PolyCompare(const void *p1, const Value& p2) { return UPP::PolyCompare(*static_cast<const T*>(p1), p2); }
+ };
+ 
+ #define SVO_FN(id, T) \
+@@ -208,7 +208,7 @@
+ template <class T>
+ inline T& Value::GetSmallRaw() const
+ {
+-	return *(T*)&data; // Silence compiler warning
++	return *const_cast<T*>(reinterpret_cast<const T*>(&data)); // Silence compiler warning
+ }
+ 
+ template <class T>
+@@ -221,7 +221,7 @@
+ 	String h = String() << "Invalid value conversion: "
+ 	                    << GetName() << " -> " << typeid(T).name();
+ 	throw ValueTypeError(h, *this, static_cast<int>(t));
+-	return *(T*)&data; // Silence compiler warning
++	return *const_cast<T*>(reinterpret_cast<const T*>(&data)); // Silence compiler warning
+ }
+ 
+ template <class T>
+@@ -242,11 +242,11 @@
+ #ifndef _DEBUG
+ 	if(t == VALUEARRAY_V) {
+ 		ASSERT(ptr()->GetType() == VALUEARRAY_V);
+-		return *(T*)this; // Illegal, but works -> better than crash in release mode
++		return *reinterpret_cast<const T *>(this); // Illegal, but works -> better than crash in release mode
+ 	}
+ 	if(t == VALUEMAP_V) {
+ 		ASSERT(ptr()->GetType() == VALUEMAP_V);
+-		return *(T*)this; // Illegal, but works -> better than crash in release mode
++		return *reinterpret_cast<const T *>(this); // Illegal, but works -> better than crash in release mode
+ 	}
+ #endif
+ 	if(IsRef()) {
+@@ -312,11 +312,11 @@
+ 	dword t = GetValueTypeNo<T>();
+ 	if(t == VALUEARRAY_V) {
+ 		ASSERT(ptr()->GetType() == VALUEARRAY_V);
+-		return *(T*)this; // Illegal, but works -> better than crash in release mode
++		return *reinterpret_cast<const T *>(this); // Illegal, but works -> better than crash in release mode
+ 	}
+ 	if(t == VALUEMAP_V) {
+ 		ASSERT(ptr()->GetType() == VALUEMAP_V);
+-		return *(T*)this; // Illegal, but works -> better than crash in release mode
++		return *reinterpret_cast<const T *>(this); // Illegal, but works -> better than crash in release mode
+ 	}
+ #endif
+ 	if(IsNull())
+diff -ruN a/uppsrc/Core/ValueUtil.cpp b/uppsrc/Core/ValueUtil.cpp
+--- a/uppsrc/Core/ValueUtil.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/ValueUtil.cpp	2026-10-31 02:43:30.562095602 -0700
+@@ -8,8 +8,8 @@
+ 
+ struct Ref::ValueRef : public RefManager {
+ 	virtual int   GetType()                            { return VALUE_V; }
+-	virtual Value GetValue(const void *ptr_)            { return *(Value *) ptr_; }
+-	virtual bool  IsNull(const void *ptr_)              { return UPP::IsNull(*(Value *) ptr_); }
++	virtual Value GetValue(const void *ptr_)            { return *static_cast<const Value *>(ptr_); }
++	virtual bool  IsNull(const void *ptr_)              { return UPP::IsNull(*static_cast<const Value *>(ptr_)); }
+ 	virtual void  SetValue(void *ptr_, const Value& v)  { *static_cast<Value *>(ptr_) = v; }
+ 	virtual void  SetNull(void *ptr_)                   { *static_cast<Value *>(ptr_) = Null; }
+ };
+@@ -57,12 +57,12 @@
+ 
+ bool ValueArray::Data::IsEqual(const Value::Void *p)
+ {
+-	return ((Data *)p)->data == data;
++	return (static_cast<const Data *>(p))->data == data;
+ }
+ 
+ int ValueArray::Data::Compare(const Value::Void *p)
+ {
+-	return data.Compare(((Data *)p)->data);
++	return data.Compare((static_cast<const Data *>(p))->data);
+ }
+ 
+ bool ValueArray::operator==(const ValueArray& v) const
+@@ -155,7 +155,7 @@
+ 				throw ValueTypeError(String().Cat() << "Invalid value conversion: "
+ 			                         << src.GetTypeName() << " -> ValueArray",
+ 			                         src, VALUEARRAY_V);
+-			data = (ValueArray::Data *)src.GetVoidPtr();
++			data = const_cast<ValueArray::Data *>(static_cast<const ValueArray::Data *>(src.GetVoidPtr()));
+ 		}
+ 	}
+ 	else
+@@ -347,7 +347,7 @@
+ 
+ bool ValueMap::Data::IsEqual(const Value::Void *p)
+ {
+-	return sIsEqual(((Data *)p)->key, key) && ((Data *)p)->value == value;
++	return sIsEqual((static_cast<const Data *>(p))->key, key) && (static_cast<const Data *>(p))->value == value;
+ }
+ 
+ bool ValueMap::operator==(const ValueMap& v) const
+@@ -357,7 +357,7 @@
+ 
+ int  ValueMap::Data::Compare(const Value::Void *p)
+ {
+-	Data *b = (Data *)p;
++	Data *b = const_cast<Data *>(static_cast<const Data *>(p));
+ 	int n = min(key.GetCount(), b->key.GetCount());
+ 	for(int i = 0; i < n; i++) {
+ 		int q = SgnCompare(key[i], b->key[i]);
+@@ -486,7 +486,7 @@
+ 				throw ValueTypeError(String().Cat() << "Invalid value conversion: "
+ 			                         << src.GetTypeName() << " -> ValueMap",
+ 			                         src, VALUEMAP_V);
+-			data = (ValueMap::Data *)src.GetVoidPtr();
++			data = const_cast<ValueMap::Data *>(static_cast<const ValueMap::Data *>(src.GetVoidPtr()));
+ 		}
+ 	}
+ 	else
+diff -ruN a/uppsrc/Core/ValueUtil.h b/uppsrc/Core/ValueUtil.h
+--- a/uppsrc/Core/ValueUtil.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/ValueUtil.h	2026-10-31 02:43:30.562160897 -0700
+@@ -109,7 +109,7 @@
+ 	virtual void  SetValue(void *p, const Value& v) { *static_cast<T *>(p) = static_cast<T>(v); }
+ 	virtual Value GetValue(const void *p)           { return *static_cast<const T *>(p); }
+ 	virtual int   GetType()                         { return static_cast<int>(GetValueTypeNo<T>()); }
+-	virtual bool  IsNull(const void *p)             { return UPP::IsNull(*(T *) p); }
++	virtual bool  IsNull(const void *p)             { return UPP::IsNull(*static_cast<const T *>(p)); }
+ 	virtual void  SetNull(void *p)                  { UPP::SetNull(*static_cast<T *>(p)); }
+ 	virtual ~StdRef() {}
+ };
+diff -ruN a/uppsrc/Core/Vcont.h b/uppsrc/Core/Vcont.h
+--- a/uppsrc/Core/Vcont.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/Vcont.h	2026-10-31 02:49:41.383182023 -0700
+@@ -77,7 +77,7 @@
+ class One : MoveableAndDeepCopyOption< One<T> > {
+ 	mutable T  *ptr;
+ 
+-	void        Free()                     { if(ptr && ptr != (T*)1) delete ptr; }
++	void        Free()                     { if(ptr && ptr != reinterpret_cast<T*>(1)) delete ptr; }
+ 	template <class TT>
+ 	void        Pick(One<TT>&& data)       { ptr = data.Detach(); }
+ 
+@@ -500,10 +500,10 @@
+ 	};
+ 
+ // Standard container interface
+-	Iterator         begin()                    { return (T **)vector.begin(); }
+-	Iterator         end()                      { return (T **)vector.end(); }
+-	ConstIterator    begin() const              { return (T **)vector.begin(); }
+-	ConstIterator    end() const                { return (T **)vector.end(); }
++	Iterator         begin()                    { return reinterpret_cast<T **>(vector.begin()); }
++	Iterator         end()                      { return reinterpret_cast<T **>(vector.end()); }
++	ConstIterator    begin() const              { return const_cast<T **>(reinterpret_cast<T *const *>(vector.begin())); }
++	ConstIterator    end() const                { return const_cast<T **>(reinterpret_cast<T *const *>(vector.end())); }
+ 
+ // Optimalization
+ 	friend void Swap(Array& a, Array& b)                   { UPP::Swap(a.vector, b.vector); }
+diff -ruN a/uppsrc/Core/Vcont.hpp b/uppsrc/Core/Vcont.hpp
+--- a/uppsrc/Core/Vcont.hpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/Vcont.hpp	2026-10-31 02:49:41.383301017 -0700
+@@ -147,7 +147,7 @@
+ #ifdef _DEBUG
+ 	return ReAlloc(max(alloc + 1, alloc >= INT_MAX / 2 ? INT_MAX : 2 * alloc));
+ #else
+-	return ReAlloc(max(alloc + 1, alloc >= int((int64)2 * INT_MAX / 3) ? INT_MAX : alloc + (alloc >> 1)));
++	return ReAlloc(max(alloc + 1, alloc >= int(static_cast<int64>(2) * INT_MAX / 3) ? INT_MAX : alloc + (alloc >> 1)));
+ #endif
+ }
+ 
+diff -ruN a/uppsrc/Core/WString.cpp b/uppsrc/Core/WString.cpp
+--- a/uppsrc/Core/WString.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/WString.cpp	2026-10-31 02:43:30.562305881 -0700
+@@ -192,7 +192,7 @@
+ WString& WString::operator=(const wchar *s_)
+ {
+ 	int  len_ = GetCount();
+-	wchar *str = (wchar *)Begin();
++	wchar *str = const_cast<wchar *>(Begin());
+ 	if(s_ >= str && s_ <= str + len_)
+ 		return *this = WString(s_, strlen__(s_));
+ 	WString0::Free();
+@@ -255,7 +255,7 @@
+ 	if(sizeof(wchar_t) == 4)
+ 		*this = WString(reinterpret_cast<const wchar *>(s_.c_str()), static_cast<int>(s_.size()));
+ 	if(sizeof(wchar_t) == 2)
+-		*this = ToUtf32((char16 *)s_.c_str(), static_cast<int>(s_.size()));
++		*this = ToUtf32(const_cast<char16 *>(reinterpret_cast<const char16 *>(s_.c_str())), static_cast<int>(s_.size()));
+ }
+ 
+ std::wstring WString::ToStd() const
+diff -ruN a/uppsrc/Core/z.cpp b/uppsrc/Core/z.cpp
+--- a/uppsrc/Core/z.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Core/z.cpp	2026-10-31 02:43:30.562475433 -0700
+@@ -42,7 +42,7 @@
+ 
+ void Crc32Stream::Out(const void *ptr_, dword count)
+ {
+-	crc = static_cast<dword>(crc32(crc, (byte *)ptr_, count));
++	crc = static_cast<dword>(crc32(crc, static_cast<const byte *>(ptr_), count));
+ }
+ 
+ void Crc32Stream::Clear()
+@@ -208,7 +208,7 @@
+ 			crc = static_cast<dword>(crc32(crc, reinterpret_cast<const Bytef *>(ptr), static_cast<unsigned int>(size)));
+ 	}
+ 
+-	z.next_in = (Bytef *)ptr;
++	z.next_in = const_cast<Bytef *>(reinterpret_cast<const Bytef *>(ptr));
+ 	z.avail_in = static_cast<uint32_t>(size);
+ 	Pump(false);
+ }
+@@ -270,7 +270,7 @@
+ 	mode = NONE;
+ 	gzip = false;
+ 	error = false;
+-	z.next_in = (byte*)"";
++	z.next_in = const_cast<byte*>(reinterpret_cast<const byte*>(""));
+ 	z.avail_in = 0;
+ }
+ 
+diff -ruN a/uppsrc/CtrlCore/CtrlAttr.cpp b/uppsrc/CtrlCore/CtrlAttr.cpp
+--- a/uppsrc/CtrlCore/CtrlAttr.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlCore/CtrlAttr.cpp	2026-10-31 02:43:30.562534383 -0700
+@@ -63,7 +63,7 @@
+ 	if(attrs.GetRawPtr() && !layout_id_literal)
+ 		LayoutId(txt);
+ 	else {
+-		attrs.SetRawPtr((void *)txt);
++		attrs.SetRawPtr(const_cast<void *>(static_cast<const void *>(txt)));
+ 		layout_id_literal = true;
+ 	}
+ 	return *this;
+diff -ruN a/uppsrc/CtrlCore/CtrlCore.h b/uppsrc/CtrlCore/CtrlCore.h
+--- a/uppsrc/CtrlCore/CtrlCore.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlCore/CtrlCore.h	2026-10-31 02:43:30.562574886 -0700
+@@ -385,7 +385,7 @@
+ template <class T>
+ const T& GetInternal(PasteClip& /*d*/)
+ {
+-	return *(T *)GetInternalDropPtr__();
++	return *static_cast<const T *>(GetInternalDropPtr__());
+ }
+ 
+ template <class T>
+diff -ruN a/uppsrc/CtrlCore/CtrlKbd.cpp b/uppsrc/CtrlCore/CtrlKbd.cpp
+--- a/uppsrc/CtrlCore/CtrlKbd.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlCore/CtrlKbd.cpp	2026-10-31 02:49:41.383403070 -0700
+@@ -73,7 +73,7 @@
+ 	dword k = keycode;
+ 	word l = LOWORD(keycode);
+ 	if(GetDefaultCharset() != CHARSET_UTF8 && !(k & K_DELTA) && l >= 32 && l != 127)
+-		k = MAKELONG((word)FromUnicode(l, CHARSET_DEFAULT), HIWORD(keycode));
++		k = MAKELONG(static_cast<word>(FromUnicode(l, CHARSET_DEFAULT)), HIWORD(keycode));
+ 	if(!focusCtrl)
+ 		return false;
+ 	Ptr<Ctrl> p = focusCtrl;
+diff -ruN a/uppsrc/CtrlCore/CtrlTimer.cpp b/uppsrc/CtrlCore/CtrlTimer.cpp
+--- a/uppsrc/CtrlCore/CtrlTimer.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlCore/CtrlTimer.cpp	2026-10-31 02:49:41.383492152 -0700
+@@ -164,12 +164,12 @@
+ }
+ 
+ void  Ctrl::SetTimeCallback(int delay_ms, Function<void ()> cb, int id) {
+-	ASSERT(id >= 0 && (size_t)id < (int)sizeof(Ctrl));
++	ASSERT(id >= 0 && static_cast<size_t>(id) < sizeof(Ctrl));
+ 	UPP::SetTimeCallback(delay_ms, cb, reinterpret_cast<byte *>(this) + id);
+ }
+ 
+ void  Ctrl::KillTimeCallback(int id) {
+-	ASSERT(id >= 0 && (size_t)id < sizeof(Ctrl));
++	ASSERT(id >= 0 && static_cast<size_t>(id) < sizeof(Ctrl));
+ 	UPP::KillTimeCallback(reinterpret_cast<byte *>(this) + id);
+ }
+ 
+@@ -193,8 +193,8 @@
+ }
+ 
+ bool  Ctrl::ExistsTimeCallback(int id) const {
+-	ASSERT(id >= 0 && (size_t)id < sizeof(Ctrl));
+-	return UPP::ExistsTimeCallback((byte *)this + id);
++	ASSERT(id >= 0 && static_cast<size_t>(id) < sizeof(Ctrl));
++	return UPP::ExistsTimeCallback(const_cast<byte *>(reinterpret_cast<const byte *>(this)) + id);
+ }
+ 
+ dword GetTimeClick()
+diff -ruN a/uppsrc/CtrlCore/GtkAfter.h b/uppsrc/CtrlCore/GtkAfter.h
+--- a/uppsrc/CtrlCore/GtkAfter.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/GtkAfter.h	2026-10-31 02:43:30.562772115 -0700
+@@ -16,7 +16,7 @@
+ void GuiMainFn_(); \
+ \
+ int main(int argc, char **argv, const char **envptr) { \
+-	UPP::AppInit__(argc, (const char **)argv, envptr); \
++	UPP::AppInit__(argc, const_cast<const char **>(argv), envptr); \
+ 	GUI_APP_MAIN_HOOK \
+ 	if (!UPP::InitGtkApp(argc, argv, envptr)) \
+ 		return -1; \
+diff -ruN a/uppsrc/CtrlCore/GtkApp.cpp b/uppsrc/CtrlCore/GtkApp.cpp
+--- a/uppsrc/CtrlCore/GtkApp.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlCore/GtkApp.cpp	2026-10-31 02:43:30.562803285 -0700
+@@ -23,7 +23,7 @@
+              const gchar *message,
+              gpointer /*user_data*/)
+ {
+-	RLOG((const char *)message);
++	RLOG(static_cast<const char *>(message));
+ 	// __BREAK__;
+ }
+ #endif
+diff -ruN a/uppsrc/CtrlCore/GtkCreate.cpp b/uppsrc/CtrlCore/GtkCreate.cpp
+--- a/uppsrc/CtrlCore/GtkCreate.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlCore/GtkCreate.cpp	2026-10-31 02:49:41.383537328 -0700
+@@ -115,7 +115,7 @@
+ 
+ 		gtk_container_add(GTK_CONTAINER(top_->window), top_->client);
+ 
+-		g_signal_connect(top_->window, "delete-event", G_CALLBACK(GtkEvent), (gpointer)(uintptr_t)top_->id);
++		g_signal_connect(top_->window, "delete-event", G_CALLBACK(GtkEvent), reinterpret_cast<gpointer>(static_cast<uintptr_t>(top_->id)));
+ 	}
+ 	else {
+ 		ONCELOCK {
+@@ -130,12 +130,12 @@
+ 		gtk_widget_set_events(w_, GDK_ALL_EVENTS_MASK & ~GDK_POINTER_MOTION_HINT_MASK & ~GDK_SMOOTH_SCROLL_MASK);
+ 	};
+ 	SetupEvents(GTK_WIDGET(gtk()));
+-	g_signal_connect(gtk(), "event", G_CALLBACK(TopGtkEvent), (gpointer)(uintptr_t)top_->id);
++	g_signal_connect(gtk(), "event", G_CALLBACK(TopGtkEvent), reinterpret_cast<gpointer>(static_cast<uintptr_t>(top_->id)));
+ 	
+ 	auto SetupEvents2 = [&](GtkWidget *w_) {
+ 		SetupEvents(w_);
+-		g_signal_connect(w_, "event", G_CALLBACK(GtkEvent), (gpointer)(uintptr_t)top_->id);
+-		g_signal_connect(w_, "draw", G_CALLBACK(GtkDraw), (gpointer)(uintptr_t)top_->id);
++		g_signal_connect(w_, "event", G_CALLBACK(GtkEvent), reinterpret_cast<gpointer>(static_cast<uintptr_t>(top_->id)));
++		g_signal_connect(w_, "draw", G_CALLBACK(GtkDraw), reinterpret_cast<gpointer>(static_cast<uintptr_t>(top_->id)));
+ 	};
+ 
+ 	SetupEvents2(top_->client);
+@@ -169,10 +169,10 @@
+ 	top_->im_context = gtk_im_multicontext_new();
+ 	gtk_im_context_set_client_window(top_->im_context, gdk());
+ 	gtk_im_context_set_use_preedit(top_->im_context, true);
+-	g_signal_connect(top_->im_context, "preedit-changed", G_CALLBACK(IMPreedit), (gpointer)(uintptr_t)top_->id);
+-	g_signal_connect(top_->im_context, "preedit-start", G_CALLBACK(IMPreedit), (gpointer)(uintptr_t)top_->id);
+-	g_signal_connect(top_->im_context, "preedit-end", G_CALLBACK(IMPreeditEnd), (gpointer)(uintptr_t)top_->id);
+-	g_signal_connect(top_->im_context, "commit", G_CALLBACK(IMCommit), (gpointer)(uintptr_t)top_->id);
++	g_signal_connect(top_->im_context, "preedit-changed", G_CALLBACK(IMPreedit), reinterpret_cast<gpointer>(static_cast<uintptr_t>(top_->id)));
++	g_signal_connect(top_->im_context, "preedit-start", G_CALLBACK(IMPreedit), reinterpret_cast<gpointer>(static_cast<uintptr_t>(top_->id)));
++	g_signal_connect(top_->im_context, "preedit-end", G_CALLBACK(IMPreeditEnd), reinterpret_cast<gpointer>(static_cast<uintptr_t>(top_->id)));
++	g_signal_connect(top_->im_context, "commit", G_CALLBACK(IMCommit), reinterpret_cast<gpointer>(static_cast<uintptr_t>(top_->id)));
+ 
+ 	WndSetPos(r);
+ 	WndShow(IsShown());
+diff -ruN a/uppsrc/CtrlCore/GtkDnD.cpp b/uppsrc/CtrlCore/GtkDnD.cpp
+--- a/uppsrc/CtrlCore/GtkDnD.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlCore/GtkDnD.cpp	2026-10-31 02:43:30.562845379 -0700
+@@ -353,7 +353,7 @@
+ 	if(!top_)
+ 		return;
+ 	GtkWidget *w = top_->window;
+-	gpointer id = (gpointer)static_cast<uintptr_t>(top_->id);
++	gpointer id = reinterpret_cast<gpointer>(static_cast<uintptr_t>(top_->id));
+ 	g_signal_connect(w, "drag-begin", G_CALLBACK(GtkDragBegin), id);
+ 	g_signal_connect(w, "drag-data-delete", G_CALLBACK(GtkDragDelete), id);
+ 	g_signal_connect(w, "drag-data-get", G_CALLBACK(GtkDragGetData), id);
+diff -ruN a/uppsrc/CtrlCore/GtkDrawImage.cpp b/uppsrc/CtrlCore/GtkDrawImage.cpp
+--- a/uppsrc/CtrlCore/GtkDrawImage.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlCore/GtkDrawImage.cpp	2026-10-31 02:43:30.562907937 -0700
+@@ -13,7 +13,7 @@
+ {
+ 	w.FlushText();
+ 	Size dsz = dest.GetSize();
+-	cairo_surface_t *surface = cairo_image_surface_create_for_data((byte *)pixels, CAIRO_FORMAT_ARGB32, dsz.cx, dsz.cy, 4 * dsz.cx);
++	cairo_surface_t *surface = cairo_image_surface_create_for_data(const_cast<byte *>(reinterpret_cast<const byte *>(pixels)), CAIRO_FORMAT_ARGB32, dsz.cx, dsz.cy, 4 * dsz.cx);
+ 	cairo_set_source_surface(w, surface, dest.left, dest.top);
+ 	cairo_paint(w);
+ 	cairo_surface_destroy(surface);
+diff -ruN a/uppsrc/CtrlCore/ParseRTF.cpp b/uppsrc/CtrlCore/ParseRTF.cpp
+--- a/uppsrc/CtrlCore/ParseRTF.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlCore/ParseRTF.cpp	2026-10-31 02:43:30.562953105 -0700
+@@ -481,7 +481,7 @@
+ 							;
+ 						command = String(b, rtf);
+ 						if(IsDigit(*rtf) || *rtf == '-')
+-							command_arg = static_cast<int>(strtol(rtf, (char **)&rtf, 10));
++							command_arg = static_cast<int>(strtol(rtf, const_cast<char **>(&rtf), 10));
+ 						if(*rtf == ' ')
+ 							rtf++;
+ 						if(command == "uc")
+diff -ruN a/uppsrc/CtrlLib/ArrayCtrl.h b/uppsrc/CtrlLib/ArrayCtrl.h
+--- a/uppsrc/CtrlLib/ArrayCtrl.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlLib/ArrayCtrl.h	2026-10-31 02:43:30.563059392 -0700
+@@ -165,7 +165,7 @@
+ 		bool           IsCtrl() const             { return ptr.GetBit(); }
+ 		CellCtrl&      GetCtrl() const            { ASSERT(IsCtrl()); return *static_cast<CellCtrl *>(ptr.GetPtr()); }
+ 
+-		void           Set(const Display& d)      { ASSERT(!IsCtrl()); ptr.Set0((void *)&d); }
++		void           Set(const Display& d)      { ASSERT(!IsCtrl()); ptr.Set0(const_cast<void *>(static_cast<const void *>(&d))); }
+ 		bool           IsDisplay() const          { return !ptr.GetBit() && ptr.GetPtr(); }
+ 		const Display& GetDisplay() const         { ASSERT(IsDisplay()); return *static_cast<const Display *>(ptr.GetPtr()); }
+ 
+diff -ruN a/uppsrc/CtrlLib/CtrlUtil.cpp b/uppsrc/CtrlLib/CtrlUtil.cpp
+--- a/uppsrc/CtrlLib/CtrlUtil.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlLib/CtrlUtil.cpp	2026-10-31 02:43:30.563158006 -0700
+@@ -424,7 +424,7 @@
+ 	double zoom;
+ 
+ 	String Key() const override {
+-		return String((byte *)&zoom, sizeof(zoom));
++		return String(const_cast<byte *>(reinterpret_cast<const byte *>(&zoom)), sizeof(zoom));
+ 	}
+ 	Image Make() const override {
+ 		Size sz(DPI(16), DPI(16));
+diff -ruN a/uppsrc/CtrlLib/MenuBar.cpp b/uppsrc/CtrlLib/MenuBar.cpp
+--- a/uppsrc/CtrlLib/MenuBar.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlLib/MenuBar.cpp	2026-10-31 02:43:30.563219297 -0700
+@@ -10,7 +10,7 @@
+ #define LTIMING(x) // RTIMING(x)
+ 
+ static ColorF xpmenuborder[] = {
+-	(ColorF)3,
++	reinterpret_cast<ColorF>(3),
+ 	&SColorShadow, &SColorShadow, &SColorShadow, &SColorShadow,
+ 	&SColorMenu, &SColorMenu, &SColorMenu, &SColorMenu,
+ 	&SColorMenu, &SColorMenu, &SColorMenu, &SColorMenu,
+diff -ruN a/uppsrc/CtrlLib/MenuItem.cpp b/uppsrc/CtrlLib/MenuItem.cpp
+--- a/uppsrc/CtrlLib/MenuItem.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlLib/MenuItem.cpp	2026-10-31 02:43:30.563287386 -0700
+@@ -232,8 +232,8 @@
+ 	}
+ 	else {
+ 		w.DrawRect(sz, SColorFace);
+-		static const ColorF b0[] = { (ColorF)1, SColorLight, SColorLight, SColorShadow, SColorShadow, };
+-		static const ColorF b1[] = { (ColorF)1, SColorShadow, SColorShadow, SColorLight, SColorLight, };
++		static const ColorF b0[] = { reinterpret_cast<ColorF>(1), SColorLight, SColorLight, SColorShadow, SColorShadow, };
++		static const ColorF b1[] = { reinterpret_cast<ColorF>(1), SColorShadow, SColorShadow, SColorLight, SColorLight, };
+ 		DrawMenuText(w, tp.x, tp.y, text_, GetFont(), IsItemEnabled(), false,
+ 		             SColorMenuText, SColorHighlightText);
+ 		if(state_)
+diff -ruN a/uppsrc/CtrlLib/ScrollBar.cpp b/uppsrc/CtrlLib/ScrollBar.cpp
+--- a/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlLib/ScrollBar.cpp	2026-10-31 02:43:30.563378122 -0700
+@@ -306,7 +306,7 @@
+ 	LLOG("PartRect(0) = " << GetPartRect(0));
+ 	LLOG("PartRect(1) = " << GetPartRect(1));
+ 	LLOG("PartRect(2) = " << GetPartRect(2));
+-	LLOG("ScrollBar::LeftDown: mousepart = " << (int)push << ", rect = " << GetPartRect(push)
++	LLOG("ScrollBar::LeftDown: mousepart = " << static_cast<int>(push) << ", rect = " << GetPartRect(push)
+ 		<< ", overthumb = " << style->overthumb << ", slider = " << Slider());
+ 	LLOG("thumbpos = " << thumbpos << ", thumbsize = " << thumbsize);
+ 	if(push == 2)
+diff -ruN a/uppsrc/CtrlLib/ToolTip.cpp b/uppsrc/CtrlLib/ToolTip.cpp
+--- a/uppsrc/CtrlLib/ToolTip.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/CtrlLib/ToolTip.cpp	2026-10-31 02:43:30.563457450 -0700
+@@ -211,7 +211,7 @@
+ 
+ QTFPopUp::QTFPopUp() {
+ 	static ColorF helpborder[] = {
+-		(ColorF)2,
++		reinterpret_cast<ColorF>(2),
+ 		&SColorText, &SColorText, &SColorText, &SColorText,
+ 		&SColorFace, &SColorFace, &SColorFace, &SColorFace,
+ 	};
+diff -ruN a/uppsrc/Draw/Cham.h b/uppsrc/Draw/Cham.h
+--- a/uppsrc/Draw/Cham.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Draw/Cham.h	2026-10-31 02:43:30.563504388 -0700
+@@ -61,7 +61,7 @@
+ 	byte status = 0; // 0 - has to be initialised or written, 1 - initialised, 2 - was written
+ 	byte registered = 0; // 0 - not yet registered
+ 
+-	T&       Write() const         { T& x = *(T *)this; x.status = 2; ChInvalidate(); return x; }
++	T&       Write() const         { T& x = *const_cast<T *>(static_cast<const T *>(this)); x.status = 2; ChInvalidate(); return x; }
+ 	void     Assign(const T& src)  { *static_cast<T *>(this) = src; }
+ };
+ 
+diff -ruN a/uppsrc/Draw/DrawUtil.cpp b/uppsrc/Draw/DrawUtil.cpp
+--- a/uppsrc/Draw/DrawUtil.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Draw/DrawUtil.cpp	2026-10-31 02:43:30.563546915 -0700
+@@ -195,7 +195,7 @@
+ const ColorF *BlackBorder()
+ {
+ 	static ColorF data[] = {
+-		(ColorF)1,
++		reinterpret_cast<ColorF>(1),
+ 		&SColorText, &SColorText, &SColorText, &SColorText,
+ 	};
+ 	return data;
+@@ -204,7 +204,7 @@
+ const ColorF *WhiteBorder()
+ {
+ 	static ColorF data[] = {
+-		(ColorF)1,
++		reinterpret_cast<ColorF>(1),
+ 		&SColorPaper, &SColorPaper, &SColorPaper, &SColorPaper,
+ 	};
+ 	return data;
+@@ -215,7 +215,7 @@
+ const ColorF *DefButtonBorder()
+ {
+ 	static ColorF data[] = {
+-		(ColorF)3,
++		reinterpret_cast<ColorF>(3),
+ 		&SColorEdge, &SColorEdge, &SColorEdge, &SColorEdge,
+ 		&SColorLight, &SColorLight, &SColorEdge, &SColorEdge,
+ 		&SColorLtFace, &SColorLtFace, &SColorShadow, &SColorShadow,
+@@ -226,7 +226,7 @@
+ const ColorF *ButtonBorder()
+ {
+ 	static ColorF data[] = {
+-		(ColorF)2,
++		reinterpret_cast<ColorF>(2),
+ 		&SColorLight, &SColorLight, &SColorEdge, &SColorEdge,
+ 		&SColorLtFace, &SColorLtFace, &SColorShadow, &SColorShadow,
+ 	};
+@@ -236,7 +236,7 @@
+ const ColorF *EdgeButtonBorder()
+ {
+ 	static ColorF data[] = {
+-		(ColorF)2,
++		reinterpret_cast<ColorF>(2),
+ 		&SColorLtFace, &SColorLtFace, &SColorEdge, &SColorEdge,
+ 		&SColorLight, &SColorLight, &SColorShadow, &SColorShadow,
+ 	};
+@@ -246,7 +246,7 @@
+ const ColorF *ButtonPushBorder()
+ {
+ 	static ColorF data[] = {
+-		(ColorF)2,
++		reinterpret_cast<ColorF>(2),
+ 		&SColorEdge, &SColorEdge, &SColorEdge, &SColorEdge,
+ 		&SColorShadow, &SColorShadow, &SColorEdge, &SColorEdge
+ 	};
+@@ -256,7 +256,7 @@
+ const ColorF *InsetBorder()
+ {
+ 	static ColorF data[] = {
+-		(ColorF)2,
++		reinterpret_cast<ColorF>(2),
+ 		&SColorShadow, &SColorShadow, &SColorLight, &SColorLight,
+ 		&SColorEdge, &SColorEdge, &SColorFace, &SColorFace
+ 	};
+@@ -266,7 +266,7 @@
+ const ColorF *OutsetBorder()
+ {
+ 	static ColorF data[] = {
+-		(ColorF)2,
++		reinterpret_cast<ColorF>(2),
+ 		&SColorFace, &SColorFace, &SColorEdge, &SColorEdge,
+ 		&SColorLight, &SColorLight, &SColorShadow, &SColorShadow,
+ 	};
+@@ -276,7 +276,7 @@
+ const ColorF *ThinOutsetBorder()
+ {
+ 	static ColorF data[] = {
+-		(ColorF)1,
++		reinterpret_cast<ColorF>(1),
+ 		&SColorLight, &SColorLight, &SColorShadow, &SColorShadow,
+ 	};
+ 	return data;
+@@ -285,7 +285,7 @@
+ const ColorF *ThinInsetBorder()
+ {
+ 	static ColorF data[] = {
+-		(ColorF)1,
++		reinterpret_cast<ColorF>(1),
+ 		&SColorShadow, &SColorShadow, &SColorLight, &SColorLight,
+ 	};
+ 	return data;
+diff -ruN a/uppsrc/Draw/FontFc.cpp b/uppsrc/Draw/FontFc.cpp
+--- a/uppsrc/Draw/FontFc.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Draw/FontFc.cpp	2026-10-31 02:43:30.563619958 -0700
+@@ -34,7 +34,7 @@
+ 	if(hg == 0) hg = 10;
+ 	String face = font.GetFaceName();
+ 	FcPattern *p = FcPatternCreate();
+-	FcPatternAddString(p, FC_FAMILY, (FcChar8*)~face);
++	FcPatternAddString(p, FC_FAMILY, const_cast<FcChar8*>(reinterpret_cast<const FcChar8*>(~face)));
+ 	FcPatternAddInteger(p, FC_SLANT, font.IsItalic() ? FC_SLANT_ITALIC : FC_SLANT_ROMAN);
+ 	FcPatternAddInteger(p, FC_PIXEL_SIZE, hg);
+ 	FcPatternAddInteger(p, FC_WEIGHT, font.IsBold() ? FC_WEIGHT_BOLD : FC_WEIGHT_NORMAL);
+diff -ruN a/uppsrc/Draw/Image.h b/uppsrc/Draw/Image.h
+--- a/uppsrc/Draw/Image.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Draw/Image.h	2026-10-31 02:43:30.563686786 -0700
+@@ -76,7 +76,7 @@
+ 	void         Set(Image& img);
+ 	void         DeepCopy(const ImageBuffer& img);
+ 
+-	RGBA*        Line(int i) const      { ASSERT(i >= 0 && i < size.cy); return (RGBA *)~pixels + static_cast<size_t>(i) * static_cast<size_t>(size.cx); }
++	RGBA*        Line(int i) const      { ASSERT(i >= 0 && i < size.cy); return const_cast<RGBA *>(~pixels) + static_cast<size_t>(i) * static_cast<size_t>(size.cx); }
+ 	friend void  DropPixels___(ImageBuffer& b) { b.pixels.Clear(); }
+ 	void         InitAttrs();
+ 
+diff -ruN a/uppsrc/Draw/ImageScale.cpp b/uppsrc/Draw/ImageScale.cpp
+--- a/uppsrc/Draw/ImageScale.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Draw/ImageScale.cpp	2026-10-31 02:43:30.563751834 -0700
+@@ -333,7 +333,7 @@
+ void BltAAFix2(RGBA *dest, const dword *src, int count)
+ {
+ #ifdef CPU_LITTLE_ENDIAN
+-	const byte *s = (byte *)src + 1;
++	const byte *s = const_cast<byte *>(reinterpret_cast<const byte *>(src)) + 1;
+ #else
+ 	const byte *s = (byte *)src + 2;
+ #endif
+diff -ruN a/uppsrc/Draw/RasterEncoder.cpp b/uppsrc/Draw/RasterEncoder.cpp
+--- a/uppsrc/Draw/RasterEncoder.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Draw/RasterEncoder.cpp	2026-10-31 02:43:30.563875698 -0700
+@@ -19,7 +19,7 @@
+ void RasterEncoder::WriteLine(const RGBA *s)
+ {
+ 	if(format.IsRGBA())
+-		WriteLineRaw((byte *)s);
++		WriteLineRaw(const_cast<byte *>(reinterpret_cast<const byte *>(s)));
+ 	else {
+ 		if(!scanline)
+ 			scanline.Alloc(static_cast<size_t>(format.GetByteCount(size.cx)));
+@@ -126,7 +126,7 @@
+ 
+ void ImageEncoder::WriteLineRaw(const byte *data)
+ {
+-	if((RGBA *)data != ~*this)
++	if(const_cast<RGBA *>(reinterpret_cast<const RGBA *>(data)) != ~*this)
+ 		memcpy(~*this, data, static_cast<unsigned long>(GetSize().cx) * sizeof(RGBA));
+ 	if(++ii < GetHeight())
+ 		SetLine(ib[ii]);
+diff -ruN a/uppsrc/Draw/RasterFormat.cpp b/uppsrc/Draw/RasterFormat.cpp
+--- a/uppsrc/Draw/RasterFormat.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Draw/RasterFormat.cpp	2026-10-31 02:43:30.563910432 -0700
+@@ -315,7 +315,7 @@
+ 		if(bpos == 0 && gpos == 1 && rpos == 2) {
+ 			RGBA *e = t + cx;
+ 			while(t < e) {
+-				*t = *(RGBA *)s;
++				*t = *const_cast<RGBA *>(reinterpret_cast<const RGBA *>(s));
+ 				t->a = 255;
+ 				s += 4;
+ 				t++;
+diff -ruN a/uppsrc/Draw/Raster.h b/uppsrc/Draw/Raster.h
+--- a/uppsrc/Draw/Raster.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Draw/Raster.h	2026-10-31 02:43:30.563821397 -0700
+@@ -105,7 +105,7 @@
+ 		const RGBA *operator~() const           { return GetRGBA(); }
+ 
+ 		Line(const RGBA *data_, bool free_)
+-			: data(data_), fmtdata((byte *)data_), raster(NULL), free(free_), fmtfree(false) {}
++			: data(data_), fmtdata(const_cast<byte *>(reinterpret_cast<const byte *>(data_))), raster(NULL), free(free_), fmtfree(false) {}
+ 		Line(const byte *fmtdata_, Raster *raster_, bool fmtfree_)
+ 			: data(NULL), fmtdata(fmtdata_), raster(raster_), free(false), fmtfree(fmtfree_) {}
+ 		Line(Line&& b)                          { Pick(pick(b)); }
+diff -ruN a/uppsrc/Painter/BufferPainter.h b/uppsrc/Painter/BufferPainter.h
+--- a/uppsrc/Painter/BufferPainter.h	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Painter/BufferPainter.h	2026-10-31 02:43:30.563961368 -0700
+@@ -20,10 +20,10 @@
+ public:
+ 	void Clear()                         { if(!IsFull()) MemoryFree(data); data = NULL; }
+ 	void Set(const byte *s, int len)     { data = static_cast<byte *>(MemoryAlloc(static_cast<size_t>(len))); memcpy8(data, s, static_cast<size_t>(len)); }
+-	void SetFull()                       { ASSERT(!data); data = (byte *)1; }
++	void SetFull()                       { ASSERT(!data); data = reinterpret_cast<byte *>(1); }
+ 
+ 	bool IsEmpty() const                 { return !data; }
+-	bool IsFull() const                  { return data == (byte *)1; }
++	bool IsFull() const                  { return data == reinterpret_cast<byte *>(1); }
+ 	operator const byte*() const         { return data; }
+ 	
+ 	ClippingLine()                       { data = NULL; }
+diff -ruN a/uppsrc/PdfDraw/TTFSubset.cpp b/uppsrc/PdfDraw/TTFSubset.cpp
+--- a/uppsrc/PdfDraw/TTFSubset.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/PdfDraw/TTFSubset.cpp	2026-10-31 02:43:30.564022168 -0700
+@@ -4,7 +4,7 @@
+ 
+ dword sCheckSum(const String& data)
+ {
+-	const byte *s = (byte *)~data;
++	const byte *s = const_cast<byte *>(reinterpret_cast<const byte *>(~data));
+ 	const byte *lim = s + (data.GetCount() & ~3);
+ 	dword sum = 0;
+ 	while(s < lim) {
+@@ -14,7 +14,7 @@
+ 	byte h[4];
+ 	h[0] = h[1] = h[2] = h[3] = 0;
+ 	byte *t = h;
+-	while(s < (byte *)data.End())
++	while(s < const_cast<byte *>(reinterpret_cast<const byte *>(data.End())))
+ 		*t++ = *s++;
+ 	sum += static_cast<dword>((h[0] << 24) | (h[1] << 16) | (h[2] << 8) | h[3]);
+ 	return sum;
+diff -ruN a/uppsrc/RichText/EncodeQtf.cpp b/uppsrc/RichText/EncodeQtf.cpp
+--- a/uppsrc/RichText/EncodeQtf.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/RichText/EncodeQtf.cpp	2026-10-31 02:49:41.383614299 -0700
+@@ -239,7 +239,7 @@
+ 			if(object.IsText()) {
+ 				qtf << "`";
+ 				while(q < slim) {
+-					ASSERT((byte)*q >= 32);
++					ASSERT(static_cast<byte>(*q) >= 32);
+ 					if(*q == '`')
+ 						data.Cat('`');
+ 					qtf.Cat(*q++);
+diff -ruN a/uppsrc/RichText/ParseQtf.cpp b/uppsrc/RichText/ParseQtf.cpp
+--- a/uppsrc/RichText/ParseQtf.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/RichText/ParseQtf.cpp	2026-10-31 02:43:30.564069047 -0700
+@@ -275,7 +275,7 @@
+ 	if(*term == '#') {
+ 		term++;
+ 	#ifdef CPU_64
+-		obj = *(RichObject *)stou64(term, &term);
++		obj = *reinterpret_cast<RichObject *>(stou64(term, &term));
+ 	#else
+ 		obj = *(RichObject *)stou(term, &term);
+ 	#endif
+diff -ruN a/uppsrc/Sql/S_info.cpp b/uppsrc/Sql/S_info.cpp
+--- a/uppsrc/Sql/S_info.cpp	2026-10-31 02:07:33.146755017 -0700
++++ b/uppsrc/Sql/S_info.cpp	2026-10-31 02:43:30.564161983 -0700
+@@ -18,7 +18,7 @@
+ 
+ Ref S_info::GetRef(const void *s, int i) const
+ {
+-	return Ref((byte *)s + column[i].offset, column[i].manager);
++	return Ref(const_cast<byte *>(static_cast<const byte *>(s)) + column[i].offset, column[i].manager);
+ }
+ 
+ int S_info::GetWidth(const SqlId& id) const

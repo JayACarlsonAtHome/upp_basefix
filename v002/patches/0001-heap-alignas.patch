@@ -1,0 +1,12 @@
+diff -ruN a/uppsrc/Core/sheap.cpp b/uppsrc/Core/sheap.cpp
+--- a/uppsrc/Core/sheap.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/sheap.cpp	2026-10-20 14:35:18.893811632 -0700
+@@ -403,7 +403,7 @@
+ 	if(heap_tls__)
+ 		return heap_tls__;
+ 
+-	static thread_local byte sHeap__[sizeof(Heap)]; // zero initialization is fine for us
++	alignas(Heap) static thread_local byte sHeap__[sizeof(Heap)]; // zero initialization is fine for us
+ 	heap_tls__ = (Heap *)sHeap__;
+ 
+ 	static thread_local HeapExitThreadGuard __;

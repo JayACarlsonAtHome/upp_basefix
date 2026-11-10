@@ -1,0 +1,18 @@
+description "upp_basefix: console checks of the U++ packages the projects use\377";
+
+uses
+	Core,
+	Core/SSH,
+	Draw,
+	plugin/png,
+	plugin/sqlite3,
+	RichText;
+
+file
+	main.cpp;
+
+mainconfig
+	"" = "";
+
+options
+	"-Wformat=2 -Werror=format";

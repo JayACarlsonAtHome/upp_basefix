@@ -53,7 +53,7 @@ static String SettingsPath()
 static String GuiLogPath(const char *name)
 {
 	String work = GetEnv("UPP_BASEFIX_WORK");
-	return AppendFileName(work.GetCount() ? work : AppendFileName(GetFileFolder(GetFileFolder(ScriptPath())), "upp_basefix_work"), String("logs/") + name);
+	return AppendFileName(work.GetCount() ? work : AppendFileName(GetFileFolder(ScriptPath()), "work"), String("logs/") + name);
 }
 
 static void GuiLog(const String& text, bool fresh = false)

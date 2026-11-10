@@ -1,0 +1,69 @@
+# ThreadSanitizer: reports from inside the system's GLib / GTK / X11 stack. These
+# libraries are not built with -fsanitize=thread, so TSan cannot see their own locking
+# (futexes, GMutex, g_slice magazines) and reports their internal hand-offs. Each rule
+# matches a report whose stack has a frame in that library; a report made only of U++
+# frames is never suppressed. No called_from_lib: it stops TSan seeing locks taken
+# inside a library, and an unlock it then sees from an inlined frame is a false report.
+race:libglib-2.0.so
+mutex:libglib-2.0.so
+race:libgobject-2.0.so
+mutex:libgobject-2.0.so
+race:libgio-2.0.so
+mutex:libgio-2.0.so
+race:libgtk-3.so
+mutex:libgtk-3.so
+race:libgdk-3.so
+mutex:libgdk-3.so
+race:libgdk_pixbuf-2.0.so
+mutex:libgdk_pixbuf-2.0.so
+race:libatk-1.0.so
+mutex:libatk-1.0.so
+race:libatk-bridge-2.0.so
+mutex:libatk-bridge-2.0.so
+race:libatspi.so
+mutex:libatspi.so
+race:libdbus-1.so
+mutex:libdbus-1.so
+race:libgvfscommon.so
+mutex:libgvfscommon.so
+race:libgvfsdbus.so
+mutex:libgvfsdbus.so
+race:libpango-1.0.so
+mutex:libpango-1.0.so
+race:libpangocairo-1.0.so
+mutex:libpangocairo-1.0.so
+race:libpangoft2-1.0.so
+mutex:libpangoft2-1.0.so
+race:libcairo.so
+mutex:libcairo.so
+race:libfontconfig.so
+mutex:libfontconfig.so
+race:libharfbuzz.so
+mutex:libharfbuzz.so
+race:libepoxy.so
+mutex:libepoxy.so
+race:libdconf.so
+mutex:libdconf.so
+race:librsvg-2.so
+mutex:librsvg-2.so
+deadlock:libglib-2.0.so
+deadlock:libgobject-2.0.so
+deadlock:libgio-2.0.so
+deadlock:libgtk-3.so
+deadlock:libgdk-3.so
+deadlock:libgdk_pixbuf-2.0.so
+deadlock:libatk-1.0.so
+deadlock:libatk-bridge-2.0.so
+deadlock:libatspi.so
+deadlock:libdbus-1.so
+deadlock:libgvfscommon.so
+deadlock:libgvfsdbus.so
+deadlock:libpango-1.0.so
+deadlock:libpangocairo-1.0.so
+deadlock:libpangoft2-1.0.so
+deadlock:libcairo.so
+deadlock:libfontconfig.so
+deadlock:libharfbuzz.so
+deadlock:libepoxy.so
+deadlock:libdconf.so
+deadlock:librsvg-2.so

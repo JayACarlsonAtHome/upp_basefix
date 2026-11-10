@@ -1,0 +1,444 @@
+diff -ruN a/uppsrc/Core/FilterStream.cpp b/uppsrc/Core/FilterStream.cpp
+--- a/uppsrc/Core/FilterStream.cpp	2026-10-31 00:56:17.905423944 -0700
++++ b/uppsrc/Core/FilterStream.cpp	2026-10-31 00:52:56.753621995 -0700
+@@ -67,7 +67,7 @@
+ 		t += sz;
+ 		s += sz;
+ 		todo -= sz;
+-		size -= static_cast<dword>(sz);
++		size = static_cast<int>(size - (static_cast<dword>(sz)));
+ 		pos += sz;
+ 	}
+ 	if(size) {
+diff -ruN a/uppsrc/Core/t.cpp b/uppsrc/Core/t.cpp
+--- a/uppsrc/Core/t.cpp	2026-10-31 00:56:17.956969044 -0700
++++ b/uppsrc/Core/t.cpp	2026-10-31 00:52:56.754007166 -0700
+@@ -125,7 +125,7 @@
+ {
+ 	CharS ids;
+ 	ids.s = id;
+-	lang &= static_cast<dword>(mask);
++	lang = static_cast<int>(lang & (static_cast<dword>(mask)));
+ 	Array<LngModule>& ma = sMod();
+ 	for(int i = 0; i < ma.GetCount(); i++) {
+ 		LngModule& m = ma[i];
+diff -ruN a/uppsrc/Core/TimeDate.cpp b/uppsrc/Core/TimeDate.cpp
+--- a/uppsrc/Core/TimeDate.cpp	2026-10-31 00:56:17.957313584 -0700
++++ b/uppsrc/Core/TimeDate.cpp	2026-10-31 00:52:56.753703731 -0700
+@@ -277,7 +277,7 @@
+ 	int q, leap;
+ 	year = 0;
+ 	q = d / (400 * 365 + 100 - 3);
+-	year += 400 * q;
++	year = static_cast<int16>(year + (400 * q));
+ 	d -= q * (400 * 365 + 100 - 3);
+ 	if(d < 0) {
+ 		year -= 400;
+@@ -287,19 +287,19 @@
+ 	if(d >= 100 * 365 + 24 + 1) {
+ 		d--;
+ 		q = d / (100 * 365 + 24);
+-		year += 100 * q;
++		year = static_cast<int16>(year + (100 * q));
+ 		d -= q * (100 * 365 + 24);
+ 		leap = 0;
+ 	}
+ 	if(d >= 365 * 4 + leap) {
+ 		q = (d + 1 - leap) / (365 * 4 + 1);
+-		year += 4 * q;
++		year = static_cast<int16>(year + (4 * q));
+ 		d -= q * (365 * 4 + 1) - 1 + leap;
+ 		leap = 1;
+ 	}
+ 	if(d >= 365 + leap) {
+ 		q = (d - leap) / 365;
+-		year += q;
++		year = static_cast<int16>(year + q);
+ 		d -= q * 365 + leap;
+ 		leap = 0;
+ 	}
+@@ -386,7 +386,7 @@
+ }
+ 
+ Date AddYears(Date date, int years) {
+-	date.year += years;
++	date.year = static_cast<int16>(date.year + years);
+ 	date.day = min(date.day, LastDayOfMonth(date).day);
+ 	return date;
+ }
+diff -ruN a/uppsrc/Core/WebSocket.cpp b/uppsrc/Core/WebSocket.cpp
+--- a/uppsrc/Core/WebSocket.cpp	2026-10-31 00:56:17.968482847 -0700
++++ b/uppsrc/Core/WebSocket.cpp	2026-10-31 00:52:56.753896330 -0700
+@@ -342,7 +342,7 @@
+ 			return;
+ 		if(mask)
+ 			for(int i = 0; i < n; i++) // TODO: Optimize
+-				buffer[i] ^= key[(i + data_pos) & 3];
++				buffer[i] = static_cast<char>(buffer[i] ^ (key[(i + data_pos) & 3]));
+ 		data.Cat(~buffer, n); // TODO: Split long data
+ 		data_pos += n;
+ 		LLOG("Frame data chunk received, chunk len: " << n);
+diff -ruN a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
+--- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-31 00:56:17.978067028 -0700
++++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-31 00:52:56.754084205 -0700
+@@ -833,14 +833,14 @@
+ 					};
+ 					kv = hwkv.Get(hw, kv);
+ 				}
+-				kv += static_cast<unsigned int>(K_DELTA);
++				kv = static_cast<int>(kv + (static_cast<unsigned int>(K_DELTA)));
+ 			}
+ 			if(GetShift() && kv != K_SHIFT_KEY)
+-				kv |= static_cast<unsigned int>(K_SHIFT);
++				kv = static_cast<int>(kv | (static_cast<unsigned int>(K_SHIFT)));
+ 			if(GetCtrl() && kv != K_CTRL_KEY)
+-				kv |= static_cast<unsigned int>(K_CTRL);
++				kv = static_cast<int>(kv | (static_cast<unsigned int>(K_CTRL)));
+ 			if(GetAlt() && kv != K_ALT_KEY)
+-				kv |= static_cast<unsigned int>(K_ALT);
++				kv = static_cast<int>(kv | (static_cast<unsigned int>(K_ALT)));
+ 			LLOG(GetKeyDesc(kv) << ", pressed: " << pressed << ", count: " << CurrentEvent.count);
+ #ifdef GDK_WINDOWING_X11
+ 			if(pressed)
+diff -ruN a/uppsrc/CtrlCore/GtkX11Util.cpp b/uppsrc/CtrlCore/GtkX11Util.cpp
+--- a/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-31 00:56:17.978426068 -0700
++++ b/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-31 00:52:56.754206085 -0700
+@@ -54,7 +54,7 @@
+ 			int len = format == 32 ? static_cast<int>(sizeof(unsigned long) * nitems) : static_cast<int>(nitems * (static_cast<unsigned long>(format >> 3)));
+ 			result.Cat(data, len);
+ 			XFree((char *)data);
+-			offset += nitems / (static_cast<unsigned long>(32 / format));
++			offset = static_cast<long int>(offset + (nitems / (static_cast<unsigned long>(32 / format))));
+ 		}
+ 		else
+ 			break;
+diff -ruN a/uppsrc/Draw/Drawing.cpp b/uppsrc/Draw/Drawing.cpp
+--- a/uppsrc/Draw/Drawing.cpp	2026-10-31 00:56:18.027041190 -0700
++++ b/uppsrc/Draw/Drawing.cpp	2026-10-31 00:52:56.754257497 -0700
+@@ -666,11 +666,11 @@
+ void Drawing::Serialize(Stream& s)
+ {
+ 	if(val.GetCount())
+-		size.cy |= 0x80000000;
++		size.cy = static_cast<unsigned int>(size.cy | 0x80000000);
+ 	s % size;
+ 	s % data;
+ 	if(static_cast<unsigned int>(size.cy) & 0x80000000) {
+-		size.cy &= ~0x80000000;
++		size.cy = static_cast<unsigned int>(size.cy & (~0x80000000));
+ 		s % val;
+ 	}
+ }
+diff -ruN a/uppsrc/Draw/ImageBlit.cpp b/uppsrc/Draw/ImageBlit.cpp
+--- a/uppsrc/Draw/ImageBlit.cpp	2026-10-31 00:56:18.031640354 -0700
++++ b/uppsrc/Draw/ImageBlit.cpp	2026-10-31 00:52:56.754341502 -0700
+@@ -181,9 +181,9 @@
+ 	int b = color.GetB();
+ 	while(s < e) {
+ 		int alpha = s->a + (s->a >> 7);
+-		t->r += alpha * (r - t->r) >> 8;
+-		t->g += alpha * (g - t->g) >> 8;
+-		t->b += alpha * (b - t->b) >> 8;
++		t->r = static_cast<byte>(t->r + (alpha * (r - t->r) >> 8));
++		t->g = static_cast<byte>(t->g + (alpha * (g - t->g) >> 8));
++		t->b = static_cast<byte>(t->b + (alpha * (b - t->b) >> 8));
+ 		t->a = static_cast<byte>(s->a + ((256 - alpha) * t->a >> 8));
+ 		s++;
+ 		t++;
+@@ -198,9 +198,9 @@
+ 	int b = color.GetB();
+ 	while(s < e) {
+ 		int alpha = s->a + (s->a >> 7);
+-		t->r += alpha * (r - t->r) >> 8;
+-		t->g += alpha * (g - t->g) >> 8;
+-		t->b += alpha * (b - t->b) >> 8;
++		t->r = static_cast<byte>(t->r + (alpha * (r - t->r) >> 8));
++		t->g = static_cast<byte>(t->g + (alpha * (g - t->g) >> 8));
++		t->b = static_cast<byte>(t->b + (alpha * (b - t->b) >> 8));
+ 		t->a = 255;
+ 		s++;
+ 		t++;
+@@ -212,9 +212,9 @@
+ 	const RGBA *e = s + len;
+ 	while(s < e) {
+ 		int alpha = s->a + (s->a >> 7);
+-		t->r += alpha * (s->r - t->r) >> 8;
+-		t->g += alpha * (s->g - t->g) >> 8;
+-		t->b += alpha * (s->b - t->b) >> 8;
++		t->r = static_cast<byte>(t->r + (alpha * (s->r - t->r) >> 8));
++		t->g = static_cast<byte>(t->g + (alpha * (s->g - t->g) >> 8));
++		t->b = static_cast<byte>(t->b + (alpha * (s->b - t->b) >> 8));
+ 		t->a = 255;
+ 		s++;
+ 		t++;
+@@ -231,9 +231,9 @@
+ 	alpha *= 0x102;
+ 	while(s < e) {
+ 		int a = (s->a * alpha) >> 16;
+-		t->r += a * (s->r - t->r) >> 8;
+-		t->g += a * (s->g - t->g) >> 8;
+-		t->b += a * (s->b - t->b) >> 8;
++		t->r = static_cast<byte>(t->r + (a * (s->r - t->r) >> 8));
++		t->g = static_cast<byte>(t->g + (a * (s->g - t->g) >> 8));
++		t->b = static_cast<byte>(t->b + (a * (s->b - t->b) >> 8));
+ 		t->a = 255;
+ 		s++;
+ 		t++;
+@@ -274,9 +274,9 @@
+ 		sBlends& x = sblends[(b->a << 8) + f->a];
+ 		int m = x.m;
+ 		b->a = x.a;
+-		b->r += m * (f->r - b->r) >> 8;
+-		b->g += m * (f->g - b->g) >> 8;
+-		b->b += m * (f->b - b->b) >> 8;
++		b->r = static_cast<byte>(b->r + (m * (f->r - b->r) >> 8));
++		b->g = static_cast<byte>(b->g + (m * (f->g - b->g) >> 8));
++		b->b = static_cast<byte>(b->b + (m * (f->b - b->b) >> 8));
+ 		b++;
+ 		f++;
+ 	}
+@@ -308,9 +308,9 @@
+ 		sBlends& x = sblends[(b->a << 8) + f->a];
+ 		int m = x.m;
+ 		b->a = x.a;
+-		b->r += m * (cr - b->r) >> 8;
+-		b->g += m * (cg - b->g) >> 8;
+-		b->b += m * (cb - b->b) >> 8;
++		b->r = static_cast<byte>(b->r + (m * (cr - b->r) >> 8));
++		b->g = static_cast<byte>(b->g + (m * (cg - b->g) >> 8));
++		b->b = static_cast<byte>(b->b + (m * (cb - b->b) >> 8));
+ 		b++;
+ 		f++;
+ 	}
+diff -ruN a/uppsrc/Draw/ImageScale.cpp b/uppsrc/Draw/ImageScale.cpp
+--- a/uppsrc/Draw/ImageScale.cpp	2026-10-31 00:56:18.032593987 -0700
++++ b/uppsrc/Draw/ImageScale.cpp	2026-10-31 00:52:56.754511411 -0700
+@@ -416,7 +416,7 @@
+ 		memset(tgt, 0, sizeof(RGBA) * static_cast<unsigned long>(tsz.cx));
+ 		return;
+ 	}
+-	offset += *offsets++;
++	offset = static_cast<dword>(offset + (*offsets++));
+ 	ASSERT(offset >= 0 && offset + segspan <= size.cy);
+ 	if(bigseg) {
+ 		row_proc(&row_buffers[0 * cx4], GetLine(offset + 0 * step), horz);
+diff -ruN a/uppsrc/Draw/RasterWrite.cpp b/uppsrc/Draw/RasterWrite.cpp
+--- a/uppsrc/Draw/RasterWrite.cpp	2026-10-31 00:56:18.041599162 -0700
++++ b/uppsrc/Draw/RasterWrite.cpp	2026-10-31 00:52:56.754593899 -0700
+@@ -30,7 +30,7 @@
+ 				byte c = 0;
+ 				byte sh = 0;
+ 				while(cx > 0) {
+-					c |= (palcv->Get(*s++)) << static_cast<byte>(sh);
++					c = static_cast<byte>(c | ((palcv->Get(*s++)) << static_cast<byte>(sh)));
+ 					sh++;
+ 					cx--;
+ 				}
+@@ -57,7 +57,7 @@
+ 				byte c = 0;
+ 				byte sh = 7;
+ 				while(cx > 0) {
+-					c |= ((s++)->g & 0x80) >> static_cast<byte>(sh);
++					c = static_cast<byte>(c | (((s++)->g & 0x80) >> static_cast<byte>(sh)));
+ 					sh--;
+ 					cx--;
+ 				}
+@@ -86,7 +86,7 @@
+ 				byte c = 0;
+ 				byte sh = 7;
+ 				while(cx > 0) {
+-					c |= (palcv->Get(*s++)) << static_cast<byte>(sh);
++					c = static_cast<byte>(c | ((palcv->Get(*s++)) << static_cast<byte>(sh)));
+ 					sh--;
+ 					cx--;
+ 				}
+@@ -113,7 +113,7 @@
+ 				byte c = 0;
+ 				byte sh = 0;
+ 				while(cx > 0) {
+-					c |= ((s++)->g & 0x80) >> static_cast<byte>(sh);
++					c = static_cast<byte>(c | (((s++)->g & 0x80) >> static_cast<byte>(sh)));
+ 					sh++;
+ 					cx--;
+ 				}
+@@ -138,7 +138,7 @@
+ 				byte c = 0;
+ 				byte sh = 0;
+ 				while(cx > 0) {
+-					c |= (palcv->Get(*s++)) << static_cast<byte>(sh);
++					c = static_cast<byte>(c | ((palcv->Get(*s++)) << static_cast<byte>(sh)));
+ 					sh += 2;
+ 					cx--;
+ 				}
+@@ -161,7 +161,7 @@
+ 				byte c = 0;
+ 				byte sh = 6;
+ 				while(cx > 0) {
+-					c |= ((s++)->g & 0xc0) >> static_cast<byte>(sh);
++					c = static_cast<byte>(c | (((s++)->g & 0xc0) >> static_cast<byte>(sh)));
+ 					sh -= 2;
+ 					cx--;
+ 				}
+@@ -186,7 +186,7 @@
+ 				byte c = 0;
+ 				byte sh = 6;
+ 				while(cx > 0) {
+-					c |= (palcv->Get(*s++)) << static_cast<byte>(sh);
++					c = static_cast<byte>(c | ((palcv->Get(*s++)) << static_cast<byte>(sh)));
+ 					sh -= 2;
+ 					cx--;
+ 				}
+@@ -209,7 +209,7 @@
+ 				byte c = 0;
+ 				byte sh = 0;
+ 				while(cx > 0) {
+-					c |= ((s++)->g & 0xc0) >> static_cast<byte>(sh);
++					c = static_cast<byte>(c | (((s++)->g & 0xc0) >> static_cast<byte>(sh)));
+ 					sh += c;
+ 					cx--;
+ 				}
+diff -ruN a/uppsrc/Painter/Fillers.cpp b/uppsrc/Painter/Fillers.cpp
+--- a/uppsrc/Painter/Fillers.cpp	2026-10-31 00:56:18.042898787 -0700
++++ b/uppsrc/Painter/Fillers.cpp	2026-10-31 00:52:56.754635928 -0700
+@@ -78,11 +78,11 @@
+ 	int16 *w = v;
+ 	int h = val / 9;
+ 	int h2 = h + h;
+-	w[-2] += h;
+-	w[2] += h;
+-	w[-1] += h2;
+-	w[1] += h2;
+-	w[0] += val - h2 - h2 - h2;
++	w[-2] = static_cast<int16>(w[-2] + h);
++	w[2] = static_cast<int16>(w[2] + h);
++	w[-1] = static_cast<int16>(w[-1] + h2);
++	w[1] = static_cast<int16>(w[1] + h2);
++	w[0] = static_cast<int16>(w[0] + (val - h2 - h2 - h2));
+ 	w[3] = 0;
+ 	v++;
+ }
+@@ -97,73 +97,73 @@
+ 	v += n;
+ 	switch(n) {
+ 	case 1:
+-		w[-2] += h;
+-		w[-1] += h2;
+-		w[1] += h2;
+-		w[0] += hv2 - h2;
+-		w[2] += h;
++		w[-2] = static_cast<int16>(w[-2] + h);
++		w[-1] = static_cast<int16>(w[-1] + h2);
++		w[1] = static_cast<int16>(w[1] + h2);
++		w[0] = static_cast<int16>(w[0] + (hv2 - h2));
++		w[2] = static_cast<int16>(w[2] + h);
+ 		w[3] = 0;
+ 		break;
+ 	case 2:
+-		w[-2] += h;
++		w[-2] = static_cast<int16>(w[-2] + h);
+ 		w[3] = static_cast<int16>(h);
+-		w[-1] += h3;
+-		w[2] += h3;
+-		w[0] += hv2;
+-		w[1] += hv2;
++		w[-1] = static_cast<int16>(w[-1] + h3);
++		w[2] = static_cast<int16>(w[2] + h3);
++		w[0] = static_cast<int16>(w[0] + hv2);
++		w[1] = static_cast<int16>(w[1] + hv2);
+ 		w[4] = 0;
+ 		break;
+ 	case 3:
+-		w[-2] += h;
++		w[-2] = static_cast<int16>(w[-2] + h);
+ 		w[4] = static_cast<int16>(h);
+-		w[-1] += h3;
++		w[-1] = static_cast<int16>(w[-1] + h3);
+ 		w[3] = static_cast<int16>(h3);
+ 		hh = hv2 + h;
+-		w[0] += hh;
+-		w[2] += hh;
+-		w[1] += hv2 + h2;
++		w[0] = static_cast<int16>(w[0] + hh);
++		w[2] = static_cast<int16>(w[2] + hh);
++		w[1] = static_cast<int16>(w[1] + (hv2 + h2));
+ 		w[5] =   0;
+ 		break;
+ 	case 4:
+-		w[-2] += h;
++		w[-2] = static_cast<int16>(w[-2] + h);
+ 		w[5] = static_cast<int16>(h);
+-		w[-1] += h3;
++		w[-1] = static_cast<int16>(w[-1] + h3);
+ 		w[4] = static_cast<int16>(h3);
+ 		hh = hv2 + h;
+-		w[0] +=  hh;
++		w[0] = static_cast<int16>(w[0] + hh);
+ 		w[3] = static_cast<int16>(hh);
+ 		hh = hv2 + h3;
+-		w[1] += hh;
+-		w[2] += hh;
++		w[1] = static_cast<int16>(w[1] + hh);
++		w[2] = static_cast<int16>(w[2] + hh);
+ 		w[6] = 0;
+ 		break;
+ 	case 5:
+-		w[-2] += h;
++		w[-2] = static_cast<int16>(w[-2] + h);
+ 		w[6] =   static_cast<int16>(h);
+-		w[-1] += h3;
++		w[-1] = static_cast<int16>(w[-1] + h3);
+ 		w[5] =   static_cast<int16>(h3);
+ 		hh = hv2 + h;
+-		w[0] += hh;
++		w[0] = static_cast<int16>(w[0] + hh);
+ 		w[4] = static_cast<int16>(hh);
+ 		hh = h3 + hv2;
+-		w[1] += hh;
++		w[1] = static_cast<int16>(w[1] + hh);
+ 		w[3] = static_cast<int16>(hh);
+-		w[2] += h3 + hv2 + h;
++		w[2] = static_cast<int16>(w[2] + (h3 + hv2 + h));
+ 		w[7] = 0;
+ 		break;
+ 	case 6:
+-		w[-2] += h;
++		w[-2] = static_cast<int16>(w[-2] + h);
+ 		w[7] = static_cast<int16>(h);
+-		w[-1] += h3;
++		w[-1] = static_cast<int16>(w[-1] + h3);
+ 		w[6] = static_cast<int16>(h3);
+ 		hh = hv2 + h;
+-		w[0] += hh;
++		w[0] = static_cast<int16>(w[0] + hh);
+ 		w[5] = static_cast<int16>(hh);
+ 		hh = h3 + hv2;
+-		w[1] += hh;
++		w[1] = static_cast<int16>(w[1] + hh);
+ 		w[4] = static_cast<int16>(hh);
+ 		hh = h3 + hv2 + h;
+-		w[2] += hh;
++		w[2] = static_cast<int16>(w[2] + hh);
+ 		w[3] = static_cast<int16>(hh);
+ 		w[8] = 0;
+ 		break;
+diff -ruN a/uppsrc/PdfDraw/PdfDraw.cpp b/uppsrc/PdfDraw/PdfDraw.cpp
+--- a/uppsrc/PdfDraw/PdfDraw.cpp	2026-10-31 00:56:18.046005938 -0700
++++ b/uppsrc/PdfDraw/PdfDraw.cpp	2026-10-31 00:52:56.754706696 -0700
+@@ -644,7 +644,7 @@
+ 			while(bit && p < e) {
+ 				if(!((p->r | p->g | p->b) == 0 || (p->r & p->g & p->b) == 255))
+ 					return Null;
+-				b |= bit & p->r;
++				b = static_cast<byte>(b | (bit & p->r));
+ 				bit >>= 1;
+ 				p++;
+ 			}
+@@ -769,7 +769,7 @@
+ 						byte b = 0;
+ 						while(bit && p < e) {
+ 							if(p->a != 255)
+-								b |= bit;
++								b = static_cast<byte>(b | bit);
+ 							bit >>= 1;
+ 							p++;
+ 						}

@@ -1,0 +1,1174 @@
+diff -ruN a/uppsrc/Core/Color.h b/uppsrc/Core/Color.h
+--- a/uppsrc/Core/Color.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Color.h	2026-10-30 22:57:17.426599457 -0700
+@@ -15,7 +15,7 @@
+ 
+ template <> String AsString(const RGBA& c);
+ 
+-template<> inline hash_t GetHashValue(const RGBA& a) { return *(dword *)&a; }
++template<> inline hash_t GetHashValue(const RGBA& a) { dword h; memcpy(&h, &a, sizeof(h)); return h; }
+ 
+ inline bool operator==(const RGBA& a, const RGBA& b)
+ {
+diff -ruN a/uppsrc/Core/CvFlt.cpp b/uppsrc/Core/CvFlt.cpp
+--- a/uppsrc/Core/CvFlt.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/CvFlt.cpp	2026-10-30 23:04:57.855635339 -0700
+@@ -152,7 +152,7 @@
+ 	LHITCOUNT("FormatDoubleDigits");
+ 
+ 	uint64 u, u1;
+-	int e10;
++	int e10 = 0; // set by FP in every case (precision is 1..18, ASSERTed above)
+ 
+ 	auto FP = [&](uint64 limit) {
+ 		e10 = precision - ((19728 * w.exponent) >> 16); // log10 estimate
+diff -ruN a/uppsrc/Core/Defs.h b/uppsrc/Core/Defs.h
+--- a/uppsrc/Core/Defs.h	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/Defs.h	2026-10-30 22:53:52.421606525 -0700
+@@ -245,6 +245,14 @@
+ #define force_inline inline
+ #endif
+ 
++// printf_format(f, a): the function takes a printf format as parameter f and its arguments
++// from parameter a on (0 for a va_list), so the compiler checks the calls.
++#ifdef COMPILER_GCC
++#define printf_format(f, a) __attribute__((format(printf, f, a)))
++#else
++#define printf_format(f, a)
++#endif
++
+ #define BINARY(i, f) \
+ extern "C" byte *i; \
+ extern "C" int COMBINE(i, _length);
+diff -ruN a/uppsrc/Core/Diag.h b/uppsrc/Core/Diag.h
+--- a/uppsrc/Core/Diag.h	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/Diag.h	2026-10-30 22:53:52.421986397 -0700
+@@ -49,7 +49,7 @@
+ String        GetTypeName(const char *type_name);
+ inline String GetTypeName(const ::std::type_info& tinfo)   { return GetTypeName(tinfo.name()); }
+ 
+-void __LOGF__(const char *format, ...);
++void __LOGF__(const char *format, ...) printf_format(1, 2);
+ 
+ #define STATIC_ASSERT( expr ) { struct __static_assert { unsigned __static_assert_tst:(expr); }; }
+ 
+diff -ruN a/uppsrc/Core/Format.cpp b/uppsrc/Core/Format.cpp
+--- a/uppsrc/Core/Format.cpp	2026-10-30 23:17:06.510704882 -0700
++++ b/uppsrc/Core/Format.cpp	2026-10-30 22:54:09.889685947 -0700
+@@ -468,6 +468,13 @@
+ 	RegisterNullFormatter(id, f);
+ }
+ 
++// The printf format is built at run time from the Format() spec ('%' + format + id), so it
++// cannot be a literal: -Wformat-nonliteral is off for these calls only.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wformat-nonliteral"
++#endif
++
+ String IntFormatter(const Formatting& f)
+ {
+ 	if(f.format.GetCount() == 0 && f.id[0] == 'd' && f.id[1] == 0)
+@@ -486,6 +493,10 @@
+ 	return String(q);
+ }
+ 
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
++
+ String IntLowerAlphaFormatter(const Formatting& f)
+ {
+ 	return FormatIntAlpha(f.arg, false);
+@@ -658,6 +669,13 @@
+ 	}
+ }
+ 
++// The printf format is built at run time from the Format() spec ('%' + format + id), so it
++// cannot be a literal: -Wformat-nonliteral is off for these calls only.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wformat-nonliteral"
++#endif
++
+ String FloatFormatter(const Formatting& f)
+ {
+ 	double d = f.arg;
+@@ -675,6 +693,9 @@
+ 	sFixPoint(h);
+ 	return String(h, n);
+ }
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+ 
+ String DateFormatter(const Formatting& f)
+ {
+@@ -1101,6 +1122,7 @@
+ 
+ // Old format ---------------------------
+ 
++printf_format(1, 0)
+ String  VFormat(const char *fmt, va_list ptr) {
+ 	// The stack buffer first, then exactly the length vsnprintf says it needs (it used to
+ 	// allocate 2 * strlen(fmt) + 1024 but pass 1500, so longer results were cut at 1500).
+diff -ruN a/uppsrc/Core/Format.h b/uppsrc/Core/Format.h
+--- a/uppsrc/Core/Format.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Format.h	2026-10-30 22:53:52.421725595 -0700
+@@ -110,7 +110,7 @@
+ 	return Format(s, gather<Vector<Value>>(args...));
+ }
+ 
+-String Sprintf(const char *fmt, ...);
++String Sprintf(const char *fmt, ...) printf_format(1, 2);
+ 
+ String DeFormat(const char *text);
+ 
+diff -ruN a/uppsrc/Core/heap.cpp b/uppsrc/Core/heap.cpp
+--- a/uppsrc/Core/heap.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/heap.cpp	2026-10-30 22:53:52.421396560 -0700
+@@ -133,7 +133,7 @@
+ 	Page *page = GetPage(l);
+ 
+ 	if(l && page->klass != k) {
+-		snprintf(h, 200, "Invalid freelist block at 0x%p sz: %d (klass mismatch)", l, Ksz(k));
++		snprintf(h, 200, "Invalid freelist block at 0x%p sz: %d (klass mismatch)", static_cast<void *>(l), Ksz(k));
+ 		Panic(h);
+ 	}
+ 	
+@@ -141,15 +141,15 @@
+ 		if(l->next) {
+ 			Page *lp = GetPage(l->next);
+ 			if(pg && lp != page) {
+-				snprintf(h, 200, "Invalid freelist block at 0x%p sz: %d (out of page) (-> 0x%p)", l, Ksz(k), l->next);
++				snprintf(h, 200, "Invalid freelist block at 0x%p sz: %d (out of page) (-> 0x%p)", static_cast<void *>(l), Ksz(k), static_cast<void *>(l->next));
+ 				Panic(h);
+ 			}
+ 			if((4096 - ((uintptr_t)(l->next) & (uintptr_t)4095)) % Ksz(k) != 0) {
+-				snprintf(h, 200, "Invalid freelist block at 0x%p sz: %d (invalid address)", l, Ksz(k));
++				snprintf(h, 200, "Invalid freelist block at 0x%p sz: %d (invalid address)", static_cast<void *>(l), Ksz(k));
+ 				Panic(h);
+ 			}
+ 			if(lp->klass != k) {
+-				snprintf(h, 200, "Invalid freelist block at 0x%p sz: %d (next klass mismatch)", l, Ksz(k));
++				snprintf(h, 200, "Invalid freelist block at 0x%p sz: %d (next klass mismatch)", static_cast<void *>(l), Ksz(k));
+ 				Panic(h);
+ 			}
+ 		}
+diff -ruN a/uppsrc/Core/HeapImp.h b/uppsrc/Core/HeapImp.h
+--- a/uppsrc/Core/HeapImp.h	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/HeapImp.h	2026-10-30 22:56:37.002640919 -0700
+@@ -29,8 +29,8 @@
+ 	bool  IsFree()                   { return free; }
+ 	bool  IsLast()                   { return last; }
+ 
+-	BlkPrefix *GetPrevHeader(int BlkSize) { return (BlkPrefix *)((byte *)this - BlkSize * GetPrevSize()); }
+-	BlkPrefix *GetNextHeader(int BlkSize) { return (BlkPrefix *)((byte *)this + BlkSize * GetSize()); }
++	BlkPrefix *GetPrevHeader(int BlkSize) { return static_cast<BlkPrefix *>(static_cast<void *>(reinterpret_cast<byte *>(this) - BlkSize * GetPrevSize())); }
++	BlkPrefix *GetNextHeader(int BlkSize) { return static_cast<BlkPrefix *>(static_cast<void *>(reinterpret_cast<byte *>(this) + BlkSize * GetSize())); }
+ };
+ 
+ template <int BlkSize>
+@@ -169,7 +169,7 @@
+ void BlkHeap<Detail, BlkSize>::Split(BlkHeader *h, word wcount, bool fill)
+ { // splits the block if bigger, links new block to free
+ 	ASSERT(BlkSize != 4096 || ((dword)(uintptr_t)h & 4095) == 0);
+-	BlkHeader *h2 = (BlkHeader *)((byte *)h + BlkSize * (int)wcount);
++	BlkHeader *h2 = static_cast<BlkHeader *>(static_cast<void *>(reinterpret_cast<byte *>(h) + BlkSize * static_cast<int>(wcount)));
+ 	word nsz = h->GetSize() - wcount;
+ 	if(nsz == 0) // nothing to split
+ 		return;
+@@ -338,7 +338,7 @@
+ 		void         Unlink()              { Dbl_Unlink(this); }
+ 		void         Link(DLink *lnk)      { Dbl_LinkAfter(this, lnk);  }
+ 
+-		LargeHeap::BlkHeader *GetFirst()   { return (LargeHeap::BlkHeader *)((byte *)this + LOFFSET); } // pointer to data area
++		LargeHeap::BlkHeader *GetFirst()   { return static_cast<LargeHeap::BlkHeader *>(static_cast<void *>(reinterpret_cast<byte *>(this) + LOFFSET)); } // pointer to data area
+ 	};
+ 
+ 	static int lclass[];
+diff -ruN a/uppsrc/Core/hheap.cpp b/uppsrc/Core/hheap.cpp
+--- a/uppsrc/Core/hheap.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/hheap.cpp	2026-10-30 23:17:24.050130504 -0700
+@@ -81,9 +81,9 @@
+ 	if(count > sys_block_limit) { // we are wasting 4KB to store just 4 bytes here, but this is n MB after all..
+ 		LTIMING("SysAlloc");
+ 		byte *sysblk = (byte *)SysAllocRaw((count + 1) * 4096);
+-		BlkHeader *h = (BlkHeader *)(sysblk + 4096);
++		BlkHeader *h = static_cast<BlkHeader *>(static_cast<void *>(sysblk + 4096));
+ 		h->size = 0;
+-		*((size_t *)sysblk) = count;
++		*static_cast<size_t *>(static_cast<void *>(sysblk)) = count;
+ 		sys_count++;
+ 		sys_size += 4096 * count;
+ 		MaxMem();
+@@ -141,7 +141,7 @@
+ 	if(h->size == 0) {
+ 		LTIMING("Sys Free");
+ 		byte *sysblk = (byte *)h - 4096;
+-		size_t count = *((size_t *)sysblk);
++		size_t count = *static_cast<size_t *>(static_cast<void *>(sysblk));
+ 		SysFreeRaw(sysblk, (count + 1) * 4096);
+ 		huge_4KB_count -= count;
+ 		sys_count--;
+diff -ruN a/uppsrc/Core/InVector.h b/uppsrc/Core/InVector.h
+--- a/uppsrc/Core/InVector.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/InVector.h	2026-10-30 23:17:24.047623172 -0700
+@@ -4,6 +4,7 @@
+ template <class K, class TT, class Less> class SortedVectorMap;
+ 
+ struct InVectorSlave__ {
++	virtual ~InVectorSlave__() = default;
+ 	virtual void Clear() = 0;
+ 	virtual void Count(int n) = 0;
+ 	virtual void Split(int blki, int nextsize) = 0;
+diff -ruN a/uppsrc/Core/lheap.cpp b/uppsrc/Core/lheap.cpp
+--- a/uppsrc/Core/lheap.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/lheap.cpp	2026-10-30 22:56:37.016513217 -0700
+@@ -120,7 +120,7 @@
+ 		BlkPrefix *h = (BlkPrefix *)ptr - 1;
+ 		while(!h->IsFirst()) // find the start of large page to get page header
+ 			h = h->GetPrevHeader(LUNIT);
+-		MoveLargeTo((DLink *)((byte *)h - LOFFSET), this);
++		MoveLargeTo(static_cast<DLink *>(static_cast<void *>(reinterpret_cast<byte *>(h) - LOFFSET)), this);
+ 		return ptr;
+ 	}
+ 
+@@ -153,7 +153,7 @@
+ 			if(free_lpages >= max_free_lpages || this == &aux) {
+ 				LTIMING("FreeLargePage");
+ 				fh->UnlinkFree();
+-				FreeLargePage((DLink *)((byte *)fh - LOFFSET));
++				FreeLargePage(static_cast<DLink *>(static_cast<void *>(reinterpret_cast<byte *>(fh) - LOFFSET)));
+ 			}
+ 			else
+ 				free_lpages++;
+diff -ruN a/uppsrc/Core/Mem.h b/uppsrc/Core/Mem.h
+--- a/uppsrc/Core/Mem.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Mem.h	2026-10-30 23:17:24.048517756 -0700
+@@ -673,8 +673,9 @@
+ {
+ #ifdef CPU_64
+ 	while(count >= 8) {
+-		uint64 a64 = *(uint64 *)a;
+-		uint64 b64 = *(uint64 *)b;
++		uint64 a64, b64;   // memcpy: an unaligned load, without reading chars through a uint64 *
++		memcpy(&a64, a, 8);
++		memcpy(&b64, b, 8);
+ 		if(a64 != b64)
+ 			return SwapEndian64(a64) < SwapEndian64(b64) ? -1 : 1;
+ 		a += 8;
+@@ -682,8 +683,9 @@
+ 		count -= 8;
+ 	}
+ 	if(count & 4) {
+-		uint32 a32 = *(uint32 *)a;
+-		uint32 b32 = *(uint32 *)b;
++		uint32 a32, b32;
++		memcpy(&a32, a, 4);
++		memcpy(&b32, b, 4);
+ 		if(a32 != b32)
+ 			return SwapEndian32(a32) < SwapEndian32(b32) ? -1 : 1;
+ 		a += 4;
+@@ -691,8 +693,9 @@
+ 	}
+ #else
+ 	while(count >= 4) {
+-		uint32 a32 = *(uint32 *)a;
+-		uint32 b32 = *(uint32 *)b;
++		uint32 a32, b32;
++		memcpy(&a32, a, 4);
++		memcpy(&b32, b, 4);
+ 		if(a32 != b32)
+ 			return SwapEndian32(a32) < SwapEndian32(b32) ? -1 : 1;
+ 		a += 4;
+@@ -701,8 +704,9 @@
+ 	}
+ #endif
+ 	if(count & 2) {
+-		uint16 a16 = *(uint16 *)a;
+-		uint16 b16 = *(uint16 *)b;
++		uint16 a16, b16;
++		memcpy(&a16, a, 2);
++		memcpy(&b16, b, 2);
+ 		if(a16 != b16)
+ 			return SwapEndian16(a16) < SwapEndian16(b16) ? -1 : 1;
+ 		a += 2;
+diff -ruN a/uppsrc/Core/Ops.h b/uppsrc/Core/Ops.h
+--- a/uppsrc/Core/Ops.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Ops.h	2026-10-30 23:17:24.048950795 -0700
+@@ -317,9 +317,10 @@
+ force_inline
+ uint64 mul64(uint64 a, uint64 b, uint64& hi)
+ {
+-	unsigned __int128 prod =  (unsigned __int128)a * b;
+-	hi = prod >> 64;
+-	return prod;
++	__extension__ typedef unsigned __int128 uint128;
++	uint128 prod = static_cast<uint128>(a) * b;
++	hi = static_cast<uint64>(prod >> 64);
++	return static_cast<uint64>(prod);
+ }
+ 
+ #elif defined(COMPILER_MSC) && defined(CPU_AMD64)
+diff -ruN a/uppsrc/Core/Profile.h b/uppsrc/Core/Profile.h
+--- a/uppsrc/Core/Profile.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Profile.h	2026-10-30 22:53:52.417294075 -0700
+@@ -33,8 +33,8 @@
+ 
+ 	class Routine {
+ 	public:
+-		Routine(TimingInspector& stat, int& nesting)
+-		: nesting(nesting), stat(stat) {
++		Routine(TimingInspector& inspector, int& counter)
++		: nesting(counter), stat(inspector) {
+ 			start_time = tmGetTime();
+ 			nesting++;
+ 		}
+diff -ruN a/uppsrc/Core/sheap.cpp b/uppsrc/Core/sheap.cpp
+--- a/uppsrc/Core/sheap.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/sheap.cpp	2026-10-30 23:17:24.051935022 -0700
+@@ -20,8 +20,8 @@
+ 	byte *b = Begin();
+ 	FreeLink *l = NULL;
+ 	while(ptr >= b) {
+-		((FreeLink *)ptr)->next = l;
+-		l = (FreeLink *)ptr;
++		static_cast<FreeLink *>(static_cast<void *>(ptr))->next = l;
++		l = static_cast<FreeLink *>(static_cast<void *>(ptr));
+ 		ptr -= sz;
+ 	}
+ 	freelist = l;
+diff -ruN a/uppsrc/Core/Socket.cpp b/uppsrc/Core/Socket.cpp
+--- a/uppsrc/Core/Socket.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/Socket.cpp	2026-10-30 23:17:24.051213741 -0700
+@@ -375,7 +375,7 @@
+ bool Socket::Listen(const IpAddrInfo& addr, int port, int listen_count, bool ipv6, bool reuse)
+ {
+ 	addrinfo *a = addr.GetResult();
+-	return Listen(port, listen_count, ipv6, reuse, &(((sockaddr_in*)a->ai_addr)->sin_addr.s_addr));
++	return Listen(port, listen_count, ipv6, reuse, &(static_cast<sockaddr_in *>(static_cast<void *>(a->ai_addr))->sin_addr.s_addr));
+ }
+ 
+ bool Socket::Accept(Socket& ls)
+diff -ruN a/uppsrc/Core/Stream.cpp b/uppsrc/Core/Stream.cpp
+--- a/uppsrc/Core/Stream.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/Stream.cpp	2026-10-30 22:56:54.357576710 -0700
+@@ -635,7 +635,7 @@
+ 		if(h.IsVoid())
+ 			LoadError();
+ 		else
+-			s = ToUtf32((const char16 *)~h, len);
++			s = ToUtf32(static_cast<const char16 *>(static_cast<const void *>(~h)), len);
+ 	}
+ 	else {
+ 		Vector<char16> x = ToUtf16(s);
+@@ -1059,9 +1059,11 @@
+ }
+ 
+ struct NilStreamClass : public Stream {
++	using Stream::_Put;
+ 	virtual void    _Put(int /*w*/)    {}
+ 	virtual bool    IsOpen() const { return true; }
+ 	virtual   int   _Term()        { return -1; }
++	using Stream::_Get;
+ 	virtual   int   _Get()         { return -1; }
+ };
+ 
+@@ -1096,6 +1098,7 @@
+ 		putchar(w);
+ #endif
+ 	}
++	using Stream::_Put;
+ 	virtual void    _Put(int w) {
+ 		if(w == '\n') {
+ #ifdef PLATFORM_WIN32
+diff -ruN a/uppsrc/Core/Stream.h b/uppsrc/Core/Stream.h
+--- a/uppsrc/Core/Stream.h	2026-10-30 23:17:06.511051254 -0700
++++ b/uppsrc/Core/Stream.h	2026-10-30 23:04:57.856128473 -0700
+@@ -307,7 +307,9 @@
+ 
+ class MemStream : public Stream {
+ protected:
++	using Stream::_Put;
+ 	virtual   void  _Put(const void *data, dword size);
++	using Stream::_Get;
+ 	virtual   dword _Get(void *data, dword size);
+ 
+ public:
+diff -ruN a/uppsrc/Core/String.cpp b/uppsrc/Core/String.cpp
+--- a/uppsrc/Core/String.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/String.cpp	2026-10-30 22:56:54.357738022 -0700
+@@ -262,7 +262,7 @@
+ 	char *p = 0;
+ 	if((int)(limit - pbegin) > 800) {
+ 		size_t sz = sizeof(Rc) + n + 1;
+-		Rc *rc = (Rc *)pbegin - 1;
++		Rc *rc = static_cast<Rc *>(static_cast<void *>(pbegin)) - 1;
+ 		if(MemoryTryRealloc(rc, sz)) {
+ 			realloced = true;
+ 			al = rc->alloc = (int)min((size_t)INT_MAX, sz - sizeof(Rc) - 1);
+diff -ruN a/uppsrc/Core/String.h b/uppsrc/Core/String.h
+--- a/uppsrc/Core/String.h	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/String.h	2026-10-30 22:56:54.357977382 -0700
+@@ -216,7 +216,7 @@
+ 	bool   IsLarge() const       { return chr[KIND] != SMALL; }
+ 	bool   IsMedium() const      { return chr[KIND] == MEDIUM; }
+ 	bool   IsRef() const         { return (byte)chr[KIND] > MEDIUM; }
+-	Rc    *Ref() const           { return (Rc *)ptr - 1; }
++	Rc    *Ref() const           { return static_cast<Rc *>(static_cast<void *>(ptr)) - 1; }
+ 	bool   IsShared() const      { return Ref()->refcount != 1; }
+ 	bool   IsSharedRef() const   { return IsRef() && IsShared(); }
+ 	int    LAlloc() const        { int b = (byte)chr[KIND]; return b == 255 ? Ref()->alloc : b; }
+diff -ruN a/uppsrc/Core/StringMem.i b/uppsrc/Core/StringMem.i
+--- a/uppsrc/Core/StringMem.i	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/StringMem.i	2026-10-30 23:17:24.049455839 -0700
+@@ -122,5 +122,5 @@
+ 	if(all == 31)
+ 		MemoryFree32_i(pbegin);
+ 	if(all > 31)
+-		MemoryFree((Rc *)pbegin - 1);
++		MemoryFree(static_cast<Rc *>(static_cast<void *>(pbegin)) - 1);
+ }
+diff -ruN a/uppsrc/Core/Vcont.h b/uppsrc/Core/Vcont.h
+--- a/uppsrc/Core/Vcont.h	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/Vcont.h	2026-10-30 22:56:54.358277173 -0700
+@@ -19,7 +19,7 @@
+ 		else {
+ 			void *p = MemoryAlloc(size * sizeof(T) + 16);
+ 			*(size_t *)p = size;
+-			ptr = (T *)((byte *)p + 16);
++			ptr = static_cast<T *>(static_cast<void *>(static_cast<byte *>(p) + 16));
+ 		}
+ 	}
+ 	void New(size_t size) {
+diff -ruN a/uppsrc/Core/Vcont.hpp b/uppsrc/Core/Vcont.hpp
+--- a/uppsrc/Core/Vcont.hpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Vcont.hpp	2026-10-30 23:08:57.166255090 -0700
+@@ -36,8 +36,12 @@
+ 	{
+ 		cont.Clear();
+ 		cont.Reserve(min(n, int(256*1024 / sizeof(T)))); // protect against invalid streams...
++		using E = std::remove_reference_t<decltype(*cont.begin())>;   // the element type
+ 		while(n--)
+-			s % cont.Add();
++			if constexpr(std::is_trivially_copyable_v<E>)
++				s % cont.Add(E()); // a plain value starts at zero, not uninitialized, before it is loaded
++			else
++				s % cont.Add();
+ 	}
+ 	else
+ 	{
+diff -ruN a/uppsrc/Core/WString.cpp b/uppsrc/Core/WString.cpp
+--- a/uppsrc/Core/WString.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/WString.cpp	2026-10-30 22:56:54.358425858 -0700
+@@ -264,7 +264,7 @@
+ 		return std::wstring((const wchar_t *)begin(), GetCount());
+ 	if(sizeof(wchar_t) == 2) {
+ 		Vector<char16> h = ToUtf16(*this);
+-		return std::wstring((const wchar_t *)h.begin(), h.GetCount());
++		return std::wstring(static_cast<const wchar_t *>(static_cast<const void *>(h.begin())), h.GetCount());
+ 	}
+ }
+ #endif
+diff -ruN a/uppsrc/Core/XML.h b/uppsrc/Core/XML.h
+--- a/uppsrc/Core/XML.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/XML.h	2026-10-30 22:55:25.933901958 -0700
+@@ -257,6 +257,7 @@
+ };
+ 
+ struct ParseXmlFilter {
++	virtual ~ParseXmlFilter() = default;
+ 	virtual bool DoTag(const String& tag) = 0;
+ 	virtual void EndTag();
+ };
+diff -ruN a/uppsrc/Core/z.cpp b/uppsrc/Core/z.cpp
+--- a/uppsrc/Core/z.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Core/z.cpp	2026-10-30 22:56:54.360061314 -0700
+@@ -486,7 +486,7 @@
+ 	if(maxsize + sizeof(int) >= INT_MAX)
+ 		Panic("Compress result is too big!");
+ 	StringBuffer b((int)maxsize + sizeof(int));
+-	*(int *)~b = sz;
++	Poke32(~b, static_cast<dword>(sz));
+ 	int clen = LZ4_compress_default((const char *)s, ~b + sizeof(int), sz, (int)maxsize);
+ 	b.SetCount(clen + sizeof(int));
+ 	b.Shrink();
+@@ -500,7 +500,7 @@
+ 
+ String FastDecompress(const String& data)
+ {
+-	int sz = *(int *)~data;
++	int sz = Peek32(~data);
+ 	StringBuffer b(sz);
+ 	LZ4_decompress_safe(~data + sizeof(int), b, data.GetCount() - sizeof(int), sz);
+ 	return String(b);
+diff -ruN a/uppsrc/CtrlCore/CtrlCore.h b/uppsrc/CtrlCore/CtrlCore.h
+--- a/uppsrc/CtrlCore/CtrlCore.h	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/CtrlCore/CtrlCore.h	2026-10-30 22:55:25.934295538 -0700
+@@ -1675,6 +1675,7 @@
+ 
+ public:
+ 	struct Rounder {
++		virtual ~Rounder() = default;
+ 		virtual Rect Round(const Rect& r) = 0;
+ 	};
+ 
+diff -ruN a/uppsrc/CtrlCore/GtkEvent.cpp b/uppsrc/CtrlCore/GtkEvent.cpp
+--- a/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/CtrlCore/GtkEvent.cpp	2026-10-30 23:17:24.060412559 -0700
+@@ -197,6 +197,7 @@
+ 			p->InvalidateScreenRect();
+ 		if(top)
+ 			top->draw_after_configure = true;
++		[[fallthrough]];
+ 	default:
+ 		break;
+ 	}
+@@ -456,6 +457,7 @@
+ 			}
+ 			e.state = prev_state;
+ 		}
++		[[fallthrough]];
+ 		default:
+ 			break;
+ 		}
+diff -ruN a/uppsrc/CtrlCore/Gtk.h b/uppsrc/CtrlCore/Gtk.h
+--- a/uppsrc/CtrlCore/Gtk.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlCore/Gtk.h	2026-10-30 22:55:11.931243645 -0700
+@@ -32,6 +32,7 @@
+ 	virtual Rect GetPaintRect() const;
+ 
+ 	virtual	void DrawRectOp(int x, int y, int cx, int cy, Color color);
++	using Draw::SysDrawImageOp;
+ 	virtual void SysDrawImageOp(int x, int y, const Image& img, Color color);
+ 	virtual void DrawLineOp(int x1, int y1, int x2, int y2, int width, Color color);
+ 
+diff -ruN a/uppsrc/CtrlCore/GtkX11Util.cpp b/uppsrc/CtrlCore/GtkX11Util.cpp
+--- a/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/CtrlCore/GtkX11Util.cpp	2026-10-30 23:17:24.060116684 -0700
+@@ -93,11 +93,13 @@
+ 	GuiLock __;
+ 	Vector<int> result;
+ 	String p = GetProperty(GDK_WINDOW_XID(w), XAtom(property), AnyPropertyType);
+-	const long int *ptr = (const long int *)~p;
+-	const long int *lim = ptr + p.GetLength() / sizeof(long int);
+-	result.Reserve(p.GetLength() / sizeof(long int));
+-	while(ptr < lim)
+-		result.Add(*ptr++);
++	const int n = p.GetLength() / static_cast<int>(sizeof(long));
++	result.Reserve(n);
++	for(int i = 0; i < n; i++) {
++		long v;   // X11 format-32 data: an array of long, copied out of the String's bytes
++		memcpy(&v, ~p + static_cast<size_t>(i) * sizeof(long), sizeof(long));
++		result.Add(static_cast<int>(v));
++	}
+ 	return result;
+ }
+ 
+diff -ruN a/uppsrc/CtrlLib/ArrayCtrl.cpp b/uppsrc/CtrlLib/ArrayCtrl.cpp
+--- a/uppsrc/CtrlLib/ArrayCtrl.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/CtrlLib/ArrayCtrl.cpp	2026-10-30 22:59:13.592426231 -0700
+@@ -2381,10 +2381,18 @@
+ 	Select(0, GetCount());
+ }
+ 
++// s is the caller's row-name format ("%s" for the row name): it is a format by design.
++#ifdef __GNUC__
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wformat-nonliteral"
++#endif
+ String ArrayCtrl::RowFormat(const char *s)
+ {
+ 	return Sprintf(s, ~row_name);
+ }
++#ifdef __GNUC__
++#pragma GCC diagnostic pop
++#endif
+ 
+ bool ArrayCtrl::DoRemove()
+ {
+diff -ruN a/uppsrc/CtrlLib/CtrlUtil.h b/uppsrc/CtrlLib/CtrlUtil.h
+--- a/uppsrc/CtrlLib/CtrlUtil.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/CtrlUtil.h	2026-10-30 22:55:25.936978705 -0700
+@@ -221,7 +221,7 @@
+ 	typedef TrayIcon CLASSNAME;
+ 
+ 	TrayIcon();
+-	~TrayIcon();
++	virtual ~TrayIcon();
+ };
+ 
+ #endif
+@@ -277,7 +277,7 @@
+ 	typedef TrayIcon CLASSNAME;
+ 
+ 	TrayIcon();
+-	~TrayIcon();
++	virtual ~TrayIcon();
+ };
+ 
+ class FileSelNative {
+diff -ruN a/uppsrc/CtrlLib/MenuImp.h b/uppsrc/CtrlLib/MenuImp.h
+--- a/uppsrc/CtrlLib/MenuImp.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/MenuImp.h	2026-10-30 22:58:53.148581758 -0700
+@@ -138,6 +138,10 @@
+ 	typedef SubMenuItem CLASSNAME;
+ 
+ 	SubMenuItem();
++
++private:
++	using Bar::Item::Key;   // kept private, as MenuItem does (MenuItem's own using makes
++	                        // MenuItemBase::Key private, so it is named through Bar::Item)
+ };
+ 
+ class TopSubMenuItem : public MenuItemBase, public SubMenuBase {
+diff -ruN a/uppsrc/CtrlLib/PushCtrl.h b/uppsrc/CtrlLib/PushCtrl.h
+--- a/uppsrc/CtrlLib/PushCtrl.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/CtrlLib/PushCtrl.h	2026-10-30 22:55:25.934680656 -0700
+@@ -417,6 +417,7 @@
+ };
+ 
+ struct VirtualButtons {
++	virtual ~VirtualButtons() = default;
+ 	virtual int                  ButtonCount() const;
+ 	virtual Rect                 ButtonRect(int i) const;
+ 	virtual const Button::Style& ButtonStyle(int i) const;
+diff -ruN a/uppsrc/Draw/Cham.cpp b/uppsrc/Draw/Cham.cpp
+--- a/uppsrc/Draw/Cham.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/Cham.cpp	2026-10-30 22:53:52.415728986 -0700
+@@ -358,7 +358,7 @@
+ 		switch(op) {
+ 		case LOOK_PAINT:
+ 			ChPaint(ctrl, w, r.Deflated(n), b.face);
+-			// fall through - need to paint border now
++			[[fallthrough]]; // need to paint border now
+ 		case LOOK_PAINTEDGE:
+ 			DrawBorder(w, r, b.border);
+ 			return 0;
+diff -ruN a/uppsrc/Draw/Draw.h b/uppsrc/Draw/Draw.h
+--- a/uppsrc/Draw/Draw.h	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Draw/Draw.h	2026-10-30 23:17:24.067310420 -0700
+@@ -22,6 +22,7 @@
+ const int FONT_V = 40;
+ 
+ struct FontGlyphConsumer {
++	virtual ~FontGlyphConsumer() = default;
+ 	virtual void Move(Pointf p) = 0;
+ 	virtual void Line(Pointf p) = 0;
+ 	virtual void Quadratic(Pointf p1, Pointf p2) = 0;
+@@ -41,14 +42,15 @@
+ }
+ 
+ class Font : public ValueType<Font, FONT_V, Moveable<Font> >{
++	struct Fields {
++		word  face;
++		word  flags;
++		int16 height;
++		int16 width;
++	};
+ 	union {
+-		int64 data;
+-		struct {
+-			word  face;
+-			word  flags;
+-			int16 height;
+-			int16 width;
+-		} v;
++		int64  data;
++		Fields v;
+ 	};
+ 	
+ 	enum {
+diff -ruN a/uppsrc/Draw/FontFc.cpp b/uppsrc/Draw/FontFc.cpp
+--- a/uppsrc/Draw/FontFc.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/FontFc.cpp	2026-10-30 23:17:24.066378671 -0700
+@@ -178,7 +178,7 @@
+ 	GlyphInfo gi;
+ 	FT_Face face = FTFace(font, NULL);
+ 	gi.lspc = gi.rspc = 0;
+-	gi.width = 0x8000;
++	gi.width = static_cast<int16>(0x8000); // not a normal glyph (GlyphInfo::IsNormal)
+ 	LLOG("GetGlyphInfoSys " << font << " " << (char)chr << " " << FormatIntHex(chr));
+ 	if(face) {
+ 		LTIMING("GetGlyphInfoSys 2");
+diff -ruN a/uppsrc/Draw/Image.h b/uppsrc/Draw/Image.h
+--- a/uppsrc/Draw/Image.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/Image.h	2026-10-30 22:57:17.426802742 -0700
+@@ -8,7 +8,7 @@
+ 	IMAGE_OPAQUE,
+ };
+ 
+-inline void Fill(RGBA *t, RGBA c, size_t n)     { memset32(t, *(dword *)&c, n); }
++inline void Fill(RGBA *t, RGBA c, size_t n)     { dword d; memcpy(&d, &c, sizeof(d)); memset32(t, d, n); }
+ void FillDown(RGBA *t, int linecy, RGBA c, int cy);
+ inline void Copy(RGBA *t, const RGBA *s, int n) { memcpy_t(t, s, n); }
+ 
+diff -ruN a/uppsrc/Draw/SDraw.h b/uppsrc/Draw/SDraw.h
+--- a/uppsrc/Draw/SDraw.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/SDraw.h	2026-10-30 23:17:24.066893238 -0700
+@@ -61,6 +61,7 @@
+ 	friend class SImageDraw;
+ 
+ public:
++	using SDraw::PutImage;
+ 	virtual void  PutImage(Point p, const Image& m, const Rect& src);
+ 	virtual void  PutRect(const Rect& r, Color color);
+ 
+diff -ruN a/uppsrc/Draw/SIMD.h b/uppsrc/Draw/SIMD.h
+--- a/uppsrc/Draw/SIMD.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Draw/SIMD.h	2026-10-30 23:17:24.066986437 -0700
+@@ -3,13 +3,13 @@
+ force_inline
+ i16x8 LoadRGBA(const RGBA *s)
+ {
+-	return Unpack8L(i32x4(*(dword *)s));
++	return Unpack8L(i32x4(Peek32(s)));
+ }
+ 
+ force_inline
+ i16x8 LoadRGBA2(const RGBA *s0, const RGBA *s1)
+ {
+-	return Unpack8L(i32x4(0, 0, *(dword *)s1, *(dword *)s0));
++	return Unpack8L(i32x4(0, 0, Peek32(s1), Peek32(s0)));
+ }
+ 
+ force_inline
+diff -ruN a/uppsrc/Painter/BufferPainter.h b/uppsrc/Painter/BufferPainter.h
+--- a/uppsrc/Painter/BufferPainter.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/BufferPainter.h	2026-10-30 23:17:24.071623230 -0700
+@@ -81,6 +81,7 @@
+ 	                        const RGBA& color1, const RGBA& color2,
+ 	                        const Xform2D& transsrc, int style);
+ 
++	using Painter::ClipOp;
+ 	virtual void   ClipOp();
+ 
+ 	virtual void   ColorStopOp(double pos, const RGBA& color);
+diff -ruN a/uppsrc/Painter/LinearPath.h b/uppsrc/Painter/LinearPath.h
+--- a/uppsrc/Painter/LinearPath.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/LinearPath.h	2026-10-30 23:17:24.071943102 -0700
+@@ -1,4 +1,5 @@
+ struct LinearPathConsumer {
++	virtual ~LinearPathConsumer() = default;
+ 	virtual void Move(const Pointf& p) = 0;
+ 	virtual void Line(const Pointf& p) = 0;
+ 	virtual void End();
+@@ -136,6 +137,7 @@
+ 
+ public:
+ 	struct Filler {
++		virtual ~Filler() = default;
+ 		virtual void Start(int x, int len) = 0;
+ 		virtual void Render(int val) = 0;
+ 		virtual void Render(int val, int len) = 0;
+diff -ruN a/uppsrc/Painter/Painter.h b/uppsrc/Painter/Painter.h
+--- a/uppsrc/Painter/Painter.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/Painter.h	2026-10-30 22:55:11.932046574 -0700
+@@ -433,6 +433,7 @@
+ 	                        const RGBA& color1, const RGBA& color2,
+ 	                        const Xform2D& transsrc, int style);
+ 
++	using Painter::ClipOp;
+ 	virtual void   ClipOp();
+ 
+ 	virtual void   CharacterOp(const Pointf& p, int ch, Font fnt);
+@@ -447,6 +448,7 @@
+ 	virtual void   LineJoinOp(int linejoin);
+ 	virtual void   MiterLimitOp(double l);
+ 	virtual void   EvenOddOp(bool evenodd);
++	using Painter::DashOp;
+ 	virtual void   DashOp(const Vector<double>& dash, double start);
+ 	virtual void   InvertOp(bool invert);
+ 	virtual void   ImageFilterOp(int filter);
+diff -ruN a/uppsrc/Painter/PainterPath.cpp b/uppsrc/Painter/PainterPath.cpp
+--- a/uppsrc/Painter/PainterPath.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/PainterPath.cpp	2026-10-30 23:17:24.072209610 -0700
+@@ -31,6 +31,7 @@
+ 		case 'M':
+ 			current = ReadPoint();
+ 			Move(current);
++			[[fallthrough]]; // SVG: the pairs after a moveto are linetos
+ 		case 'L':
+ 			while(IsDouble()) {
+ 				current = ReadPoint();
+diff -ruN a/uppsrc/Painter/Painting.h b/uppsrc/Painter/Painting.h
+--- a/uppsrc/Painter/Painting.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/Painting.h	2026-10-30 23:17:24.072311175 -0700
+@@ -117,6 +117,7 @@
+ 	                        const RGBA& color1, const RGBA& color2,
+ 	                        const Xform2D& transsrc, int style);
+ 
++	using Painter::ClipOp;
+ 	virtual void   ClipOp();
+ 
+ 	virtual void   CharacterOp(const Pointf& p, int ch, Font fnt);
+@@ -131,6 +132,7 @@
+ 	virtual void   LineJoinOp(int linejoin);
+ 	virtual void   MiterLimitOp(double l);
+ 	virtual void   EvenOddOp(bool evenodd);
++	using Painter::DashOp;
+ 	virtual void   DashOp(const Vector<double>& dash, double start);
+ 	virtual void   InvertOp(bool invert);
+ 	virtual void   ImageFilterOp(int filter);
+diff -ruN a/uppsrc/Painter/Path.cpp b/uppsrc/Painter/Path.cpp
+--- a/uppsrc/Painter/Path.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/Path.cpp	2026-10-30 22:56:54.358511429 -0700
+@@ -54,7 +54,7 @@
+ 	Vector<byte>& p = path_info->path.Top();
+ 	int l = p.GetCount();
+ 	p.SetCount(l + sizeof(T));
+-	T *e = (T *)(p.begin() + l);
++	T *e = static_cast<T *>(static_cast<void *>(p.begin() + l));
+ 	e->type = type;
+ 	return *e;
+ }
+diff -ruN a/uppsrc/Painter/RenderChar.cpp b/uppsrc/Painter/RenderChar.cpp
+--- a/uppsrc/Painter/RenderChar.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/RenderChar.cpp	2026-10-30 22:55:11.932423905 -0700
+@@ -9,7 +9,9 @@
+ 
+ 	virtual void LineOp(const Pointf& p, bool);
+ 	virtual void MoveOp(const Pointf& p, bool);
++	using NilPainter::QuadraticOp;
+ 	virtual void QuadraticOp(const Pointf& p1, const Pointf& p, bool);
++	using NilPainter::CubicOp;
+ 	virtual void CubicOp(const Pointf& p1, const Pointf& p2, const Pointf& p, bool);
+ 	virtual void CloseOp();
+ 
+diff -ruN a/uppsrc/Painter/Render.cpp b/uppsrc/Painter/Render.cpp
+--- a/uppsrc/Painter/Render.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/Painter/Render.cpp	2026-10-30 22:56:54.359691285 -0700
+@@ -70,7 +70,7 @@
+ 	};
+ 
+ 	while(data < end) {
+-		const LinearData *d = (LinearData *)data;
++		const LinearData *d = static_cast<const LinearData *>(static_cast<const void *>(data));
+ 		switch(d->type) {
+ 		case MOVE: {
+ 			g->Move(pos = attr ? attr->mtx.Transform(d->p) : d->p);
+@@ -85,7 +85,7 @@
+ 		}
+ 		case QUADRATIC: {
+ 			PAINTER_TIMING("QUADRATIC");
+-			const QuadraticData *d = (QuadraticData *)data;
++			const QuadraticData *d = static_cast<const QuadraticData *>(static_cast<const void *>(data));
+ 			if(attr) {
+ 				Pointf p = attr->mtx.Transform(d->p);
+ 				ApproximateQuadratic(*g, pos, attr->mtx.Transform(d->p1), p, AdjustTolerance(p));
+@@ -100,7 +100,7 @@
+ 		}
+ 		case CUBIC: {
+ 			PAINTER_TIMING("CUBIC");
+-			const CubicData *d = (CubicData *)data;
++			const CubicData *d = static_cast<const CubicData *>(static_cast<const void *>(data));
+ 			if(attr) {
+ 				Pointf p = attr->mtx.Transform(d->p);
+ 				ApproximateCubic(*g, pos, attr->mtx.Transform(d->p1),
+@@ -115,7 +115,7 @@
+ 			break;
+ 		}
+ 		case CHAR: {
+-			const CharData *ch = (CharData *)data;
++			const CharData *ch = static_cast<const CharData *>(static_cast<const void *>(data));
+ 			ApproximateChar(*g, ch->p, ch->ch, ch->fnt, tolerance);
+ 			data += sizeof(CharData);
+ 			break;
+diff -ruN a/uppsrc/Painter/SvgInternal.h b/uppsrc/Painter/SvgInternal.h
+--- a/uppsrc/Painter/SvgInternal.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Painter/SvgInternal.h	2026-10-30 23:17:24.072548948 -0700
+@@ -11,6 +11,7 @@
+ 	virtual void   CloseOp();
+ 	virtual void   DivOp();
+ 	
++	using Painter::ClipOp;
+ 	virtual void   ClipOp();
+ 
+ 	virtual void   TextOp(const Pointf& p, const wchar *text, Font fnt, int n = -1,
+diff -ruN a/uppsrc/plugin/bmp/Bmp.cpp b/uppsrc/plugin/bmp/Bmp.cpp
+--- a/uppsrc/plugin/bmp/Bmp.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/plugin/bmp/Bmp.cpp	2026-10-30 22:57:17.427391226 -0700
+@@ -80,7 +80,7 @@
+ 	case 8: fmt.Set8(); break;
+ 	case 16:
+ 		if(header.biCompression == 3 /* BI_BITFIELD */)
+-			fmt.Set16le(*(dword *)(header.palette + 0), *(dword *)(header.palette + 1), *(dword *)(header.palette + 2));
++			fmt.Set16le(static_cast<dword>(Peek32le(header.palette + 0)), static_cast<dword>(Peek32le(header.palette + 1)), static_cast<dword>(Peek32le(header.palette + 2)));
+ 		else
+ 			fmt.Set16le(31 << 10, 31 << 5, 31);
+ 		break;
+@@ -89,7 +89,7 @@
+ 		break;
+ 	case 32:
+ 		if(header.biCompression == 3 /* BI_BITFIELD */)
+-			fmt.Set32le(*(dword *)(header.palette + 0), *(dword *)(header.palette + 1), *(dword *)(header.palette + 2));
++			fmt.Set32le(static_cast<dword>(Peek32le(header.palette + 0)), static_cast<dword>(Peek32le(header.palette + 1)), static_cast<dword>(Peek32le(header.palette + 2)));
+ 		else
+ 			fmt.Set32le(0xff0000, 0x00ff00, 0x0000ff);
+ 		break;
+diff -ruN a/uppsrc/RichText/EncodeHTML.cpp b/uppsrc/RichText/EncodeHTML.cpp
+--- a/uppsrc/RichText/EncodeHTML.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/EncodeHTML.cpp	2026-10-30 22:55:11.932498751 -0700
+@@ -343,6 +343,7 @@
+ 	DefaultHtmlObjectSaver(const String& outdir_, const String& namebase_, int imtolerance_, Zoom z_)
+ 	: outdir(outdir_), namebase(namebase_), z(z_), imtolerance(imtolerance_), im(0) {}
+ 
++	using HtmlObjectSaver::GetHtml;
+ 	virtual String GetHtml(const RichObject& object, const String& link);
+ 
+ private:
+diff -ruN a/uppsrc/RichText/Object.cpp b/uppsrc/RichText/Object.cpp
+--- a/uppsrc/RichText/Object.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/RichText/Object.cpp	2026-10-30 22:55:11.932608838 -0700
+@@ -285,9 +285,12 @@
+ struct RichObjectTypeDrawingCls : public RichObjectType
+ {
+ 	String GetTypeName(const Value&) const override;
++	using RichObjectType::GetPhysicalSize;
+ 	Size   GetPhysicalSize(const Value& data) const override;
++	using RichObjectType::GetPixelSize;
+ 	Size   GetPixelSize(const Value& data) const override;
+ 	void   Paint(const Value& data, Draw& w, Size sz, const RichObjectPaintInfo& pi) const override;
++	using RichObjectType::Read;
+ 	Value  Read(const String& s) const override;
+ 	String Write(const Value& v) const override;
+ 
+@@ -388,9 +391,12 @@
+ struct RichObjectTypePNGCls : public RichObjectType
+ {
+ 	String GetTypeName(const Value&) const override;
++	using RichObjectType::GetPhysicalSize;
+ 	Size   GetPhysicalSize(const Value& data) const override;
++	using RichObjectType::GetPixelSize;
+ 	Size   GetPixelSize(const Value& data) const override;
+ 	void   Paint(const Value& data, Draw& w, Size sz, const RichObjectPaintInfo& pi) const override;
++	using RichObjectType::Read;
+ 	Value  Read(const String& s) const override;
+ 	String Write(const Value& v) const override;
+ };
+diff -ruN a/uppsrc/RichText/ParaPaint.cpp b/uppsrc/RichText/ParaPaint.cpp
+--- a/uppsrc/RichText/ParaPaint.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/RichText/ParaPaint.cpp	2026-10-30 22:53:52.416121596 -0700
+@@ -193,6 +193,7 @@
+ 	switch(style) {
+ 	case RULER_DASH:
+ 		segment = 2 * cy;
++		[[fallthrough]];
+ 	case RULER_DOT:
+ 		while(x < r) {
+ 			w.DrawRect(x, y, min(r - x, segment), cy, ink);
+diff -ruN a/uppsrc/RichText/RichDiagram.cpp b/uppsrc/RichText/RichDiagram.cpp
+--- a/uppsrc/RichText/RichDiagram.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/RichText/RichDiagram.cpp	2026-10-30 22:55:11.932673346 -0700
+@@ -4,9 +4,12 @@
+ 
+ struct RichDiagram : public RichObjectType {
+ 	String GetTypeName(const Value& v) const override;
++	using RichObjectType::Read;
+ 	Value  Read(const String& s) const override;
+ 	String Write(const Value& v) const override;
++	using RichObjectType::GetPhysicalSize;
+ 	Size   GetPhysicalSize(const Value& data) const override;
++	using RichObjectType::GetPixelSize;
+ 	Size   GetPixelSize(const Value& data) const override;
+ 
+ 	void   Paint(const Value& data, Draw& w, Size sz, const RichObjectPaintInfo& pi) const override;
+diff -ruN a/uppsrc/RichText/RichImage.cpp b/uppsrc/RichText/RichImage.cpp
+--- a/uppsrc/RichText/RichImage.cpp	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/RichText/RichImage.cpp	2026-10-30 23:17:24.075055395 -0700
+@@ -7,12 +7,15 @@
+ 
+ struct RichImage : public RichObjectType {
+ 	String GetTypeName(const Value& v) const override;
++	using RichObjectType::GetPhysicalSize;
+ 	Size   GetPhysicalSize(const Value& data) const override;
++	using RichObjectType::GetPixelSize;
+ 	Size   GetPixelSize(const Value& data) const override;
+ 	void   Paint(const Value& data, Draw& w, Size sz, const RichObjectPaintInfo& pi) const override;
+ 	Image  ToImage(int64, const Value& data, Size sz, const RichObjectPaintInfo& pi) const override;
+ 
+ 	bool   Accept(PasteClip& clip) override;
++	using RichObjectType::Read;
+ 	Value  Read(PasteClip& clip) override;
+ 	String GetClipFmts() const override;
+ 	String GetClip(const Value& data, const String& fmt) const override;
+@@ -106,9 +109,12 @@
+ 
+ struct RichPNG : public RichObjectType {
+ 	String GetTypeName(const Value& v) const override;
++	using RichObjectType::Read;
+ 	Value  Read(const String& s) const override;
+ 	String Write(const Value& v) const override;
++	using RichObjectType::GetPhysicalSize;
+ 	Size   GetPhysicalSize(const Value& data) const override;
++	using RichObjectType::GetPixelSize;
+ 	Size   GetPixelSize(const Value& data) const override;
+ 	void   Paint(const Value& data, Draw& w, Size sz, const RichObjectPaintInfo& pi) const override;
+ 	Image  ToImage(int64, const Value& data, Size sz, const RichObjectPaintInfo& pi) const override;
+@@ -181,9 +187,12 @@
+ 
+ struct RichRawImage : public RichObjectType {
+ 	String GetTypeName(const Value& v) const override;
++	using RichObjectType::Read;
+ 	Value  Read(const String& s) const override;
+ 	String Write(const Value& v) const override;
++	using RichObjectType::GetPhysicalSize;
+ 	Size   GetPhysicalSize(const Value& data) const override;
++	using RichObjectType::GetPixelSize;
+ 	Size   GetPixelSize(const Value& data) const override;
+ 	void   Paint(const Value& data, Draw& w, Size sz, const RichObjectPaintInfo& pi) const override;
+ 	Image  ToImage(int64, const Value& data, Size sz, const RichObjectPaintInfo& pi) const override;
+@@ -298,7 +307,9 @@
+ 
+ struct RichImlImage : public RichObjectType {
+ 	String GetTypeName(const Value& v) const override;
++	using RichObjectType::GetPhysicalSize;
+ 	Size   GetPhysicalSize(const Value& data) const override;
++	using RichObjectType::GetPixelSize;
+ 	Size   GetPixelSize(const Value& data) const override;
+ 	void   Paint(const Value& data, Draw& w, Size sz, const RichObjectPaintInfo& pi) const override;
+ 	Image  ToImage(int64, const Value& data, Size sz, const RichObjectPaintInfo& pi) const override;
+diff -ruN a/uppsrc/RichText/RichText.h b/uppsrc/RichText/RichText.h
+--- a/uppsrc/RichText/RichText.h	2026-10-27 02:28:07.492546109 -0700
++++ b/uppsrc/RichText/RichText.h	2026-10-30 22:55:25.936675246 -0700
+@@ -113,6 +113,7 @@
+ };
+ 
+ struct RichTextLayoutTracer {
++	virtual ~RichTextLayoutTracer() = default;
+ 	virtual void  Paragraph(const Rect& page, PageY y, const RichPara& para);
+ 	virtual void  EndParagraph(PageY y);
+ 	virtual void  Table(const Rect& page, PageY y, const RichTable& table);
+diff -ruN a/uppsrc/Sql/Sql.cpp b/uppsrc/Sql/Sql.cpp
+--- a/uppsrc/Sql/Sql.cpp	2026-10-27 02:28:07.493546209 -0700
++++ b/uppsrc/Sql/Sql.cpp	2026-10-30 22:55:11.933104901 -0700
+@@ -305,6 +305,7 @@
+ struct sReadFields : public FieldOperator {
+ 	Sql *sql;
+ 
++	using FieldOperator::Field;
+ 	void Field(const char *name, Ref f) {
+ 		sql->GetColumn(SqlId(name), f);
+ 	}
+@@ -464,6 +465,7 @@
+ 	String clist;
+ 	String qlist;
+ 
++	using FieldOperator::Field;
+ 	virtual void Field(const char *name, Ref f) {
+ 		if(i) {
+ 			clist += ", ";
+@@ -498,6 +500,7 @@
+ 	String clist;
+ 	String qlist;
+ 
++	using FieldOperator::Field;
+ 	virtual void Field(const char *name, Ref f) {
+ 		if(clist.GetCount()) {
+ 			clist += ", ";
+@@ -535,6 +538,7 @@
+ 	String clist;
+ 	String qlist;
+ 
++	using FieldOperator::Field;
+ 	virtual void Field(const char *name, Ref f) {
+ 		if(!f.IsNull()) {
+ 			if(clist.GetCount()) {
+@@ -577,6 +581,7 @@
+ 	String key;
+ 	Value  keyval;
+ 
++	using FieldOperator::Field;
+ 	virtual void Field(const char *name, Ref f) {
+ 		if(i == 0) {
+ 			key = name;
+diff -ruN a/uppsrc/Sql/Sqlexp.h b/uppsrc/Sql/Sqlexp.h
+--- a/uppsrc/Sql/Sqlexp.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Sql/Sqlexp.h	2026-10-30 22:55:11.933808307 -0700
+@@ -44,6 +44,7 @@
+ 
+ struct FieldDumper : public FieldOperator {
+ 	String s;
++	using FieldOperator::Field;
+ 	virtual void Field(const char *name, Ref f);
+ };
+ 
+@@ -500,7 +501,7 @@
+ 
+ //$-SqlSet(const SqlVal& p0, ...)
+ #define E__SqlSet(I)   SqlSet(const SqlVal& p0, __List##I(E__SqlVal));
+-	__Expand(E__SqlSet);
++	__Expand(E__SqlSet)
+ //$+
+ 	explicit SqlSet(Fields nfields);
+ 
+@@ -636,7 +637,7 @@
+ 	SqlSelect()                                       { on = valid = false; }
+ //$-SqlSelect(SqlVal v, ...);
+ #define E__QSelect(I)   SqlSelect(__List##I(E__SqlVal));
+-	__Expand(E__QSelect);
++	__Expand(E__QSelect)
+ #undef  E__QSelect
+ //$+
+ 
+diff -ruN a/uppsrc/Sql/SqlSchema.h b/uppsrc/Sql/SqlSchema.h
+--- a/uppsrc/Sql/SqlSchema.h	2026-10-27 02:28:07.493546209 -0700
++++ b/uppsrc/Sql/SqlSchema.h	2026-10-30 22:55:11.933307083 -0700
+@@ -181,6 +181,7 @@
+ 	S_info&  info;
+ 	void    *s;
+ 
++	using FieldOperator::Field;
+ 	virtual void Field(const char *name, Ref f, bool *b);
+ 	virtual void Width(int width);
+ 
+diff -ruN a/uppsrc/Sql/SqlSet.cpp b/uppsrc/Sql/SqlSet.cpp
+--- a/uppsrc/Sql/SqlSet.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Sql/SqlSet.cpp	2026-10-30 22:55:11.933488823 -0700
+@@ -104,6 +104,7 @@
+ struct FieldSqlSet : FieldOperator {
+ 	SqlSet *set;
+ 
++	using FieldOperator::Field;
+ 	virtual void Field(const char *name, Ref) {
+ 		set->Cat(SqlId(name));
+ 	}
+diff -ruN a/uppsrc/Sql/SqlStatement.cpp b/uppsrc/Sql/SqlStatement.cpp
+--- a/uppsrc/Sql/SqlStatement.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Sql/SqlStatement.cpp	2026-10-30 22:55:11.933554882 -0700
+@@ -421,6 +421,7 @@
+ 	SqlInsert *insert;
+ 	bool       nokey;
+ 
++	using FieldOperator::Field;
+ 	virtual void Field(const char *name, Ref f)	{
+ 		if(!nokey)
+ 			insert->Column(name, (Value)f);
+@@ -548,6 +549,7 @@
+ struct UpdateFieldOperator : public FieldOperator {
+ 	SqlUpdate *update;
+ 
++	using FieldOperator::Field;
+ 	virtual void Field(const char *name, Ref f)	{
+ 		update->Column(name, (Value)f);
+ 	}
+diff -ruN a/uppsrc/Sql/util_td.cpp b/uppsrc/Sql/util_td.cpp
+--- a/uppsrc/Sql/util_td.cpp	2026-10-27 02:28:07.493546209 -0700
++++ b/uppsrc/Sql/util_td.cpp	2026-10-30 22:55:11.933936787 -0700
+@@ -27,6 +27,7 @@
+ struct NfEqual : FieldOperator {
+ 	ValueArray va;
+ 	
++	using FieldOperator::Field;
+ 	virtual void Field(const char */*name*/, Ref f) {
+ 		va.Add(f);
+ 	}
+@@ -43,6 +44,7 @@
+ struct NfAsString : FieldOperator {
+ 	String text;
+ 	
++	using FieldOperator::Field;
+ 	virtual void Field(const char *name, Ref f) {
+ 		text << "\n\t" << name << '=' << (Value)f;
+ 	}

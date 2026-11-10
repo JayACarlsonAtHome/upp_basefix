@@ -1,3 +1,3 @@
-# the work area lives outside the repo (UPP_BASEFIX_WORK, default ../upp_basefix_work)
+# each version keeps its work area and install inside it, never committed (v00N/.gitignore)
 *.orig
 *.rej

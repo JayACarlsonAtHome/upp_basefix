@@ -1,0 +1,503 @@
+diff -ruN a/uppsrc/Core/SSH/Channels.cpp b/uppsrc/Core/SSH/Channels.cpp
+--- a/uppsrc/Core/SSH/Channels.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/Channels.cpp	2026-10-20 14:35:18.984811694 -0700
+@@ -25,7 +25,7 @@
+ 	if(!channel)
+ 		return;
+ 
+-	Run([=]() mutable {
++	Run([=, this]() mutable {
+ 		int rc = libssh2_channel_free(*channel);
+ 		if(!WouldBlock(rc) && rc < 0)
+ 			ThrowError(rc);
+@@ -42,12 +42,12 @@
+ {
+ 	if(IsOpen())
+ 		Close();
+-	return Run([=]() mutable { return Init(); });
++	return Run([=, this]() mutable { return Init(); });
+ }
+ 
+ bool SshChannel::Close()
+ {
+-	return Run([=]() mutable {
++	return Run([=, this]() mutable {
+ 		int rc = libssh2_channel_close(*channel);
+ 		if(!WouldBlock(rc) && rc < 0) ThrowError(rc);
+ 		if(!rc) LLOG("Channel close message is sent to the server.");
+@@ -57,7 +57,7 @@
+ 
+ bool SshChannel::WaitClose()
+ {
+-	return Run([=]() mutable {
++	return Run([=, this]() mutable {
+ 		int rc = libssh2_channel_wait_closed(*channel);
+ 		if(!WouldBlock(rc) && rc < 0) ThrowError(rc);
+ 		if(!rc)	LLOG("Channel close message is acknowledged by the server.");
+@@ -67,7 +67,7 @@
+ 
+ bool SshChannel::Request(const String& request, const String& params)
+ {
+-	return Run([=]() mutable {
++	return Run([=, this]() mutable {
+ 		int rc = libssh2_channel_process_startup(
+ 			*channel,
+ 			request,
+@@ -85,7 +85,7 @@
+ 
+ bool SshChannel::RequestTerminal(const String& term, int width, int height, const String& modes)
+ {
+-	return Run([=]() mutable {
++	return Run([=, this]() mutable {
+ 		int rc = libssh2_channel_request_pty_ex(
+ 			*channel,
+ 			~term,
+@@ -107,7 +107,7 @@
+ 
+ bool SshChannel::SetEnv(const String& variable, const String& value)
+ {
+-	return Run([=]() mutable {
++	return Run([=, this]() mutable {
+ 		int rc = libssh2_channel_setenv(*channel, variable, value);
+ 		if(!WouldBlock(rc) && rc < 0) ThrowError(rc);
+ 		if(!rc)	LLOG("Environment variable '" << variable << "' set to " << value);
+@@ -117,7 +117,7 @@
+ 
+ bool SshChannel::PutEof()
+ {
+-	return Run([=]() mutable {
++	return Run([=, this]() mutable {
+ 		int rc = libssh2_channel_send_eof(*channel);
+ 		if(!WouldBlock(rc) && rc < 0) ThrowError(rc);
+ 		if(!rc)	LLOG("EOF message is sent to the server.");
+@@ -127,7 +127,7 @@
+ 
+ bool SshChannel::GetEof()
+ {
+-	return Run([=]() mutable {
++	return Run([=, this]() mutable {
+ 		int rc = libssh2_channel_wait_eof(*channel);
+ 		if(!WouldBlock(rc) && rc < 0) ThrowError(rc);
+ 		if(!rc) LLOG("EOF message is acknowledged by the server.");;
+@@ -149,7 +149,7 @@
+ 
+ bool SshChannel::SetTerminalSize(int width, int height)
+ {
+-	return Run([=]() mutable { return SetPtySz(width, height) >= 0; });
++	return Run([=, this]() mutable { return SetPtySz(width, height) >= 0; });
+ }
+ 
+ int SshChannel::SetPtySz(int w, int h)
+@@ -163,7 +163,7 @@
+ 
+ bool SshChannel::SetReadWindowSize(uint32 size, bool force)
+ {
+-	return Run([=]() mutable { return SetWndSz(size, force); });
++	return Run([=, this]() mutable { return SetWndSz(size, force); });
+ }
+ 
+ bool SshChannel::SetWndSz(uint32 size, bool force)
+@@ -202,7 +202,7 @@
+ int SshChannel::Get(void *ptr, int size, int sid)
+ {
+ 	done = 0;
+-	Run([=]() mutable {
++	Run([=, this]() mutable {
+ 		while(done < size && !IsEof() && !IsTimeout()) {
+ 			int rc = Read(ptr, size, sid);
+ 			if(rc < 0) return false;
+@@ -226,7 +226,7 @@
+ {
+ 	done = 0;
+ 	String line;
+-	Run([=, &line]{
++	Run([=, this, &line]{
+ 		bool eol = false;
+ 		do {
+ 			int c = Read(sid);
+@@ -252,7 +252,7 @@
+ int SshChannel::Put(const void *ptr, int size, int sid)
+ {
+ 	done = 0;
+-	Run([=]() mutable {
++	Run([=, this]() mutable {
+ 		while(done < size && !IsEof() && !IsTimeout()) {
+ 			int rc = Write(ptr, size, sid);
+ 			if(rc < 0) return false;
+@@ -326,7 +326,7 @@
+ {
+ 	Buffer<char> buffer(ssh->chunk_size, 0);
+ 
+-	return Run([=, &buffer, &input]{
++	return Run([=, this, &buffer, &input]{
+ 		done = 0;
+ 		int len = Read(buffer, ssh->chunk_size);
+ 		ReadWrite(input, buffer, len);
+diff -ruN a/uppsrc/Core/SSH/Core.cpp b/uppsrc/Core/SSH/Core.cpp
+--- a/uppsrc/Core/SSH/Core.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/Core.cpp	2026-10-20 14:35:18.984811694 -0700
+@@ -49,7 +49,7 @@
+ 
+ bool Ssh::Run(Gate<>&& fn, bool abortable)
+ {
+-	auto Do = [=, &fn]()
++	auto Do = [=, this, &fn]()
+ 	{
+ 		Mutex::Lock __(sLoopLock);
+ 
+diff -ruN a/uppsrc/Core/SSH/Scp.cpp b/uppsrc/Core/SSH/Scp.cpp
+--- a/uppsrc/Core/SSH/Scp.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/Scp.cpp	2026-10-20 14:35:18.984811694 -0700
+@@ -8,7 +8,7 @@
+ bool Scp::OpenRead(const String& path, ScpAttrs& attrs)
+ {
+ 	Zero(attrs);
+-	return Run([=, &attrs]() mutable {
++	return Run([=, this, &attrs]() mutable {
+ 		LIBSSH2_CHANNEL *ch = libssh2_scp_recv2(ssh->session, path, &attrs);
+ 		if(!ch && !WouldBlock()) {
+ 			LLOG("Unable to open file " << path);
+@@ -24,7 +24,7 @@
+ 
+ bool Scp::OpenWrite(const String& path, int64 size, long mode)
+ {
+-	return Run([=]() mutable {
++	return Run([=, this]() mutable {
+ 		LIBSSH2_CHANNEL *ch = libssh2_scp_send64(ssh->session, path, mode, size, 0, 0);
+ 		if(!ch && !WouldBlock()) {
+ 			LLOG("Unable to open file " << path);
+diff -ruN a/uppsrc/Core/SSH/Session.cpp b/uppsrc/Core/SSH/Session.cpp
+--- a/uppsrc/Core/SSH/Session.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/Session.cpp	2026-10-20 14:35:18.984811694 -0700
+@@ -69,7 +69,7 @@
+ 	if(!session)
+ 		return;
+ 
+-	Run([=]() mutable {
++	Run([=, this]() mutable {
+ 		if(!ssh->session)
+ 			return true;
+ 		int rc = libssh2_session_disconnect(ssh->session, "Disconnecting...");
+@@ -79,7 +79,7 @@
+ 		return true;
+ 	});
+ 
+-	Run([=]() mutable {
++	Run([=, this]() mutable {
+ 		if(!ssh->session)
+ 			return true;
+ 		int rc = libssh2_session_free(ssh->session);
+@@ -109,7 +109,7 @@
+ {
+ 	IpAddrInfo ipinfo;
+ 
+-	if(!Run([=, &ipinfo] () mutable {
++	if(!Run([=, this, &ipinfo] () mutable {
+ 		if(host.IsEmpty())
+ 			ThrowError(-1, "Host is not specified.");
+ 		ssh->session = nullptr;
+@@ -125,7 +125,7 @@
+ 	})) goto Bailout;
+ 
+ 	if(!WhenProxy) {
+-		if(!Run([=, &ipinfo] () mutable {
++		if(!Run([=, this, &ipinfo] () mutable {
+ 			if(ipinfo.InProgress())
+ 				return false;
+ 			if(!ipinfo.GetResult())
+@@ -134,14 +134,14 @@
+ 			return true;
+ 		})) goto Bailout;
+ 
+-		if(!Run([=, &ipinfo] () mutable {
++		if(!Run([=, this, &ipinfo] () mutable {
+ 			if(!session->socket.Connect(ipinfo))
+ 				return false;
+ 			ipinfo.Clear();
+ 			return true;
+ 		})) goto Bailout;
+ 
+-		if(!Run([=, &ipinfo] () mutable {
++		if(!Run([=, this] () mutable {
+ 			if(!session->socket.WaitConnect())
+ 				return false;
+ 			LLOG("Successfully connected to " << host <<":" << port);
+@@ -149,7 +149,7 @@
+ 		})) goto Bailout;
+ 	}
+ 	else {
+-		if(!Run([=] () mutable {
++		if(!Run([=, this] () mutable {
+ 			if(!WhenProxy())
+ 				ThrowError(-1, "Proxy connection attempt failed.");
+ 			LLOG("Proxy connection to " << host << ":" << port << " is successful.");
+@@ -157,7 +157,7 @@
+ 		})) goto Bailout;
+ 	}
+ 
+-	if(!Run([=] () mutable {
++	if(!Run([=, this] () mutable {
+ #ifdef UPP_HEAP
+ 			LLOG("Using Upp's memory managers.");
+ 			ssh->session = libssh2_session_init_ex((*ssh_malloc), (*ssh_free), (*ssh_realloc), this);
+@@ -186,7 +186,7 @@
+ 	})) goto Bailout;
+ 
+ 	while(!session->iomethods.IsEmpty()) {
+-		if(!Run([=] () mutable {
++		if(!Run([=, this] () mutable {
+ 			int    method = session->iomethods.GetKey(0);
+ 			String mnames = GetMethodNames(method);
+ 			int rc = libssh2_session_method_pref(ssh->session, method, ~mnames);
+@@ -199,7 +199,7 @@
+ 		})) goto Bailout;
+ 	}
+ 
+-	if(!Run([=] () mutable {
++	if(!Run([=, this] () mutable {
+ 			int rc = libssh2_session_handshake(ssh->session, session->socket.GetSOCKET());
+ 			if(!WouldBlock(rc) && rc < 0) ThrowError(rc);
+ 			if(!rc) {
+@@ -211,7 +211,7 @@
+ 			return !rc;
+ 	})) goto Bailout;
+ 
+-	if(!Run([=] () mutable {
++	if(!Run([=, this] () mutable {
+ 			session->authmethods = libssh2_userauth_list(ssh->session, user, user.GetLength());
+ 			if(IsNull(session->authmethods)) {
+ 				if(libssh2_userauth_authenticated(ssh->session)) {
+@@ -233,7 +233,7 @@
+ 	if(session->connected)
+ 		goto Finalize;
+ 
+-	if(!Run([=] () mutable {
++	if(!Run([=, this] () mutable {
+ 			int rc = -1;
+ 			switch(session->authmethod) {
+ 				case PASSWORD:
+diff -ruN a/uppsrc/Core/SSH/SFtp.cpp b/uppsrc/Core/SSH/SFtp.cpp
+--- a/uppsrc/Core/SSH/SFtp.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/SFtp.cpp	2026-10-20 14:35:18.984811694 -0700
+@@ -24,7 +24,7 @@
+ 	if(!sftp_session)
+ 		return;
+ 
+-	Run([=]() mutable {
++	Run([=, this]() mutable {
+ 		if(WouldBlock(libssh2_sftp_shutdown(*sftp_session)))
+ 			return false;
+ 		ssh->init = false;
+@@ -50,7 +50,7 @@
+ {
+ 	SFtpHandle h = nullptr;
+ 
+-	Run([=, &h] () mutable {
++	Run([=, this, &h] () mutable {
+ 		h = libssh2_sftp_open(*sftp_session, path, flags, mode);
+ 		if(!h && !WouldBlock())
+ 			ThrowError(-1);
+@@ -66,7 +66,7 @@
+ 	if(!handle)
+ 		return;
+ 
+-	Run([=] () mutable {
++	Run([=, this] () mutable {
+ 		int rc = libssh2_sftp_close_handle(handle);
+ 		if(!rc)	LLOG("File handle freed.");
+ 		return !rc;
+@@ -75,7 +75,7 @@
+ 
+ bool SFtp::Rename(const String& oldpath, const String& newpath)
+ {
+-	return Run([=] () mutable {
++	return Run([=, this] () mutable {
+ 		int rc = libssh2_sftp_rename(*sftp_session, oldpath, newpath);
+ 		if(!WouldBlock(rc) && rc != 0)
+ 			ThrowError(rc);
+@@ -87,7 +87,7 @@
+ 
+ bool SFtp::Delete(const String& path)
+ {
+-	return Run([=] () mutable {
++	return Run([=, this] () mutable {
+ 		int rc = libssh2_sftp_unlink(*sftp_session, path);
+ 		if(!WouldBlock(rc) && rc != 0)
+ 			ThrowError(rc);
+@@ -99,7 +99,7 @@
+ 
+ bool SFtp::Sync(SFtpHandle handle)
+ {
+-	return Run([=] () mutable {
++	return Run([=, this] () mutable {
+ 		int rc = libssh2_sftp_fsync(handle);
+ 		if(!WouldBlock(rc) && rc != 0)
+ 			ThrowError(rc);
+@@ -135,7 +135,7 @@
+ {
+ 	done = 0;
+ 
+-	Run([=]() mutable {
++	Run([=, this]() mutable {
+ 		while(done < size && !IsTimeout()) {
+ 			int rc = static_cast<int>(
+ 				libssh2_sftp_read(handle, (char*) ptr + done, min(size - done, ssh->chunk_size))
+@@ -164,7 +164,7 @@
+ {
+ 	done = 0;
+ 
+-	Run([=]() mutable {
++	Run([=, this]() mutable {
+ 		while(done < size && !IsTimeout()) {
+ 			int rc = static_cast<int>(
+ 				libssh2_sftp_write(handle, (const char*) ptr + done, min(size - done, ssh->chunk_size))
+@@ -251,7 +251,7 @@
+ {
+ 	SFtpHandle h = nullptr;
+ 
+-	Run([=, &h] () mutable {
++	Run([=, this, &h] () mutable {
+ 		h = libssh2_sftp_opendir(*sftp_session, path);
+ 		if(!h && !WouldBlock())
+ 			ThrowError(-1);
+@@ -264,7 +264,7 @@
+ 
+ bool SFtp::MakeDir(const String& path, long mode)
+ {
+-	return Run([=] () mutable {
++	return Run([=, this] () mutable {
+ 		int rc = libssh2_sftp_mkdir(*sftp_session, path, mode);
+ 		if(!WouldBlock(rc) && rc != 0)
+ 			ThrowError(rc);
+@@ -276,7 +276,7 @@
+ 
+ bool SFtp::RemoveDir(const String& path)
+ {
+-	return Run([=] () mutable {
++	return Run([=, this] () mutable {
+ 		int rc = libssh2_sftp_rmdir(*sftp_session, path);
+ 		if(!WouldBlock(rc) && rc != 0)
+ 			ThrowError(rc);
+@@ -289,7 +289,7 @@
+ bool SFtp::ListDir(SFtpHandle handle, DirList& list)
+ {
+ 	SFtpAttrs attrs;
+-	return Run([=, &attrs, &list] () mutable {
++	return Run([=, this, &attrs, &list] () mutable {
+ 		char label[512];
+ 		char longentry[512];
+ 
+@@ -339,7 +339,7 @@
+ 	Buffer<char> buffer(512, 0);
+ 
+ 	if(type == LIBSSH2_SFTP_SYMLINK)
+-		return Run([=, &path, &buffer, &target] () mutable {
++		return Run([=, this, &path, &buffer, &target] () mutable {
+ 			int rc = libssh2_sftp_symlink_ex(
+ 						*sftp_session,
+ 						path,
+@@ -357,7 +357,7 @@
+ 			return !rc;
+ 		});
+ 	else
+-		return Run([=, &path, &buffer, &target] () mutable {
++		return Run([=, this, &path, &buffer, &target] () mutable {
+ 			Buffer<char> sbuf(512, 0);
+ 			int rc = libssh2_sftp_symlink_ex(
+ 						*sftp_session,
+@@ -392,7 +392,7 @@
+ 
+ bool SFtp::GetAttrs(SFtpHandle handle, SFtpAttrs& attrs)
+ {
+-	return Run([=, &attrs] () mutable {
++	return Run([=, this, &attrs] () mutable {
+ 		int rc = FStat(handle, attrs, false);
+ 		if(rc < 0)	ThrowError(rc);
+ 		if(!rc)	LLOG("File attributes successfully retrieved.");
+@@ -402,7 +402,7 @@
+ 
+ bool SFtp::GetAttrs(const String& path, SFtpAttrs& attrs)
+ {
+-	return Run([=, &path, &attrs] () mutable {
++	return Run([=, this, &path, &attrs] () mutable {
+ 		int rc = LStat(path, attrs, LIBSSH2_SFTP_STAT);
+ 		if(rc < 0)	ThrowError(rc);
+ 		if(!rc) LLOG(Format("File attributes of '%s' is successfully retrieved.", path));
+@@ -412,7 +412,7 @@
+ 
+ bool SFtp::SetAttrs(SFtpHandle handle, const SFtpAttrs& attrs)
+ {
+-	return Run([=, &attrs] () mutable {
++	return Run([=, this, &attrs] () mutable {
+ 		int rc = FStat(handle, const_cast<SFtpAttrs&>(attrs), true);
+ 		if(rc < 0)	ThrowError(rc);
+ 		if(!rc)	LLOG("File attributes successfully modified.");
+@@ -422,7 +422,7 @@
+ 
+ bool SFtp::SetAttrs(const String& path, const SFtpAttrs& attrs)
+ {
+-	return Run([=, &attrs] () mutable {
++	return Run([=, this, &attrs] () mutable {
+ 		int rc = LStat(path,  const_cast<SFtpAttrs&>(attrs), LIBSSH2_SFTP_SETSTAT);
+ 		if(rc < 0)	ThrowError(rc);
+ 		if(!rc)	LLOG(Format("File attributes of '%s' is successfully modified.", path));
+diff -ruN a/uppsrc/Core/SSH/Shell.cpp b/uppsrc/Core/SSH/Shell.cpp
+--- a/uppsrc/Core/SSH/Shell.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/Shell.cpp	2026-10-20 14:35:18.995811702 -0700
+@@ -138,7 +138,7 @@
+ 	if(mode != CONSOLE)
+ 		return true;
+ 	
+-	return Ssh::Run([=]() mutable {
++	return Ssh::Run([=, this]() mutable {
+ #ifdef PLATFORM_WIN32
+ 		stdinput = GetStdHandle(STD_INPUT_HANDLE);
+ 		if(!stdinput)
+@@ -261,7 +261,7 @@
+ 	if(!xenabled)
+ 		return true;
+ 
+-	return Ssh::Run([=]() mutable {
++	return Ssh::Run([=, this]() mutable {
+ #ifdef PLATFORM_POSIX
+ 		int rc = libssh2_channel_x11_req(*channel, xscreen);
+ 		if(!WouldBlock(rc) && rc < 0)
+diff -ruN a/uppsrc/Core/SSH/Tunnel.cpp b/uppsrc/Core/SSH/Tunnel.cpp
+--- a/uppsrc/Core/SSH/Tunnel.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/SSH/Tunnel.cpp	2026-10-20 14:35:18.995811702 -0700
+@@ -25,7 +25,7 @@
+ 	if(!listener)
+ 		return;
+ 	
+-	Run([=]() mutable{
++	Run([=, this]() mutable{
+ 		int rc = libssh2_channel_forward_cancel(*listener);
+ 		if(!WouldBlock(rc) && rc < 0) ThrowError(rc);
+ 		if(rc == 0)	listener.Clear();
+@@ -40,7 +40,7 @@
+ 	if(!IsValid())
+ 		return false;
+ 
+-	return Run([=]() mutable{
++	return Run([=, this]() mutable{
+ 		LIBSSH2_CHANNEL *ch = libssh2_channel_direct_tcpip(ssh->session, host , port);
+ 		if(!ch && !WouldBlock()) ThrowError(-1);
+ 		if(ch) {
+@@ -67,7 +67,7 @@
+ 	if(!IsValid())
+ 		return false;
+ 	
+-	return Run([=]() mutable {
++	return Run([=, this]() mutable {
+ 		LIBSSH2_LISTENER *lsn = libssh2_channel_forward_listen_ex(
+ 			ssh->session,
+ 			host.IsEmpty() ? nullptr : ~host,
+@@ -97,7 +97,7 @@
+ 		return false;
+ 	}
+ 
+-	return Run([=, &listener]() mutable {
++	return Run([=, this, &listener]() mutable {
+ 		LIBSSH2_CHANNEL *ch = libssh2_channel_forward_accept(*listener.listener);
+ 		if(!ch && !WouldBlock()) ThrowError(-1);
+ 		if(ch) {

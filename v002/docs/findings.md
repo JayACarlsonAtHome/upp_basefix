@@ -1,0 +1,70 @@
+# Findings in U++ 18761 (2026-10-20)
+
+Pin: github.com/ultimatepp/ultimatepp master at `af8e133a7697` (2026-10-19), build 18761.
+From `./upp_basefix.sh test` with each check (valgrind, helgrind, ASan + UBSan, TSan) and
+strict builds (`-Wall -Wextra`), gcc 15 and clang, debug builds for the stacks. Most were
+found first on build 18619 and are still in 18761; "Ours" = upp_basefix's check programs:
+no finding is in them.
+
+## Fixed by a patch
+
+| Patch | Found by | Where | What |
+|---|---|---|---|
+| 0001 | run, gcc -O3 | Core/sheap.cpp | per-thread heap byte array not aligned to Heap |
+| 0002 | build, C++20+ | Core/SSH (7 files) | implicit `this` capture via `[=]` (deprecated); upstream has fixed the others since 18619; one lambda also captured `ipinfo` it never used |
+| 0003 | valgrind, LSan (GUI) | CtrlLib/ChGtk3.cpp `GtkSettingsString` | the string `g_object_get` returns is never `g_free`'d (13 bytes per call) |
+| 0004 | UBSan | plugin/png/pngupp.cpp | `(1 << bpp) - 1` with bpp 32: shift by 32 (undefined) |
+| 0005 | UBSan (GUI) | Painter/Context.cpp | `Create` leaves `attr.onpath` unset, then copies attr (bool value 33); and `ImageFilterOp` stores the filter in `attr.invert` instead of `attr.filter` |
+| 0006 | helgrind | Core/CoWork.cpp `Pool::Pool` | worker threads started before `quit` and the free list are set; safe only through the static-init guard, which helgrind cannot see |
+| 0007 | valgrind (GUI) | CtrlCore/CtrlFrame.cpp `InsertFrame` | a control's second frame: the first frame's view is not copied, so the next layout compares an uninitialised Rect |
+| 0008 | strict: -Wparentheses | Core/parser.cpp | U+20000 and up: `hi<<10 \| lo + 0x10000` is missing parentheses, so every code point with bit 16 set comes out wrong; and `hex < 0xDBFF` misses the last high surrogate (U+10FC00..U+10FFFF) |
+| 0008 | strict: -Wtype-limits | Draw/ImageOp.cpp `Equalight` | `size_t n` tested `n < 0`: never true, so Equalight always returns the image unchanged |
+| 0008 | strict: -Wtype-limits | Core/Cpu.cpp `GetSystemMemoryStatus` | sysconf's -1 stored in uint64 before the `>= 0` test |
+| 0009 | strict | Core/Heap.h, PdfDraw, RichText/DiagramShape.cpp | values read before they are set in some paths (initialised now) |
+| 0010 | strict: -Wdeprecated-copy | Core/Gtypes.h | Size_, Point_, Rect_: one converting constructor is the copy constructor, so the implicit copy assignment is deprecated; now `= default` (538 sites) |
+| 0011 | strict: -Wparentheses | 64 files | `&&` within `\|\|` spelled out with parentheses (same meaning) |
+| 0012 | strict: -Wunused-parameter | 140 files | unused parameter names commented out (`int /*x*/`); `[[maybe_unused]]` where only ASSERT, LLOG or another platform's code uses one |
+| 0013 | strict: -Wimplicit-fallthrough | 11 files | every intended fall-through marked `[[fallthrough]];` (each read: key press -> release, Home -> Ctrl+Home, ...) |
+| 0014 | strict: -Wimplicit-fallthrough, ASan | RichText/ParseQtf.cpp | at an unexpected end of QTF text, `switch(*term++)` (and two more spots, one in `GetColor`) steps past the NUL, so `Error()` and the parser read beyond the string; `Error` is `[[noreturn]]` |
+| 0014 | strict: -Wunused-parameter | CtrlLib/StatusBar.cpp `InfoCtrl::GetTabOffset(int t)` | ignores `t` (a local `t` hides it) and returns the end of the last tab; now stops at tab `t` (no caller in U++) |
+| 0014 | strict: -Wunused-parameter | Core/Regex.h (new since 18619) | `Regex(dword options, const char *pattern, int len)` and the `WRegex` one call `Set(pattern, len)`: the options (e.g. `PCRE2_CASELESS`) are dropped |
+| 0015 | strict: the rest | 21 files | signed/unsigned compares (`findarg`/`decode` compare integers by value: no negative number equals an unsigned one), debug `CHECK` as one expression (it left an empty `else`), default member values for aggregates, `[[maybe_unused]]` SSH allocators, sized `operator delete`, enum/int in `?:`, `(const T)` casts, byte fields tested `>= 0`, two string-literal `?:` gcc -O3 + ASan misread |
+| 0016 | bootstrap | Draw/Draw.upp | the system packages are declared for DPKG only (freetype, fontconfig, X11, xcb, expat); the RPM names are added |
+| 0017 | reading `VFormat` for -Wformat-nonliteral | Core/Format.cpp `VFormat` (behind `Sprintf`) | when the format is long it allocates `2 * strlen(fmt) + 1024` bytes but passes 1500 to `vsnprintf`, and the estimate can be short anyway: results over 1500 characters are cut. Now measures, then formats |
+| 0017 | `printf` format attribute on `Sprintf` (-Wformat-nonliteral) | Core/InetUtil.cpp `WwwFormat` | the time zone text was appended to the *format* (`"%2d:%02d:%02d " + GetTimeZoneText()`), so a `%` in it would be read as a directive; it is appended to the result now |
+| 0017 | gcc 16 -O2 -Wmaybe-uninitialized | Core/Stream.h `operator%(long&)`, `(unsigned long&)` | a long is 32 bits in the stream, read through `(dword *)&d`: where long is 64 bits (Linux, macOS), loading sets only its low half and leaves the rest as it was. Now loads the whole value (sign / zero extended); `float` / `double` copy their bytes instead of reading them through a `dword *` / `uint64 *` (aliasing) |
+| 0017 | gcc 16 -O2 -Warray-bounds | Core/Mem.cpp `memset8__`, `memcpy8__` | the main loops stop at an end pointer less 128 (64), which for a short block points before its start (undefined); the loops count what is left instead |
+| 0018 | strict-full (jac313's warnings) | 62 files | the small kinds: `[[fallthrough]]`, `printf_format` attributes (Defs.h) on `Sprintf` / `VFormat` / `__LOGF__`, the run-time printf formats of `Format()` kept local, `%p` given `void *`, `__int128` as `__extension__`, Font's struct named outside its anonymous union, `virtual` destructors for 9 callback/interface bases, `using Base::Name` where an override hid the other overloads (48; `SubMenuItem` keeps it private as `MenuItem` does), cast-align (through `void *` for raw storage the allocator aligns; `memcpy` / `Peek32` loads where bytes were read as wider integers), two gcc 16 -O2 maybe-uninitialized (CvFlt's `e10`; a stream container loading plain values starts them at zero) |
+| 0019 | strict-full: -Wshadow | 208 files | 899 shadow sites (a parameter or local named like a member, an outer local or a parameter): each declaration renamed to `NAME_` (U++'s own spelling for these, e.g. `Set(Stream& in_)`), with exactly the uses clang resolves to it; names of their own where an outer one already took `NAME_` (`ki`, `cpos64`, `hashpos`, ...). `SocketWaitEvent::Wait` declared its element twice (the inner one dropped); CtrlDraw's inner-block `LEVELCHECK`s get a name of their own (`LEVELCHECKIN`), `DOLEVELCHECK` still checks the function's |
+| 0020 | strict-full: -Wsign-conversion, -Wconversion, clang's int / float / 64-to-32 kinds | 217 files | about 2,000 implicit conversions made explicit (`static_cast<T>(expr)`, T the type the compiler converts to): U++ mixes int, dword, size_t, byte and char by design, so the conversions stay and are now visible; no behaviour change |
+| 0021 | strict-full: -Wconversion on `x op= y` | 12 files | 79 compound assignments on a narrower x (int16 / byte / char / short fields, mostly Painter's subpixel fillers) written out as `x = static_cast<T>(x op y)`, which is what `op=` means; only one-line statements whose x can be read twice. No behaviour change |
+| 0022 | strict-full: the conversions 0020 / 0021 could not do | 36 files | `HASH_CONST1..3` were signed `int64` (`I64`) yet only multiply `uint64` / `hash_t`: now unsigned literals, and the casts 0020 set beside them are gone; templates cast to their own types (`tchar`, `UINT`, `BYTE`); `-1 * uresult` written `UINT(0) - uresult` (same bits); font / stream flag clears narrow explicitly (Stream's style is a 6-bit field); label align / orientation masked `& 7` for their signed 4-bit fields (every value is 0..4); FreeType's 64-bit 26.6 metrics narrowed explicitly; `last += *out++ = v` keeps one statement; a few 0020 / 0021 casts on the wrong operand moved |
+| 0023 | strict-full: -Wold-style-cast | 247 files | 1,845 C casts made C++ casts around exactly the operand clang names: static_cast, or reinterpret_cast / const_cast where the compiler rejects static_cast (in debug or release: templates need the kind their every instantiation takes). No behaviour change |
+| 0024 | strict-full: -Wold-style-cast, the rest | 68 files | casts written in macro bodies (MD5's rounds, MAKELONG / MAKEWORD) and arguments (ASSERT), a const-away plus a type change as `const_cast<T>(static_cast<const T>(x))`, `Value`'s storage and `Vector<void *>`'s iterators (const ones through `T *const *`), GTK callback ids as `gpointer`. Bug: `OFFSETOF(clss, mbr)` took a member's address in a fake object at address 1 (undefined behaviour); it is `offsetof` now (only plain BMP structs use it) |
+| 0025 | jac313's GUI under strict-full | Core/AString.hpp `ReverseFind` | `len *= sizeof(tchar)` turned the length into a byte count in an `int`, then passed it to `memcmp`: now a `size_t` of its own. The check programs never instantiate it; Jac313Runner does |
+
+UppBaseCheck checks the bugs of 0008, 0014 and 0017 (`Sprintf` past 1500 characters, a stream `long`)
+and the `findarg` rule of 0015 directly: on the pristine tree it passes 13/23, on the patched tree 23/23.
+0017's `WwwFormat` and `memset8__` / `memcpy8__` fixes cannot be shown by a check: the zone text
+comes from the system, and the pointer is undefined behaviour with no visible effect on x86.
+
+## Not in uppsrc, so not patched
+
+| Where | What |
+|---|---|
+| `mkumk_gcc.sh` (repo root) | since the switch to system libraries (2026-10-14) it no longer links: it lacks `-llz4 -lzstd -llzma -lpcre2-8 -lpcre2-32 -lxxhash`; `upp_basefix.sh` adds them when it builds umk |
+
+## System libraries, not U++ (suppressed: supp/)
+
+| Check | Where | What |
+|---|---|---|
+| valgrind, LSan (GUI) | librsvg (Rust) | 40 bytes kept for the process lifetime when GTK loads SVG icons |
+| TSan (GUI) | GLib, GObject, GTK, GDK, gdk-pixbuf, ATK, dbus, GVFS, cairo, pango, ... | not built with -fsanitize=thread, so TSan cannot see their own locking (futexes, GMutex, g_slice) and reports their internal hand-offs; in every report the frames above U++'s call into GTK were all library frames |
+
+Checked runs of the GUI also start it with `NO_AT_BRIDGE=1 GTK_A11Y=none GIO_USE_VFS=local`
+(no accessibility bridge, no GVFS): fewer system threads; nothing of U++ is left out.
+
+## Strict builds
+
+With 0010-0015, strict builds (`-Wall -Wextra`) of the check programs give no warning at
+all, gcc and clang, debug and release, and with each check: see strict.md.

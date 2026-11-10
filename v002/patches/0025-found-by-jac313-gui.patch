@@ -1,0 +1,15 @@
+diff -ruN a/uppsrc/Core/AString.hpp b/uppsrc/Core/AString.hpp
+--- a/uppsrc/Core/AString.hpp	2026-10-31 03:05:26.757041573 -0700
++++ b/uppsrc/Core/AString.hpp	2026-10-31 03:07:33.073491754 -0700
+@@ -81,9 +81,9 @@
+ 	if(from < GetLength()) {
+ 		const tchar *ptr = B::Begin();
+ 		const tchar *p = ptr + from - len + 1;
+-		len *= sizeof(tchar);
++		size_t bytes = static_cast<size_t>(len) * sizeof(tchar);
+ 		while(p >= ptr) {
+-			if(*s == *p && memcmp(s, p, len) == 0)
++			if(*s == *p && memcmp(s, p, bytes) == 0)
+ 				return static_cast<int>((p - ptr));
+ 			p--;
+ 		}

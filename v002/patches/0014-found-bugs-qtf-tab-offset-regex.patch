@@ -1,0 +1,101 @@
+diff -ruN a/uppsrc/Core/Regex.h b/uppsrc/Core/Regex.h
+--- a/uppsrc/Core/Regex.h	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/Core/Regex.h	2026-10-20 14:35:20.210812530 -0700
+@@ -50,7 +50,7 @@
+ 	bool Match(const String& text) const                            { return Match(text, text.GetCount()); }
+ 
+ 	Regex() {}
+-	Regex(dword options, const char *pattern, int len)              { Set(pattern, len); }
++	Regex(dword options, const char *pattern, int len)              { Set(options, pattern, len); }
+ 	Regex(dword options, const char *pattern)                       { Set(options, pattern, (int)strlen(pattern)); }
+ 	Regex(dword options, const String& pattern)                     { Set(options, pattern, pattern.GetCount()); }
+ 
+@@ -89,7 +89,7 @@
+ 	bool Match(const WString& text) const                            { return Match(text, text.GetCount()); }
+ 
+ 	WRegex() {}
+-	WRegex(dword options, const wchar *pattern, int len)             { Set(pattern, len); }
++	WRegex(dword options, const wchar *pattern, int len)             { Set(options, pattern, len); }
+ 	WRegex(dword options, const wchar *pattern)                      { Set(options, pattern, strlen32(pattern)); }
+ 	WRegex(dword options, const WString& pattern)                    { Set(options, pattern, pattern.GetCount()); }
+ 
+diff -ruN a/uppsrc/CtrlLib/StatusBar.cpp b/uppsrc/CtrlLib/StatusBar.cpp
+--- a/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 14:35:20.002812388 -0700
++++ b/uppsrc/CtrlLib/StatusBar.cpp	2026-10-20 14:35:20.208812529 -0700
+@@ -90,13 +90,13 @@
+ 	Size sz = GetSize();
+ 	Rect r = sz;
+ 	r.right = 2;
+-	for(int i = 0; i < tab.GetCount() && r.right < sz.cx; i++) {
+-		const Tab& t = tab[i];
++	for(int i = 0; i < t && i < tab.GetCount() && r.right < sz.cx; i++) {
++		const Tab& tb = tab[i];
+ 		r.left = r.right;
+-		if(t.width < 0)
+-			r.right = max(r.right, sz.cx + t.width);
++		if(tb.width < 0)
++			r.right = max(r.right, sz.cx + tb.width);
+ 		else
+-			r.right = min((dword)sz.cx, dword(r.right) + t.width);
++			r.right = min((dword)sz.cx, dword(r.right) + tb.width);
+ 	}
+ 	return r.right;
+ }
+diff -ruN a/uppsrc/RichText/ParseQtf.cpp b/uppsrc/RichText/ParseQtf.cpp
+--- a/uppsrc/RichText/ParseQtf.cpp	2026-10-19 07:23:06.000000000 -0700
++++ b/uppsrc/RichText/ParseQtf.cpp	2026-10-20 14:35:20.208812529 -0700
+@@ -76,7 +76,7 @@
+ 	void   Flush();
+ 	void   SetFormat();
+ 	void   FlushStyles();
+-	void   Error(const char *s);
++	[[noreturn]] void Error(const char *s);
+ 
+ 	void   ReadObject();
+ 
+@@ -197,7 +197,9 @@
+ 
+ Color RichQtfParser::GetColor()
+ {
+-	int c = *term++;
++	int c = *term;
++	if(c) // at the end of the text, stay there
++		term++;
+ 	if(c == '(') {
+ 		byte r = GetNumber();
+ 		if(Key(')')) {
+@@ -325,11 +327,11 @@
+ 			StringBuffer data;
+ 			for(;;) {
+ 				while(*term < 32 && *term > 0) term++;
+-				if((byte)*term >= ' ' && (byte)*term <= 127 || *term == '\0') break;
++				if(((byte)*term >= ' ' && (byte)*term <= 127) || *term == '\0') break;
+ 				byte seven = *term++;
+ 				for(int i = 0; i < 7; i++) {
+ 					while((byte)*term < 32 && (byte)*term > 0) term++;
+-					if((byte)*term >= ' ' && (byte)*term <= 127 || *term == '\0') break;
++					if(((byte)*term >= ' ' && (byte)*term <= 127) || *term == '\0') break;
+ 					data.Cat((*term++ & 0x7f) | ((seven << 7) & 0x80));
+ 					seven >>= 1;
+ 				}
+@@ -765,8 +767,10 @@
+ 							format.bullet = RichPara::BULLET_NONE;
+ 						else {
+ 							int c = *term++;
+-							if(!c)
++							if(!c) {
++								term--; // Error shows the text at term
+ 								Error("Unexpected end of text");
++							}
+ 							format.bullet =
+ 							                c == '1' ? RichPara::BULLET_ROUNDWHITE :
+ 							                c == '2' ? RichPara::BULLET_BOX :
+@@ -777,7 +781,7 @@
+ 						break;
+ 					case 'p':
+ 						switch(*term++) {
+-						case 0:   Error("Unexpected end of text");
++						case 0:   term--; Error("Unexpected end of text"); // Error shows the text at term
+ 						case 'h': format.linespacing = RichPara::LSP15; break;
+ 						case 'd': format.linespacing = RichPara::LSP20; break;
+ 						case 'w': format.linespacing = RichPara::LSP115; break;
