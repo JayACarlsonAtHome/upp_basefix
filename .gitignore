@@ -1,3 +1,4 @@
 # each version keeps its work area and install inside it, never committed (v00N/.gitignore)
 *.orig
 *.rej
+.claude/
