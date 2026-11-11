@@ -168,15 +168,28 @@ cmd_status() {
   [ "$have" = "$n" ]
 }
 
-# compiler C -> the compiler to run: UPP_BASEFIX_GCC / UPP_BASEFIX_CLANG, else the bm/ file's
+# compiler C -> the compiler to run: UPP_BASEFIX_GCC / UPP_BASEFIX_CLANG; else (clang) the highest
+# version among every clang++-NN on PATH, the bm/ file's path and plain clang++ (on Ubuntu/Mint
+# plain clang++ is the distro's old default, 18 on 24.04, whose std::expected fails against
+# libstdc++ 15, while Fedora/RHEL may have only plain clang++ next to an older compat clang++-NN);
+# else (gcc) the bm/ file's
 # path if it exists, else the first of its fallbacks on PATH (a versioned g++ first: on
 # Ubuntu/Mint plain g++ is 13, which has no -std=c++26)
 compiler() {
-  local env bm path fallbacks f
+  local env bm path fallbacks f p v best="" bestv=-1
   case $1 in gcc) env=${UPP_BASEFIX_GCC:-}; bm="$HERE/bm/GCC15.bm"; fallbacks="g++-16 g++-15 g++" ;;
              clang) env=${UPP_BASEFIX_CLANG:-}; bm="$HERE/bm/CLANG26.bm"; fallbacks=clang++ ;; esac
   [ -n "$env" ] && { echo "$env"; return; }
   path=$(sed -n 's/^COMPILER = "\(.*\)";/\1/p' "$bm")
+  if [ "$1" = clang ]; then
+    for f in $(compgen -c clang++- | grep -E '^clang\+\+-[0-9]+$' | sort -u) "$path" clang++; do
+      p=$(command -v "$f" 2>/dev/null) || continue
+      v=$("$p" -dumpversion 2>/dev/null) || continue
+      v=${v%%.*}
+      [ "$v" -gt "$bestv" ] 2>/dev/null && { best=$p; bestv=$v; }
+    done
+    [ -n "$best" ] && { echo "$best"; return; }
+  fi
   [ -x "$path" ] && { echo "$path"; return; }
   for f in $fallbacks; do command -v "$f" && return; done
   die "no $1 compiler (set UPP_BASEFIX_${1^^})"
