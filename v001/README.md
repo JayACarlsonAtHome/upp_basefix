@@ -51,6 +51,7 @@ CtrlLib, plugin/png, plugin/sqlite3, plugin/bmp.
 | 0024 | strict-full, the last casts: casts in macro bodies and arguments, const-away plus a type change spelled as both, Value / Vector<void *> storage, GTK callback ids; `OFFSETOF` on `offsetof` (it read a member of a fake object at address 1) — strict-full 0, with -Werror |
 | 0025 | found by building jac313's GUI (Jac313Runner, JTextGui) with jac313's whole warning set: `AString::ReverseFind` counted bytes in an `int` (code the check programs do not instantiate) |
 | 0026 | C++23 is the minimum: the build methods U++ writes by itself (umk, TheIDE setup, Android NDK default) ask for `-std=c++23`, not `-std=c++17`. umk is built from the patched tree so that it writes them too |
+| 0027 | `FileMapping::Open` checks `ftruncate`'s result: a failed resize closes the file and returns false (as the Windows branch does when the mapping fails) instead of `(void)`-discarding it. Ubuntu/Mint GCC (default `_FORTIFY_SOURCE`) warns on the discarded result even through the `(void)` cast; found by jac313's gui-build gate |
 
 Details for each: `docs/findings.md`; how the strict warnings were fixed: `docs/strict.md`.
 

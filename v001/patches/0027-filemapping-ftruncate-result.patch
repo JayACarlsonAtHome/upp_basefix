@@ -1,0 +1,15 @@
+diff -ruN a/uppsrc/Core/FileMapping.cpp b/uppsrc/Core/FileMapping.cpp
+--- a/uppsrc/Core/FileMapping.cpp	2026-11-11 03:53:51.104598440 -0800
++++ b/uppsrc/Core/FileMapping.cpp	2026-11-11 03:53:59.765081813 -0800
+@@ -65,7 +65,10 @@
+ 	if(!FileStream::OpenHandle(filename, mode, hfile, filesize, acm))
+ 		return false;
+ 	if((mode & FileStream::MODEMASK) == FileStream::CREATE) {
+-		(void)ftruncate(hfile, wsize);
++		if(ftruncate(hfile, wsize) != 0) {
++			Close();
++			return false;
++		}
+ 		filesize = wsize;
+ 	}
+ #endif
